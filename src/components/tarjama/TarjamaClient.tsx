@@ -121,11 +121,11 @@ function TarjamaContent() {
     }
   };
 
-  // PDF URL with page hash
+  // Individual Surah PDF URL (Every Surah starts on Page 1)
+  const surahPdfFile = `/tarjama/surahs/${selectedSurahNumber}.pdf`;
   const currentPdfUrl = useMemo(() => {
-    const pageNum = surahMapping.page;
-    return `${activeJild.fileName}#page=${pageNum}&view=FitH&toolbar=1&navpanes=1`;
-  }, [activeJild.fileName, surahMapping.page]);
+    return `${surahPdfFile}#view=FitH&toolbar=1&navpanes=1`;
+  }, [surahPdfFile]);
 
   return (
     <div
@@ -384,10 +384,10 @@ function TarjamaContent() {
 
             {/* Download Button */}
             <a
-              href={activeJild.fileName}
+              href={surahPdfFile}
               download={`${currentSurah.name}-Tarjama.pdf`}
               className="px-2.5 py-1 rounded-lg bg-emerald-900/60 hover:bg-emerald-800 border border-emerald-600/60 text-emerald-100 text-xs font-medium flex items-center gap-1 transition-all active:scale-95 cursor-pointer"
-              title="Download translation to read offline anytime"
+              title="Download this Surah translation to read offline anytime"
             >
               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
@@ -404,7 +404,7 @@ function TarjamaContent() {
           }`}
         >
           <object
-            key={`${activeJild.fileName}-s${selectedSurahNumber}-p${surahMapping.page}`}
+            key={`surah-pdf-${selectedSurahNumber}`}
             data={currentPdfUrl}
             type="application/pdf"
             className="w-full h-full border-0"
@@ -438,7 +438,7 @@ function TarjamaContent() {
                 </a>
 
                 <a
-                  href={activeJild.fileName}
+                  href={surahPdfFile}
                   download={`${currentSurah.name}-Tarjama.pdf`}
                   className="w-full py-2 px-3 rounded-xl bg-[#092215] hover:bg-[#0f2e1e] border border-emerald-600/70 text-emerald-100 text-xs font-semibold flex items-center justify-center gap-1.5 transition-all active:scale-95 cursor-pointer text-center"
                 >
