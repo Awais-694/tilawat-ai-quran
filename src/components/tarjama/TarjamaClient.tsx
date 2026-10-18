@@ -1,33 +1,16 @@
 "use client";
 
-import { useState, useMemo, useEffect, useRef, Suspense } from "react";
+import { useState, useMemo, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { JILDS, SURAH_TARJAMA_PAGES } from "@/data/tarjama-meta";
 import surahsMeta from "@/data/surahs-meta.json";
-
-// Quick-access popular Surahs for instant 1-click reading
-const POPULAR_SURAHS = [
-  { number: 1, name: "الفاتحة", en: "Al-Fatiha" },
-  { number: 2, name: "البقرة", en: "Al-Baqarah" },
-  { number: 18, name: "الكهف", en: "Al-Kahf" },
-  { number: 36, name: "يسٓ", en: "Yaseen" },
-  { number: 55, name: "الرَّحْمٰن", en: "Ar-Rahman" },
-  { number: 56, name: "الواقعة", en: "Al-Waqi'ah" },
-  { number: 67, name: "الملك", en: "Al-Mulk" },
-  { number: 112, name: "الإخلاص", en: "Al-Ikhlas" },
-];
 
 function TarjamaContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  // State: Default to Surah 1 (Al-Fatiha) if no parameter is provided
+  // State: Default to Surah 1 (Al-Fatiha) or URL ?surah=X
   const [selectedSurahNumber, setSelectedSurahNumber] = useState<number>(1);
-  const [selectedAyahNumber, setSelectedAyahNumber] = useState<string>("");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const searchContainerRef = useRef<HTMLDivElement>(null);
 
   // Read URL query parameter ?surah=X if provided
   useEffect(() => {
@@ -39,20 +22,6 @@ function TarjamaContent() {
       }
     }
   }, [searchParams]);
-
-  // Close search dropdown on click outside
-  useEffect(() => {
-    function handleClickOutside(e: MouseEvent) {
-      if (
-        searchContainerRef.current &&
-        !searchContainerRef.current.contains(e.target as Node)
-      ) {
-        setIsSearchOpen(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
 
   // Auto-update Service Worker to ensure fresh PDF streaming
   useEffect(() => {
@@ -72,40 +41,9 @@ function TarjamaContent() {
     );
   }, [selectedSurahNumber]);
 
-  // Mapping info (silently retrieves volume and page behind the scenes)
-  const surahMapping = useMemo(() => {
-    return SURAH_TARJAMA_PAGES[selectedSurahNumber] ?? { jildId: 1, page: 7 };
-  }, [selectedSurahNumber]);
-
-  const activeJild = useMemo(() => {
-    return (
-      JILDS.find((j) => j.id === surahMapping.jildId) ?? JILDS[0]
-    );
-  }, [surahMapping.jildId]);
-
-  // Autocomplete search suggestions
-  const filteredSuggestions = useMemo(() => {
-    const q = searchQuery.trim().toLowerCase();
-    if (!q) return [];
-    return surahsMeta
-      .filter((s) => {
-        return (
-          s.number.toString() === q ||
-          s.number.toString().startsWith(q) ||
-          s.name.toLowerCase().includes(q) ||
-          s.arabicName.includes(q) ||
-          s.translation.toLowerCase().includes(q)
-        );
-      })
-      .slice(0, 8); // Top 8 suggestions
-  }, [searchQuery]);
-
   const handleSelectSurah = (surahNumber: number) => {
     if (surahNumber >= 1 && surahNumber <= 114) {
       setSelectedSurahNumber(surahNumber);
-      setSelectedAyahNumber("");
-      setSearchQuery("");
-      setIsSearchOpen(false);
     }
   };
 
@@ -121,7 +59,7 @@ function TarjamaContent() {
     }
   };
 
-  // Individual Surah PDF URL (Every Surah starts on Page 1)
+  // Individual Surah PDF URL (Page 1 is the start of this exact Surah)
   const surahPdfFile = `/tarjama/surahs/${selectedSurahNumber}.pdf`;
   const currentPdfUrl = useMemo(() => {
     return `${surahPdfFile}#view=FitH&toolbar=1&navpanes=1`;
@@ -135,7 +73,7 @@ function TarjamaContent() {
           : ""
       }`}
     >
-      {/* Top Header & Search Area */}
+      {/* Top Header Card */}
       {!isFullscreen && (
         <div className="relative overflow-visible rounded-2xl sm:rounded-3xl bg-gradient-to-br from-[#0c1e15]/95 via-[#07160f]/95 to-[#040e09]/95 border border-[#1d442f]/80 p-3.5 sm:p-5 shadow-[0_12px_40px_rgba(0,0,0,0.5)] backdrop-blur-md">
           <div className="absolute inset-x-0 top-0 h-[1.5px] bg-gradient-to-r from-transparent via-emerald-400/50 to-transparent" />
@@ -159,29 +97,22 @@ function TarjamaContent() {
             </div>
           </div>
 
-          {/* User-Friendly Question & Search Section */}
+          {/* User Question Header */}
           <div className="text-center mt-1 mb-3">
             <h1 className="text-base sm:text-xl font-bold text-white flex items-center justify-center gap-2">
               <span>📖</span>
               <span>آپ کون سی سورت کا ترجمہ پڑھنا چاہتے ہیں؟</span>
             </h1>
-            <p className="text-xs sm:text-sm text-emerald-300/70 mt-1">
-              Select or search any Surah to open its authentic Urdu translation directly
-            </p>
           </div>
 
-          {/* Search & Selector Row */}
-          <div
-            ref={searchContainerRef}
-            className="relative flex flex-col sm:flex-row items-stretch sm:items-center gap-2 max-w-2xl mx-auto"
-          >
-            {/* Quick Dropdown Picker */}
-            <div className="relative sm:w-1/2">
+          {/* Clean, Single Surah Dropdown Selector */}
+          <div className="max-w-md mx-auto">
+            <div className="relative">
               <select
                 aria-label="Select Surah"
                 value={selectedSurahNumber}
                 onChange={(e) => handleSelectSurah(Number(e.target.value))}
-                className="w-full appearance-none px-3.5 py-2.5 rounded-xl bg-[#06140d] border border-emerald-700/80 text-white font-medium text-xs sm:text-sm focus:outline-none focus:border-emerald-400 cursor-pointer shadow-inner pr-8"
+                className="w-full appearance-none px-4 py-2.5 sm:py-3 rounded-2xl bg-[#06140d] border border-emerald-600/80 hover:border-emerald-400 text-white font-medium text-xs sm:text-sm focus:outline-none focus:border-emerald-300 cursor-pointer shadow-lg pr-10 transition-colors"
               >
                 {surahsMeta.map((s) => (
                   <option key={s.number} value={s.number} className="bg-[#06140d] text-white">
@@ -189,103 +120,12 @@ function TarjamaContent() {
                   </option>
                 ))}
               </select>
-              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2.5 text-emerald-400">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3.5 text-emerald-400">
+                <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
                 </svg>
               </div>
             </div>
-
-            {/* Instant Search Bar */}
-            <div className="relative flex-1">
-              <input
-                type="text"
-                value={searchQuery}
-                onFocus={() => setIsSearchOpen(true)}
-                onChange={(e) => {
-                  setSearchQuery(e.target.value);
-                  setIsSearchOpen(true);
-                }}
-                placeholder="سورت کا نام یا نمبر لکھیں (e.g. Yaseen, Rahman, 36)..."
-                className="w-full px-3.5 py-2.5 pl-9 rounded-xl bg-[#06140d] border border-emerald-700/80 text-white placeholder-emerald-400/40 text-xs sm:text-sm focus:outline-none focus:border-emerald-400 transition-colors shadow-inner"
-              />
-              <svg
-                className="w-4 h-4 text-emerald-400/70 absolute left-3 top-3"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                viewBox="0 0 24 24"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
-              </svg>
-
-              {/* Autocomplete Suggestions Popup */}
-              {isSearchOpen && filteredSuggestions.length > 0 && (
-                <div className="absolute left-0 right-0 top-full mt-1.5 z-50 bg-[#091b12] border border-emerald-600/80 rounded-xl shadow-2xl overflow-hidden max-h-64 overflow-y-auto divide-y divide-emerald-950/70 animate-fadeIn">
-                  {filteredSuggestions.map((s) => (
-                    <button
-                      key={s.number}
-                      onClick={() => handleSelectSurah(s.number)}
-                      className="w-full px-3.5 py-2.5 flex items-center justify-between text-left hover:bg-emerald-900/50 transition-colors group cursor-pointer"
-                    >
-                      <div className="flex items-center gap-2">
-                        <span className="w-6 h-6 rounded-md bg-emerald-800 text-white text-[11px] font-bold flex items-center justify-center">
-                          {s.number}
-                        </span>
-                        <div>
-                          <div className="text-xs sm:text-sm font-semibold text-white group-hover:text-emerald-200">
-                            {s.name}
-                          </div>
-                          <div className="text-[10px] text-emerald-400/70">
-                            {s.translation} • {s.numberOfAyahs} آیات
-                          </div>
-                        </div>
-                      </div>
-                      <span className="font-quran text-emerald-200 text-sm" dir="rtl">
-                        {s.arabicName}
-                      </span>
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Optional Ayah Number Field */}
-            <div className="w-full sm:w-28 flex items-center">
-              <input
-                type="number"
-                min="1"
-                max={currentSurah.numberOfAyahs}
-                value={selectedAyahNumber}
-                onChange={(e) => setSelectedAyahNumber(e.target.value)}
-                placeholder={`آیت (1-${currentSurah.numberOfAyahs})`}
-                className="w-full px-3 py-2.5 rounded-xl bg-[#06140d] border border-emerald-800/80 text-white placeholder-emerald-400/40 text-xs sm:text-sm focus:outline-none focus:border-emerald-400 text-center shadow-inner"
-              />
-            </div>
-          </div>
-
-          {/* Quick Popular Surah Pills */}
-          <div className="flex items-center justify-center gap-1.5 flex-wrap mt-3 pt-3 border-t border-emerald-900/50">
-            <span className="text-[11px] text-emerald-400/70 mr-1 font-medium hidden sm:inline">
-              مشہور سورتیں:
-            </span>
-            {POPULAR_SURAHS.map((p) => {
-              const isActive = selectedSurahNumber === p.number;
-              return (
-                <button
-                  key={p.number}
-                  onClick={() => handleSelectSurah(p.number)}
-                  className={`px-3 py-1 rounded-full text-xs font-medium transition-all active:scale-95 cursor-pointer flex items-center gap-1 border ${
-                    isActive
-                      ? "bg-emerald-600 border-emerald-300 text-white shadow-[0_0_10px_rgba(16,185,129,0.4)] font-semibold"
-                      : "bg-[#06140d]/70 border-emerald-900/80 text-emerald-200/90 hover:bg-emerald-900/60 hover:text-white"
-                  }`}
-                >
-                  <span className="font-quran">{p.name}</span>
-                  <span className="text-[10px] opacity-75 hidden sm:inline">({p.en})</span>
-                </button>
-              );
-            })}
           </div>
         </div>
       )}
@@ -322,11 +162,6 @@ function TarjamaContent() {
               <span className="text-[10px] sm:text-xs text-emerald-200 bg-emerald-950/80 px-2 py-0.5 rounded-full font-normal">
                 {currentSurah.numberOfAyahs} آیات • {currentSurah.revelationType}
               </span>
-              {selectedAyahNumber && (
-                <span className="text-[10px] text-amber-200 bg-amber-950/80 px-2 py-0.5 rounded-full font-normal border border-amber-500/40">
-                  آیت {selectedAyahNumber}
-                </span>
-              )}
             </div>
 
             {/* Next Surah Button */}
