@@ -18,12 +18,12 @@ export function DailyStreakWidget({
     <Link
       href="/streak"
       className="block group relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#0c2419] via-[#091b12] to-[#05130b] border border-emerald-700/50 hover:border-emerald-500/80 p-4 sm:p-5 shadow-lg hover:shadow-emerald-950/50 transition-all duration-200 cursor-pointer"
-      title="ہفتہ وار تلاوت اور اسٹریک کی مکمل تفصیلات دیکھیں"
+      title="View weekly streak details and reading time"
     >
       {/* Top Header: Flame Badge, Streak Number, and View Details Button */}
       <div className="flex items-center justify-between gap-3">
         {/* Left: Flame Icon + Streak Text */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3.5">
           {/* Flame Icon */}
           <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-500/20 via-emerald-950 to-emerald-900/40 border border-amber-500/40 flex items-center justify-center shrink-0 shadow-sm group-hover:scale-105 transition-transform">
             <svg
@@ -36,7 +36,7 @@ export function DailyStreakWidget({
           </div>
 
           <div>
-            <div className="flex items-baseline gap-2">
+            <div className="flex items-baseline gap-1.5">
               <span className="text-2xl font-black text-white font-mono tracking-tight">
                 {streak}
               </span>
@@ -44,19 +44,19 @@ export function DailyStreakWidget({
                 {streak === 1 ? "Day Streak" : "Days Streak"}
               </span>
             </div>
-            <div className="text-xs text-emerald-400/80 font-medium flex items-center gap-1.5">
-              <span>Best: {longestStreak} {longestStreak === 1 ? "Day" : "Days"}</span>
-              <span className="text-emerald-700">•</span>
-              <span className="text-emerald-300/70 font-quran text-[11px]" dir="rtl">
-                روزانہ تلاوت کا تسلسل
-              </span>
+            <div className="text-xs text-emerald-400/80 font-medium mt-0.5">
+              {streak > 0
+                ? `Personal Best: ${longestStreak} ${longestStreak === 1 ? "day" : "days"}`
+                : longestStreak > 0
+                ? `Personal Best: ${longestStreak} ${longestStreak === 1 ? "day" : "days"}`
+                : "Recite today to start your streak"}
             </div>
           </div>
         </div>
 
         {/* Right: Clean View Details Pill Button */}
         <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold text-emerald-200 bg-emerald-950/80 border border-emerald-700/60 group-hover:bg-emerald-800/80 group-hover:border-emerald-400 group-hover:text-white transition-all shrink-0 shadow-sm">
-          <span>تفصیلات</span>
+          <span>Weekly Report</span>
           <svg className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
           </svg>
@@ -110,11 +110,11 @@ export function DailyStreakWidget({
 
                 {/* Today indicator label */}
                 <span
-                  className={`text-[10px] font-medium mt-1 select-none ${
-                    item.isToday ? "text-amber-300 font-semibold" : "text-transparent"
+                  className={`text-[10px] font-semibold mt-1 select-none ${
+                    item.isToday ? "text-amber-300" : "text-transparent"
                   }`}
                 >
-                  {item.isToday ? "آج" : "·"}
+                  {item.isToday ? "Today" : "·"}
                 </span>
               </div>
             );

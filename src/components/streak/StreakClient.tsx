@@ -9,9 +9,25 @@ import {
   calcLongestStreak,
   getWeekDays,
   formatTimeSpent,
-  formatTimeSpentUrdu,
-  type DayStreakItem,
 } from "@/lib/quran/streak";
+
+function formatReadableDate(dateStr: string): string {
+  if (!dateStr) return "";
+  const [y, m, d] = dateStr.split("-").map(Number);
+  const dt = new Date(y, m - 1, d);
+  return dt.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+}
+
+function formatWeekRange(startStr: string, endStr: string): string {
+  if (!startStr || !endStr) return "";
+  const [y1, m1, d1] = startStr.split("-").map(Number);
+  const [y2, m2, d2] = endStr.split("-").map(Number);
+  const dt1 = new Date(y1, m1 - 1, d1);
+  const dt2 = new Date(y2, m2 - 1, d2);
+  const start = dt1.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  const end = dt2.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+  return `${start} – ${end}`;
+}
 
 export function StreakClient() {
   const router = useRouter();
@@ -88,10 +104,15 @@ export function StreakClient() {
     }
   };
 
+  const weekRangeText = useMemo(() => {
+    if (weekDays.length < 7) return "";
+    return formatWeekRange(weekDays[0].date, weekDays[6].date);
+  }, [weekDays]);
+
   return (
-    <div className="max-w-3xl mx-auto space-y-5 pb-16 px-1 sm:px-2">
+    <div className="max-w-2xl mx-auto space-y-5 pb-16 px-2 sm:px-0">
       {/* Top Header Navigation */}
-      <div className="flex items-center justify-between min-h-[46px] border-b border-emerald-900/50 pb-3">
+      <div className="flex items-center justify-between min-h-[46px] border-b border-emerald-900/40 pb-3">
         <button
           onClick={handleBack}
           className="inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-semibold text-emerald-100 bg-[#0d2217] hover:bg-[#133022] border border-emerald-600/50 hover:border-emerald-400 shadow-sm active:scale-95 transition-all cursor-pointer"
@@ -104,8 +125,8 @@ export function StreakClient() {
           <h1 className="text-lg sm:text-xl font-bold text-white tracking-wide">
             Daily Streak & Activity
           </h1>
-          <p className="text-xs text-emerald-300/80 font-quran" dir="rtl">
-            روزانہ تلاوت کا تسلسل اور تفصیلی ریکارڈ
+          <p className="text-xs text-emerald-400/80">
+            Weekly recitation history and consistency
           </p>
         </div>
 
@@ -143,11 +164,11 @@ export function StreakClient() {
               </div>
               <div className="text-xs text-emerald-400 font-medium mt-0.5">
                 {currentStreak > 0
-                  ? "ماشاءاللہ! روزانہ تلاوت کا تسلسل برقرار ہے۔"
-                  : "آج کی تلاوت مکمل کریں اور اپنی اسٹریک شروع کریں۔"}
+                  ? "Keep it up! Your daily recitation habit is active."
+                  : "Recite any Surah today to start your streak."}
               </div>
               <div className="text-[11px] text-emerald-400/80 mt-1">
-                سب سے بہترین ریکارڈ: <span className="font-bold text-white">{longestStreak} {longestStreak === 1 ? "Day" : "Days"}</span>
+                Personal Best: <span className="font-bold text-white">{longestStreak} {longestStreak === 1 ? "day" : "days"}</span>
               </div>
             </div>
           </div>
@@ -155,10 +176,10 @@ export function StreakClient() {
           {/* Quick CTA to start reciting */}
           <Link
             href="/surahs"
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-500 hover:to-emerald-600 text-white font-bold text-xs sm:text-sm shadow-md active:scale-95 transition-all text-center"
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-500 hover:to-emerald-600 text-white font-bold text-xs sm:text-sm shadow-md active:scale-95 transition-all text-center shrink-0"
           >
             <span>📖</span>
-            <span>آج کی تلاوت کریں</span>
+            <span>Recite Today</span>
           </Link>
         </div>
 
@@ -166,58 +187,58 @@ export function StreakClient() {
         <div className="grid grid-cols-3 gap-2 sm:gap-3 mt-4 pt-3.5 border-t border-emerald-900/60">
           <div className="bg-[#05140b]/80 border border-emerald-900/60 rounded-xl p-2.5 text-center">
             <span className="text-[11px] text-emerald-300/80 font-medium block">
-              صرف کیا گیا وقت
+              Time Spent
             </span>
             <span className="text-sm sm:text-base font-bold text-white mt-0.5 block font-mono">
               {formatTimeSpent(weekStats.totalSeconds)}
             </span>
-            <span className="text-[10px] text-emerald-400/70 font-quran block" dir="rtl">
-              {formatTimeSpentUrdu(weekStats.totalSeconds)}
+            <span className="text-[10px] text-emerald-400/70 block mt-0.5">
+              Reading time
             </span>
           </div>
 
           <div className="bg-[#05140b]/80 border border-emerald-900/60 rounded-xl p-2.5 text-center">
             <span className="text-[11px] text-emerald-300/80 font-medium block">
-              حاضری کے دن
+              Days Active
             </span>
             <span className="text-sm sm:text-base font-bold text-emerald-200 mt-0.5 block font-mono">
               {weekStats.daysActive} / 7
             </span>
-            <span className="text-[10px] text-emerald-400/70 block">
-              {Math.round((weekStats.daysActive / 7) * 100)}% Consistency
+            <span className="text-[10px] text-emerald-400/70 block mt-0.5">
+              {Math.round((weekStats.daysActive / 7) * 100)}% consistency
             </span>
           </div>
 
           <div className="bg-[#05140b]/80 border border-emerald-900/60 rounded-xl p-2.5 text-center">
             <span className="text-[11px] text-emerald-300/80 font-medium block">
-              کل پڑھے گئے الفاظ
+              Words Read
             </span>
             <span className="text-sm sm:text-base font-bold text-white mt-0.5 block font-mono">
               {weekStats.totalWords}
             </span>
-            <span className="text-[10px] text-emerald-400/70 block">
-              {weekStats.accuracy ? `${weekStats.accuracy}% درستگی` : "الفاظ"}
+            <span className="text-[10px] text-emerald-400/70 block mt-0.5">
+              {weekStats.accuracy ? `${weekStats.accuracy}% accuracy` : "Total words"}
             </span>
           </div>
         </div>
       </div>
 
       {/* Week Navigation Selector */}
-      <div className="flex items-center justify-between bg-[#0a2016]/90 border border-emerald-800/50 rounded-2xl px-3 sm:px-4 py-2 shadow-sm">
+      <div className="flex items-center justify-between bg-[#0a2016]/90 border border-emerald-800/50 rounded-2xl px-3 sm:px-4 py-2.5 shadow-sm">
         <button
           onClick={() => setWeekOffset((prev) => prev - 1)}
           className="text-xs text-emerald-200 hover:text-white bg-emerald-950/80 border border-emerald-700/50 hover:border-emerald-500 rounded-lg px-2.5 py-1.5 transition-all flex items-center gap-1 active:scale-95 cursor-pointer"
         >
           <span>←</span>
-          <span>پچھلا ہفتہ</span>
+          <span>Previous Week</span>
         </button>
 
         <div className="text-center">
           <span className="text-xs sm:text-sm font-bold text-white block">
-            {weekOffset === 0 ? "یہ ہفتہ (This Week)" : weekOffset === -1 ? "پچھلا ہفتہ (Last Week)" : `${Math.abs(weekOffset)} ہفتے پہلے`}
+            {weekOffset === 0 ? "This Week" : weekOffset === -1 ? "Last Week" : `${Math.abs(weekOffset)} Weeks Ago`}
           </span>
-          <span className="text-[10px] sm:text-[11px] text-emerald-300/70 block font-mono">
-            {weekDays[0]?.date} تا {weekDays[6]?.date}
+          <span className="text-[11px] text-emerald-300/70 block font-mono">
+            {weekRangeText}
           </span>
         </div>
 
@@ -230,7 +251,7 @@ export function StreakClient() {
               : "text-emerald-200 hover:text-white bg-emerald-950/80 border border-emerald-700/50 hover:border-emerald-500 active:scale-95 cursor-pointer"
           }`}
         >
-          <span>اگلا ہفتہ</span>
+          <span>Next Week</span>
           <span>→</span>
         </button>
       </div>
@@ -238,9 +259,9 @@ export function StreakClient() {
       {/* 7-Day Visual Timeline Bar (Clean Circles) */}
       <div className="bg-[#0c2419] border border-emerald-700/50 rounded-2xl p-3 sm:p-4 shadow-sm">
         <div className="text-xs font-semibold text-emerald-200 mb-2.5 flex items-center justify-between">
-          <span>Weekly Overview (ہفتہ وار جائزہ)</span>
+          <span>Weekly Overview</span>
           <span className="text-[11px] text-emerald-400 font-normal">
-            {weekStats.daysActive} دن تلاوت مکمل
+            {weekStats.daysActive} of 7 days completed
           </span>
         </div>
 
@@ -300,7 +321,7 @@ export function StreakClient() {
       {/* Day-by-Day Detailed Recitation Cards */}
       <div className="space-y-2.5">
         <h2 className="text-xs sm:text-sm font-bold text-white flex items-center gap-2 px-1">
-          <span>روزانہ کی تفصیلی رپورٹ (Day by Day Breakdown)</span>
+          <span>Daily Breakdown</span>
         </h2>
 
         <div className="space-y-2">
@@ -342,16 +363,16 @@ export function StreakClient() {
                     <div>
                       <div className="flex items-center gap-2">
                         <span className="text-sm font-bold text-white">
-                          {d.fullDayName} ({d.urduDayName})
+                          {d.fullDayName}
                         </span>
                         {d.isToday && (
                           <span className="bg-amber-400 text-amber-950 text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider">
-                            آج
+                            Today
                           </span>
                         )}
                       </div>
                       <span className="text-[11px] text-emerald-400/70 font-mono">
-                        {d.date}
+                        {formatReadableDate(d.date)}
                       </span>
                     </div>
                   </div>
@@ -361,7 +382,7 @@ export function StreakClient() {
                     {/* Time Spent */}
                     <div className="bg-[#030e07] border border-emerald-900/60 rounded-xl px-2.5 py-1.5 text-center min-w-[70px]">
                       <span className="text-[10px] text-emerald-400/70 block">
-                        وقت
+                        Time
                       </span>
                       <span className="font-bold text-white font-mono block">
                         {d.hasRecited ? formatTimeSpent(d.timeSpentSeconds) : "0m"}
@@ -371,7 +392,7 @@ export function StreakClient() {
                     {/* Words */}
                     <div className="bg-[#030e07] border border-emerald-900/60 rounded-xl px-2.5 py-1.5 text-center min-w-[70px]">
                       <span className="text-[10px] text-emerald-400/70 block">
-                        الفاظ
+                        Words
                       </span>
                       <span className="font-bold text-emerald-200 font-mono block">
                         {d.wordsRevealed}
@@ -379,26 +400,26 @@ export function StreakClient() {
                     </div>
 
                     {/* Status Button / Pill */}
-                    <div className="min-w-[85px] text-right sm:text-center">
+                    <div className="min-w-[90px] text-right sm:text-center">
                       {d.hasRecited ? (
                         <span className="inline-flex items-center gap-1 bg-emerald-950 border border-emerald-600/60 text-emerald-300 text-[11px] font-medium px-2.5 py-1 rounded-full">
                           <span>✓</span>
-                          <span>پڑھی گئی</span>
+                          <span>Completed</span>
                         </span>
                       ) : d.isToday ? (
                         <Link
                           href="/surahs"
                           className="inline-flex items-center gap-1 bg-amber-500 hover:bg-amber-400 text-amber-950 text-[11px] font-bold px-3 py-1 rounded-full active:scale-95 transition-all shadow-sm"
                         >
-                          <span>ابھی پڑھیں</span>
+                          <span>Recite Now</span>
                         </Link>
                       ) : d.isPast ? (
                         <span className="inline-flex items-center gap-1 text-emerald-700 text-[11px] px-2 py-1">
-                          <span>نہیں پڑھی</span>
+                          <span>Missed</span>
                         </span>
                       ) : (
                         <span className="text-[11px] text-emerald-800">
-                          آئندہ دن
+                          Upcoming
                         </span>
                       )}
                     </div>
@@ -409,7 +430,7 @@ export function StreakClient() {
                 {d.hasRecited && d.surahs.length > 0 && (
                   <div className="mt-2.5 pt-2 border-t border-emerald-900/50 flex flex-wrap items-center gap-1.5">
                     <span className="text-[11px] text-emerald-400/80 font-medium mr-1">
-                      سورتیں:
+                      Surahs:
                     </span>
                     {d.surahs.map((s) => (
                       <Link
@@ -417,8 +438,8 @@ export function StreakClient() {
                         href={`/recite/${s.number}`}
                         className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[#06150e] hover:bg-[#0c2418] border border-emerald-700/60 hover:border-emerald-400 text-emerald-200 text-xs font-medium transition-all"
                       >
-                        <span className="font-quran" dir="rtl">{s.arabicName}</span>
-                        <span className="text-[10px] text-emerald-400/70">({s.name})</span>
+                        <span className="font-semibold">{s.number}. {s.name}</span>
+                        <span className="font-quran text-emerald-400/80 text-[11px]" dir="rtl">({s.arabicName})</span>
                       </Link>
                     ))}
                   </div>
@@ -435,7 +456,10 @@ export function StreakClient() {
           &quot;أَحَبُّ الْأَعْمَالِ إِلَى اللَّهِ أَدْوَمُهَا وَإِنْ قَلَّ&quot;
         </p>
         <p className="text-xs text-emerald-300/80">
-          (صحیح بخاری — اللہ تعالیٰ کے نزدیک سب سے پسندیدہ عمل وہ ہے جو پابندی سے کیا جائے، خواہ تھوڑا ہی کیوں نہ ہو)
+          “The most beloved deeds to Allah are those that are most consistent, even if they are small.”
+        </p>
+        <p className="text-[10px] text-emerald-400/60 font-mono">
+          — Sahih al-Bukhari
         </p>
       </div>
     </div>
