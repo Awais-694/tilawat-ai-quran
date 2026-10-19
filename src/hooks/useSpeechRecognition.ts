@@ -16,7 +16,7 @@ interface SRInstance {
   stop: () => void;
 }
 
-type ResultHandler = (finalText: string, interimText: string) => void;
+type ResultHandler = (finalText: string, interimText: string, interimAlts?: string[]) => void;
 
 /**
  * Arabic speech recognition (Chrome/Edge Web Speech API, lang ar-SA).
@@ -45,8 +45,8 @@ export function useSpeechRecognition(onResult: ResultHandler) {
   const finalsAll = useRef<string[]>([]);
   const sessionFinalsAppended = useRef(0);
 
-  const emit = (interim: string) =>
-    handlerRef.current(finalsAll.current.join(" "), interim);
+  const emit = (interim: string, interimAlts?: string[]) =>
+    handlerRef.current(finalsAll.current.join(" "), interim, interimAlts);
 
   const start = () => {
     if (!supported) return;
@@ -62,6 +62,8 @@ export function useSpeechRecognition(onResult: ResultHandler) {
     rec.onresult = (e) => {
       let finalsInSession = 0;
       let interimText = "";
+      const altsSet = new Set<string>();
+
       for (let i = 0; i < e.results.length; i++) {
         const r = e.results[i];
         if (r.isFinal) {
@@ -80,9 +82,17 @@ export function useSpeechRecognition(onResult: ResultHandler) {
           if (chunk) {
             interimText += (interimText ? " " : "") + chunk;
           }
+          // Collect alternative hypotheses for fast speech recognition
+          const rAny = r as unknown as Record<number, SRAlternative | undefined> & { length: number };
+          if (rAny.length > 1) {
+            for (let a = 1; a < rAny.length; a++) {
+              const altChunk = rAny[a]?.transcript?.trim();
+              if (altChunk) altsSet.add(altChunk);
+            }
+          }
         }
       }
-      emit(interimText.trim());
+      emit(interimText.trim(), altsSet.size > 0 ? Array.from(altsSet) : undefined);
     };
     rec.onerror = (e) => {
       if (e.error === "no-speech") {

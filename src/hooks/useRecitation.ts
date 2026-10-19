@@ -47,7 +47,7 @@ export function useRecitation(tokens: WordToken[], initialRevealed: number = 0) 
   }, []);
 
   const handleResult = useCallback(
-    (finalText: string, interimText: string) => {
+    (finalText: string, interimText: string, interimAlts?: string[]) => {
       const finalWords = wordsOf(finalText);
       const rawNew = finalWords.slice(processedFinalWords.current);
       let committed = revealedRef.current;
@@ -164,23 +164,31 @@ export function useRecitation(tokens: WordToken[], initialRevealed: number = 0) 
         interimWords = collapseMuqattaat(interimWords, muqLive).words;
       }
 
-      // Interim feedback: ONLY allow preview of the immediate current word being spoken.
-      // Web Speech API models in browsers predict ahead and autocomplete entire verses (e.g. saying "الحمد" emits "الحمد لله رب العالمين").
-      // We must NEVER allow interim autocomplete to reveal future unrecited words or entire future ayahs!
+      // Live interim matching for fast recitation:
+      // Match incoming words in sequence against the expected Quran tokens starting from committed.
+      // matchMany enforces strict sequential order (no skipping unrecited words).
       let live = committed;
       if (interimWords.length > 0) {
-        // Test if the first 1 or 2 speech tokens match the immediate expected token rLive
-        let candidate: string[] = [interimWords[0]];
-        if (
-          interimWords.length >= 2 &&
-          matchMany(expected, committed, [interimWords[0] + interimWords[1]], expectedForms).revealed > committed
-        ) {
-          candidate = [interimWords[0], interimWords[1]];
-        }
-        const interimMatch = matchMany(expected, committed, candidate, expectedForms);
-        // Live interim preview can at most advance by the current spoken word (or +2 if words were merged in speech)
-        live = Math.min(interimMatch.revealed, committed + 2);
+        const interimMatch = matchMany(expected, committed, interimWords, expectedForms);
+        live = Math.min(interimMatch.revealed, expected.length);
       }
+
+      // If speech recognition alternatives are available, check if an alternative matches further
+      if (interimAlts && interimAlts.length > 0) {
+        for (const alt of interimAlts) {
+          let altWords = wordsOf(alt);
+          if ((MUQATTA_AT[muqLive] || MUQATTA_AT_FORMS[muqLive]) && altWords.length > 0) {
+            altWords = collapseMuqattaat(altWords, muqLive).words;
+          }
+          if (altWords.length > 0) {
+            const altMatch = matchMany(expected, committed, altWords, expectedForms);
+            if (altMatch.revealed > live) {
+              live = Math.min(altMatch.revealed, expected.length);
+            }
+          }
+        }
+      }
+
       setDisplayRevealed(Math.max(committed, live));
       const heard = (finalText + " " + interimText).trim();
       if (heard) setLastHeard(heard);
