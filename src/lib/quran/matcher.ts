@@ -38,13 +38,25 @@ function consonantSkeleton(w: string): string {
 
 function phoneticCanon(w: string): string {
   return w
-    .replace(/[ظذض]/g, "ذ")
+    .replace(/[ظذضز]/g, "ذ")
     .replace(/[ثسص]/g, "س")
     .replace(/[طت]/g, "ت")
-    .replace(/[قك]/g, "ك")
+    .replace(/[قكگ]/g, "ك")
+    .replace(/[حھہه]/g, "ه")
     .replace(/[ؤئ]/g, "ي")
     .replace(/[ةه]$/g, "ه")
     .replace(/ا+/g, "ا");
+}
+
+export function stripPrefixes(w: string): string[] {
+  const prefixes = ["وال", "فال", "بال", "كال", "لل", "ال", "و", "ف", "ب", "ل", "ك"];
+  const res = new Set<string>([w]);
+  for (const p of prefixes) {
+    if (w.startsWith(p) && w.length - p.length >= 2) {
+      res.add(w.slice(p.length));
+    }
+  }
+  return Array.from(res);
 }
 
 export function wordMatches(target: string, heard: string): boolean {
@@ -54,37 +66,26 @@ export function wordMatches(target: string, heard: string): boolean {
   if (tNorm === hNorm) return true;
   if (phoneticCanon(tNorm) === phoneticCanon(hNorm)) return true;
 
-  // Aliases check (e.g. Speech engine writing "انزل" for "انذر")
+  // Aliases check (e.g. Speech engine writing "انزل" for "انذر", "الله" for "لله")
   const tAliases = WORD_ALIASES[target] || WORD_ALIASES[tNorm];
   if (tAliases && (tAliases.includes(heard) || tAliases.includes(hNorm))) return true;
   const hAliases = WORD_ALIASES[heard] || WORD_ALIASES[hNorm];
   if (hAliases && (hAliases.includes(target) || hAliases.includes(tNorm))) return true;
 
-  // Handle wasl prefix "و" (e.g. "والشمس" vs "الشمس")
-  if (tNorm.startsWith("و") && tNorm.slice(1) === hNorm) return true;
-  if (hNorm.startsWith("و") && hNorm.slice(1) === tNorm) return true;
-
-  // Handle wasl prefix "ف" (e.g. "فالشمس" vs "الشمس")
-  if (tNorm.startsWith("ف") && tNorm.slice(1) === hNorm) return true;
-  if (hNorm.startsWith("ف") && hNorm.slice(1) === tNorm) return true;
-
-  // Handle wasl prefix "ب" (e.g. "بالله" vs "الله")
-  if (tNorm.startsWith("ب") && tNorm.slice(1) === hNorm) return true;
-  if (hNorm.startsWith("ب") && hNorm.slice(1) === tNorm) return true;
-
-  // Handle wasl prefix "ل" (e.g. "لله" vs "الله")
-  if (tNorm.startsWith("ل") && tNorm.slice(1) === hNorm) return true;
-  if (hNorm.startsWith("ل") && hNorm.slice(1) === tNorm) return true;
-
-  // Handle wasl prefix "ال" (e.g. "الحمد" vs "حمد")
-  if (tNorm.startsWith("ال") && tNorm.slice(2) === hNorm) return true;
-  if (hNorm.startsWith("ال") && hNorm.slice(2) === tNorm) return true;
-
-  // Handle compound prefixes "وال" and "فال"
-  if (tNorm.startsWith("وال") && tNorm.slice(3) === hNorm) return true;
-  if (hNorm.startsWith("وال") && hNorm.slice(3) === tNorm) return true;
-  if (tNorm.startsWith("فال") && tNorm.slice(3) === hNorm) return true;
-  if (hNorm.startsWith("فال") && hNorm.slice(3) === tNorm) return true;
+  // Stems check: strip Arabic prepositions/prefixes (و، ف، ب، ل، ك، ال، وال، فال، بال، لل)
+  const tStems = stripPrefixes(tNorm);
+  const hStems = stripPrefixes(hNorm);
+  for (const ts of tStems) {
+    for (const hs of hStems) {
+      if (ts === hs) return true;
+      if (phoneticCanon(ts) === phoneticCanon(hs)) return true;
+      const skT = consonantSkeleton(ts);
+      const skH = consonantSkeleton(hs);
+      if (skT.length >= 2 && skT === skH) return true;
+      const maxL = Math.max(ts.length, hs.length);
+      if (maxL >= 3 && editDistance(ts, hs) <= 1) return true;
+    }
+  }
 
   // Handle Tanween Alif addition / omission in fast recitation (e.g. "عظيما" vs "عظيم")
   if (tNorm.length >= 3 && tNorm.endsWith("ا") && tNorm.slice(0, -1) === hNorm) return true;
@@ -97,12 +98,12 @@ export function wordMatches(target: string, heard: string): boolean {
   // Consonant skeleton matching for Madd vowels / dagger alif variations (e.g. "الرحمن" vs "الرحمان")
   const skT = consonantSkeleton(tNorm);
   const skH = consonantSkeleton(hNorm);
-  if (skT.length >= 3 && skT === skH) return true;
+  if (skT.length >= 2 && skT === skH) return true;
 
   const maxLen = Math.max(tNorm.length, hNorm.length);
   // Fuzzy match for minor browser speech transcription variations
-  if (maxLen >= 3 && editDistance(tNorm, hNorm) <= 1) return true;
-  if (maxLen >= 6 && editDistance(tNorm, hNorm) <= 2) return true;
+  if (maxLen >= 2 && editDistance(tNorm, hNorm) <= 1) return true;
+  if (maxLen >= 5 && editDistance(tNorm, hNorm) <= 2) return true;
   return false;
 }
 
@@ -173,12 +174,24 @@ export function matchMany(
       i += 3;
       continue;
     }
-    // 4. Two Quran words merged into one heard word (e.g. "رب العالمين" -> "ربالعالمين")
+    // 4. Two Quran words merged into one heard word (e.g. "رب العالمين" -> "ربالعالمين", "ولا الضالين" -> "والضالين")
     const r2 = skipEmpty(expectedNormalized, r + 1);
     if (r2 < expectedNormalized.length) {
       const combos = new Set<string>();
-      for (const a of formsAt(r)) for (const b of formsAt(r2)) combos.add((a + b).replace(/ا+/g, "ا"));
+      for (const a of formsAt(r)) {
+        for (const b of formsAt(r2)) {
+          combos.add((a + b).replace(/ا+/g, "ا"));
+          if (a === "ولا" && b.startsWith("ال")) {
+            combos.add(("وال" + b.slice(2)).replace(/ا+/g, "ا"));
+          }
+        }
+      }
       if (combos.has(w.replace(/ا+/g, "ا"))) {
+        r = skipEmpty(expectedNormalized, r2 + 1);
+        i++;
+        continue;
+      }
+      if (formsAt(r).some((f) => f === "ولا" || f === "و" || f === "ف") && matches(r2, w)) {
         r = skipEmpty(expectedNormalized, r2 + 1);
         i++;
         continue;

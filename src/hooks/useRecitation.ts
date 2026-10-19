@@ -189,7 +189,15 @@ export function useRecitation(tokens: WordToken[], initialRevealed: number = 0) 
         }
       }
 
-      setDisplayRevealed(Math.max(committed, live));
+      // When live match from speech stream advances, lock it in so the word reveals
+      // instantly on the first recitation attempt and never blurs back when speech pauses.
+      if (live > committed) {
+        committed = live;
+        revealedRef.current = committed;
+        setRevealed(committed);
+      }
+
+      setDisplayRevealed((prev) => Math.max(prev, committed, live));
       const heard = (finalText + " " + interimText).trim();
       if (heard) setLastHeard(heard);
     },

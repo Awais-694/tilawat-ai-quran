@@ -59,20 +59,23 @@ export function ReciteClient({
       loaded
         ? loaded.tokens.map((t) => {
             const normalized = normalizeArabic(t.display);
+            const daggerNorm = normalizeArabic(t.display, { daggerAsAlef: true });
             const extraForms = [
               ...(MUQATTA_AT_FORMS[normalized] ?? []),
               ...(WORD_ALIASES[normalized] ?? []),
+              ...(WORD_ALIASES[daggerNorm] ?? []),
             ];
             const forms = [
               ...new Set([
                 ...extraForms,
-                normalizeArabic(t.display, { daggerAsAlef: true }),
+                daggerNorm,
                 normalizeArabic(t.display, { maksuraAsAlef: true }),
                 normalizeArabic(t.display, { daggerAsAlef: true, maksuraAsAlef: true }),
                 normalizeArabic(t.display.replace(/ؤ/g, "ئ")),
                 normalizeArabic(t.display.replace(/ئ/g, "ؤ")),
-                normalizeArabic(t.display.replace(/ظ/g, "ذ")),
-                normalizeArabic(t.display.replace(/ذ/g, "ظ")),
+                normalizeArabic(t.display.replace(/[ظض]/g, "ذ")),
+                normalizeArabic(t.display.replace(/[ذض]/g, "ز")),
+                normalizeArabic(t.display.replace(/ح/g, "ه")),
               ]),
             ].filter((f) => f !== normalized);
             return {

@@ -70,12 +70,18 @@ export function useSpeechRecognition(onResult: ResultHandler) {
           finalsInSession++;
           if (finalsInSession > sessionFinalsAppended.current) {
             const t = r[0].transcript.trim();
-            // Ek jaisa final dobara aaye to ignore karo (double-start ya
-            // browser quirk se duplicate finals progress kharab karte hain).
-            if (t && t !== finalsAll.current[finalsAll.current.length - 1]) {
+            if (t) {
               finalsAll.current.push(t);
             }
             sessionFinalsAppended.current = finalsInSession;
+          }
+          // Collect alternatives for final results as well
+          const rAny = r as unknown as Record<number, SRAlternative | undefined> & { length: number };
+          if (rAny.length > 1) {
+            for (let a = 1; a < rAny.length; a++) {
+              const altChunk = rAny[a]?.transcript?.trim();
+              if (altChunk) altsSet.add(altChunk);
+            }
           }
         } else {
           const chunk = r[0].transcript.trim();
