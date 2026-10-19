@@ -20,9 +20,9 @@ export function DailyStreakWidget({
       className="block group relative overflow-hidden rounded-2xl bg-[#0a2016]/90 hover:bg-[#0d261b] border border-emerald-700/60 hover:border-emerald-500/80 p-4 transition-all duration-200 shadow-md hover:shadow-emerald-950/40 cursor-pointer"
       title="View weekly streak details"
     >
-      {/* Top Header: Flame Badge, Streak Number, and View Details Button */}
+      {/* Top Header: Flame Badge, Streak Number, and View Details Button (No Arrows) */}
       <div className="flex items-center justify-between gap-3">
-        {/* Left: Flame Icon + Streak Text (No verbose sentence) */}
+        {/* Left: Flame Icon + Streak Text */}
         <div className="flex items-center gap-3">
           <div className="w-11 h-11 rounded-xl bg-amber-500/15 border border-amber-500/35 flex items-center justify-center shrink-0 shadow-sm group-hover:scale-105 transition-transform">
             <svg
@@ -49,12 +49,9 @@ export function DailyStreakWidget({
           </div>
         </div>
 
-        {/* Right: Clean View Details Pill Button */}
-        <div className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-full text-xs font-semibold text-emerald-200 bg-emerald-950/90 border border-emerald-700/60 group-hover:bg-emerald-800/80 group-hover:border-emerald-400 group-hover:text-white transition-all shrink-0">
-          <span>Weekly</span>
-          <svg className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-          </svg>
+        {/* Right: Clean View Details Pill Button (Arrow Removed) */}
+        <div className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold text-emerald-200 bg-emerald-950/90 border border-emerald-700/60 group-hover:bg-emerald-800/80 group-hover:border-emerald-400 group-hover:text-white transition-all shrink-0 shadow-sm">
+          <span>Weekly Report</span>
         </div>
       </div>
 

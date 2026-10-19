@@ -111,31 +111,34 @@ export function StreakClient() {
 
   return (
     <div className="max-w-xl mx-auto space-y-4 pb-16 px-2 sm:px-0">
-      {/* Top Header Navigation - Sleek single-line mobile header */}
-      <div className="flex items-center justify-between min-h-[44px] border-b border-emerald-900/40 pb-2.5">
+      {/* Top Header Navigation - Clean Pill Buttons with No Arrow */}
+      <div className="flex items-center justify-between min-h-[46px] border-b border-emerald-900/40 pb-3">
+        {/* Back Button (No Arrow) */}
         <button
           onClick={handleBack}
-          className="w-8 h-8 rounded-full flex items-center justify-center text-emerald-200 bg-[#0d2217] hover:bg-[#133022] border border-emerald-600/50 hover:border-emerald-400 active:scale-95 transition-all cursor-pointer"
-          aria-label="Back to home"
+          className="inline-flex items-center justify-center px-4 py-1.5 rounded-full text-xs font-semibold text-emerald-100 bg-[#0d2217] hover:bg-[#133022] border border-emerald-600/50 hover:border-emerald-400 active:scale-95 transition-all shadow-sm cursor-pointer"
         >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-          </svg>
+          Back
         </button>
 
+        {/* Centered Page Title */}
         <h1 className="text-base sm:text-lg font-bold text-white tracking-tight">
           Streak & Activity
         </h1>
 
+        {/* Improved Dashboard Button */}
         <Link
           href="/"
-          className="text-xs text-emerald-300 hover:text-white font-medium px-2 py-1 transition-colors"
+          className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold text-emerald-200 bg-[#0d2217] hover:bg-[#133022] border border-emerald-600/50 hover:border-emerald-400 active:scale-95 transition-all shadow-sm"
         >
-          Dashboard
+          <svg className="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+          </svg>
+          <span>Dashboard</span>
         </Link>
       </div>
 
-      {/* Main Hero Streak Banner Card - Clean & Bold, No wordy sentence */}
+      {/* Main Hero Streak Banner Card */}
       <div className="relative overflow-hidden rounded-2xl bg-[#0a2016] border border-emerald-700/60 p-4 sm:p-5 shadow-lg">
         <div className="flex items-center justify-between gap-3">
           {/* Flame Icon & Streak Numbers */}
@@ -206,7 +209,7 @@ export function StreakClient() {
         </div>
       </div>
 
-      {/* Week Navigation Selector - Icon Buttons that NEVER wrap */}
+      {/* Week Navigation Selector */}
       <div className="flex items-center justify-between bg-[#0a2016] border border-emerald-800/50 rounded-2xl px-3 py-2 shadow-sm">
         <button
           onClick={() => setWeekOffset((prev) => prev - 1)}
