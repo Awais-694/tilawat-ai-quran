@@ -95,8 +95,9 @@ export function getRolling7Days(
     const act = activityMap.get(dateStr);
     const words = act?.wordsRevealed ?? 0;
     const hasRecited = words > 0;
-    // Estimate realistic time if timeSpentSeconds was not saved (100 words ~ 90s)
-    const timeSpent = act?.timeSpentSeconds ?? (hasRecited ? Math.max(60, Math.round(words * 1.5)) : 0);
+    // Ensure realistic time floor (average recitation is ~45-50 words/min = 1.3s/word)
+    const minEstimatedTime = hasRecited ? Math.max(60, Math.round(words * 1.3)) : 0;
+    const timeSpent = Math.max(act?.timeSpentSeconds ?? 0, minEstimatedTime);
     const surahNumbers = act?.surahsPracticed ?? [];
     const surahs = surahNumbers
       .map((num) => {
@@ -156,7 +157,8 @@ export function getWeekDays(
     const act = activityMap.get(dateStr);
     const words = act?.wordsRevealed ?? 0;
     const hasRecited = words > 0;
-    const timeSpent = act?.timeSpentSeconds ?? (hasRecited ? Math.max(60, Math.round(words * 1.5)) : 0);
+    const minEstimatedTime = hasRecited ? Math.max(60, Math.round(words * 1.3)) : 0;
+    const timeSpent = Math.max(act?.timeSpentSeconds ?? 0, minEstimatedTime);
     const surahNumbers = act?.surahsPracticed ?? [];
     const surahs = surahNumbers
       .map((num) => {

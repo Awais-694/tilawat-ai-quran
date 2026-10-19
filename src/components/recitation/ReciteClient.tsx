@@ -244,14 +244,17 @@ export function ReciteClient({
       const row = await db.activity.get(today);
       const prevSurahs = row?.surahsPracticed ?? [];
       const updatedSurahs = Array.from(new Set([...prevSurahs, surahNumber]));
-      // Calculate realistic active time (cap idle time to max 10 minutes)
-      const validTimeAdd = timeDeltaSec <= 600 ? timeDeltaSec : Math.round(rDelta * 1.5);
+      const totalWords = (row?.wordsRevealed ?? 0) + rDelta;
+      const minEstimated = totalWords > 0 ? Math.round(totalWords * 1.3) : 0;
+      // Calculate realistic active time (at least 1.3s per revealed word)
+      const timeCredit = Math.max(timeDeltaSec <= 600 ? timeDeltaSec : 0, Math.round(rDelta * 1.3));
+      const newSec = Math.max((row?.timeSpentSeconds ?? 0) + timeCredit, minEstimated);
       await db.activity.put({
         date: today,
-        wordsRevealed: (row?.wordsRevealed ?? 0) + rDelta,
+        wordsRevealed: totalWords,
         mistakes: (row?.mistakes ?? 0) + mDelta,
         sessions: (row?.sessions ?? 0) + (sessionCounted.current ? 1 : 0),
-        timeSpentSeconds: (row?.timeSpentSeconds ?? 0) + validTimeAdd,
+        timeSpentSeconds: newSec,
         surahsPracticed: updatedSurahs,
       });
       sessionCounted.current = false;
@@ -285,6 +288,44 @@ export function ReciteClient({
       void saveRef.current();
     };
   }, []);
+
+  // Active recitation live timer: accumulates active recitation seconds while listening
+  const activeSecondsBuffer = useRef(0);
+  useEffect(() => {
+    if (!listening) return;
+    const interval = setInterval(() => {
+      activeSecondsBuffer.current += 1;
+      if (activeSecondsBuffer.current >= 10) {
+        const toAdd = activeSecondsBuffer.current;
+        activeSecondsBuffer.current = 0;
+        const today = new Date().toISOString().slice(0, 10);
+        void db.activity.get(today).then((row) => {
+          if (row) {
+            void db.activity.put({
+              ...row,
+              timeSpentSeconds: (row.timeSpentSeconds ?? 0) + toAdd,
+            });
+          }
+        });
+      }
+    }, 1000);
+    return () => {
+      clearInterval(interval);
+      if (activeSecondsBuffer.current > 0) {
+        const toAdd = activeSecondsBuffer.current;
+        activeSecondsBuffer.current = 0;
+        const today = new Date().toISOString().slice(0, 10);
+        void db.activity.get(today).then((row) => {
+          if (row) {
+            void db.activity.put({
+              ...row,
+              timeSpentSeconds: (row.timeSpentSeconds ?? 0) + toAdd,
+            });
+          }
+        });
+      }
+    };
+  }, [listening]);
 
   // ---- galat lafz par red flash + kamzor lafz record ----
   const [flash, setFlash] = useState(false);
