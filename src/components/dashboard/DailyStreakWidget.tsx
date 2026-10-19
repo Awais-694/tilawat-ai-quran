@@ -17,123 +17,105 @@ export function DailyStreakWidget({
   return (
     <Link
       href="/streak"
-      className="block group relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-br from-[#0c1e15]/95 via-[#07160f]/95 to-[#040e09]/95 border border-emerald-500/40 hover:border-emerald-400/80 p-3 sm:p-4.5 shadow-[0_10px_35px_rgba(0,0,0,0.5)] hover:shadow-[0_14px_45px_rgba(16,185,129,0.25)] backdrop-blur-md transition-all duration-300 cursor-pointer"
-      title="پورے ہفتے کی اسٹریک اور تلاوت کی تفصیلات دیکھیں"
+      className="block group relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#0c2419] via-[#091b12] to-[#05130b] border border-emerald-700/50 hover:border-emerald-500/80 p-4 sm:p-5 shadow-lg hover:shadow-emerald-950/50 transition-all duration-200 cursor-pointer"
+      title="ہفتہ وار تلاوت اور اسٹریک کی مکمل تفصیلات دیکھیں"
     >
-      {/* Subtle top luminous accent line */}
-      <div className="absolute inset-x-0 top-0 h-[1.5px] bg-gradient-to-r from-transparent via-emerald-400/60 to-transparent group-hover:via-emerald-300 transition-all" />
-
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 sm:gap-4">
-        {/* Left Side: Flame Icon & Streak Numbers */}
-        <div className="flex items-center gap-3 shrink-0">
-          {/* Flame Icon with Circular Progress Ring */}
-          <div className="relative w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center bg-gradient-to-br from-emerald-950 via-[#0d281a] to-[#06140d] border border-emerald-500/50 shadow-[0_0_18px_rgba(16,185,129,0.25)] group-hover:scale-105 group-hover:shadow-[0_0_24px_rgba(245,158,11,0.35)] transition-all">
-            <svg className="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 44 44">
-              <circle
-                cx="22"
-                cy="22"
-                r="18"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-                className="text-emerald-950"
-              />
-              <circle
-                cx="22"
-                cy="22"
-                r="18"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-                strokeDasharray="113"
-                strokeDashoffset={streak > 0 ? Math.max(10, 113 - (streak / Math.max(7, longestStreak || 7)) * 113) : 113}
-                strokeLinecap="round"
-                className="text-amber-400 transition-all duration-700"
-              />
+      {/* Top Header: Flame Badge, Streak Number, and View Details Button */}
+      <div className="flex items-center justify-between gap-3">
+        {/* Left: Flame Icon + Streak Text */}
+        <div className="flex items-center gap-3">
+          {/* Flame Icon */}
+          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-500/20 via-emerald-950 to-emerald-900/40 border border-amber-500/40 flex items-center justify-center shrink-0 shadow-sm group-hover:scale-105 transition-transform">
+            <svg
+              className="w-6 h-6 text-amber-400 drop-shadow-[0_0_8px_rgba(245,158,11,0.5)]"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+            >
+              <path d="M12 2c.5 2.5 2 4.5 4 6 2.5 1.9 3.5 4.3 3.5 7 0 4.14-3.36 7.5-7.5 7.5S4.5 19.14 4.5 15c0-3.3 2-6.2 4-8.5.3 1.2 1 2.2 2 2.8 0-3.5 1-6.5 1.5-7.3z" />
             </svg>
-            <span className="text-xl sm:text-2xl filter drop-shadow-[0_0_8px_rgba(245,158,11,0.6)] animate-pulse select-none">
-              🔥
-            </span>
           </div>
 
           <div>
-            <div className="flex items-baseline gap-1.5">
-              <span className="text-xl sm:text-2xl font-black text-white tracking-tight font-mono">
+            <div className="flex items-baseline gap-2">
+              <span className="text-2xl font-black text-white font-mono tracking-tight">
                 {streak}
               </span>
-              <span className="text-sm sm:text-base font-bold text-emerald-200">
-                {streak === 1 ? "Day" : "Days"}
-              </span>
-              <span className="text-xs text-amber-300 font-semibold ml-1">
-                Streak
+              <span className="text-sm font-bold text-emerald-200">
+                {streak === 1 ? "Day Streak" : "Days Streak"}
               </span>
             </div>
-            <div className="text-[11px] sm:text-xs text-emerald-400 font-semibold flex items-center gap-1.5">
-              <span>Longest Streak {longestStreak} {longestStreak === 1 ? "Day" : "Days"}</span>
-              <span className="text-emerald-700 select-none">•</span>
-              <span className="text-emerald-300/80 group-hover:text-emerald-200 underline underline-offset-2">
-                تفصیلات دیکھیں →
+            <div className="text-xs text-emerald-400/80 font-medium flex items-center gap-1.5">
+              <span>Best: {longestStreak} {longestStreak === 1 ? "Day" : "Days"}</span>
+              <span className="text-emerald-700">•</span>
+              <span className="text-emerald-300/70 font-quran text-[11px]" dir="rtl">
+                روزانہ تلاوت کا تسلسل
               </span>
             </div>
           </div>
         </div>
 
-        {/* Right Side: 7-Day Visual Diamonds matching screenshot */}
-        <div className="bg-[#05130b]/90 border border-emerald-900/70 rounded-xl sm:rounded-2xl px-2.5 sm:px-3.5 py-2 sm:py-2.5 shadow-inner flex items-center justify-between sm:justify-around gap-1.5 sm:gap-2.5 overflow-x-auto">
+        {/* Right: Clean View Details Pill Button */}
+        <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold text-emerald-200 bg-emerald-950/80 border border-emerald-700/60 group-hover:bg-emerald-800/80 group-hover:border-emerald-400 group-hover:text-white transition-all shrink-0 shadow-sm">
+          <span>تفصیلات</span>
+          <svg className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+          </svg>
+        </div>
+      </div>
+
+      {/* 7-Day Clean Habit Tracker Row */}
+      <div className="mt-4 pt-3.5 border-t border-emerald-900/60">
+        <div className="grid grid-cols-7 gap-1.5 sm:gap-2">
           {days.map((item) => {
             return (
               <div
                 key={item.date}
-                className="flex flex-col items-center min-w-[32px] sm:min-w-[38px] text-center"
+                className="flex flex-col items-center justify-center text-center"
               >
-                {/* Day Name Label (e.g. Mon) */}
+                {/* Day Label (e.g. Mon, Tue) */}
                 <span
-                  className={`text-[10px] sm:text-[11px] font-semibold mb-1.5 select-none ${
+                  className={`text-[11px] font-medium mb-1.5 select-none ${
                     item.isToday
-                      ? "text-emerald-400 font-bold"
+                      ? "text-amber-300 font-bold"
                       : "text-emerald-300/70"
                   }`}
                 >
                   {item.dayLabel}
                 </span>
 
-                {/* Status Diamond */}
-                <div className="relative flex items-center justify-center my-0.5">
+                {/* Day Status Icon */}
+                <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center transition-all">
                   {item.hasRecited ? (
-                    // Recited: Filled vibrant emerald diamond with checkmark ✓
-                    <div className="w-6 h-6 sm:w-7 sm:h-7 rotate-45 rounded-[3px] bg-gradient-to-br from-emerald-400 to-emerald-600 shadow-[0_0_12px_rgba(16,185,129,0.6)] flex items-center justify-center group-hover:scale-110 transition-transform">
-                      <span className="-rotate-45 text-white text-[10px] sm:text-xs font-black select-none">
-                        ✓
-                      </span>
-                    </div>
-                  ) : item.isPast ? (
-                    // Missed in past: Dark diamond with sad face ☹
-                    <div className="w-6 h-6 sm:w-7 sm:h-7 rotate-45 rounded-[3px] border border-emerald-900/90 bg-[#06150d] flex items-center justify-center opacity-70">
-                      <span className="-rotate-45 text-emerald-600 text-[10px] sm:text-xs select-none">
-                        ☹
-                      </span>
+                    // Recited: Crisp emerald circle with white checkmark
+                    <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-emerald-500 text-white flex items-center justify-center shadow-sm shadow-emerald-500/40">
+                      <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                      </svg>
                     </div>
                   ) : item.isToday ? (
-                    // Today pending: Active glowing diamond border
-                    <div className="w-6 h-6 sm:w-7 sm:h-7 rotate-45 rounded-[3px] border-2 border-emerald-400 bg-emerald-950/60 shadow-[0_0_12px_rgba(52,211,153,0.4)] animate-pulse flex items-center justify-center">
-                      <span className="-rotate-45 text-emerald-300 text-[9px] font-bold select-none">
-                        ⏳
-                      </span>
+                    // Today pending: Subtle active border with a soft dot
+                    <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border-2 border-amber-400/90 bg-amber-500/10 flex items-center justify-center">
+                      <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
+                    </div>
+                  ) : item.isPast ? (
+                    // Past missed day: Minimal muted circle with a faint neutral dot
+                    <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-emerald-950/40 border border-emerald-900/40 flex items-center justify-center">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-800/60" />
                     </div>
                   ) : (
-                    // Future day: Empty outline diamond
-                    <div className="w-6 h-6 sm:w-7 sm:h-7 rotate-45 rounded-[3px] border border-emerald-800/40 bg-transparent opacity-40" />
+                    // Future day: Empty subtle outline
+                    <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-emerald-900/30 bg-transparent" />
                   )}
                 </div>
 
-                {/* Active Indicator Arrow ▲ underneath Today */}
-                <div className="h-2.5 flex items-center justify-center mt-0.5">
-                  {item.isToday && (
-                    <span className="text-emerald-400 text-[8px] font-black leading-none select-none drop-shadow-[0_0_4px_rgba(52,211,153,0.8)]">
-                      ▲
-                    </span>
-                  )}
-                </div>
+                {/* Today indicator label */}
+                <span
+                  className={`text-[10px] font-medium mt-1 select-none ${
+                    item.isToday ? "text-amber-300 font-semibold" : "text-transparent"
+                  }`}
+                >
+                  {item.isToday ? "آج" : "·"}
+                </span>
               </div>
             );
           })}

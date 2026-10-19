@@ -12,7 +12,6 @@ import {
   formatTimeSpentUrdu,
   type DayStreakItem,
 } from "@/lib/quran/streak";
-import { getSurahMeta } from "@/lib/quran/data";
 
 export function StreakClient() {
   const router = useRouter();
@@ -92,61 +91,63 @@ export function StreakClient() {
   return (
     <div className="max-w-3xl mx-auto space-y-5 pb-16 px-1 sm:px-2">
       {/* Top Header Navigation */}
-      <div className="relative flex items-center justify-between min-h-[46px] border-b border-emerald-900/40 pb-3">
+      <div className="flex items-center justify-between min-h-[46px] border-b border-emerald-900/50 pb-3">
         <button
           onClick={handleBack}
-          className="inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-semibold tracking-wide text-emerald-100 bg-[#0d2217]/90 hover:bg-[#133022] border border-emerald-600/50 hover:border-emerald-400/80 shadow-[0_2px_8px_rgba(0,0,0,0.35)] backdrop-blur-md active:scale-95 transition-all duration-200 cursor-pointer"
+          className="inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-semibold text-emerald-100 bg-[#0d2217] hover:bg-[#133022] border border-emerald-600/50 hover:border-emerald-400 shadow-sm active:scale-95 transition-all cursor-pointer"
         >
           <span>←</span>
           <span>Home</span>
         </button>
 
         <div className="text-center">
-          <h1 className="text-lg sm:text-2xl font-black text-white tracking-wide">
+          <h1 className="text-lg sm:text-xl font-bold text-white tracking-wide">
             Daily Streak & Activity
           </h1>
-          <p className="text-[11px] sm:text-xs text-emerald-300/80 font-quran" dir="rtl">
-            روزانہ تلاوت کا تسلسل اور ہفتہ وار ریکارڈ
+          <p className="text-xs text-emerald-300/80 font-quran" dir="rtl">
+            روزانہ تلاوت کا تسلسل اور تفصیلی ریکارڈ
           </p>
         </div>
 
         <Link
           href="/"
-          className="text-xs text-emerald-400/80 hover:text-emerald-200 font-semibold px-2 py-1 rounded transition-colors"
+          className="text-xs text-emerald-300 hover:text-white font-medium px-2 py-1 transition-colors"
         >
           Dashboard
         </Link>
       </div>
 
       {/* Main Hero Streak Banner Card */}
-      <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-br from-[#0c1e15]/95 via-[#07160f]/95 to-[#040e09]/95 border border-emerald-500/50 p-4 sm:p-6 shadow-[0_12px_40px_rgba(0,0,0,0.55)] backdrop-blur-md">
-        <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-amber-400 to-transparent" />
-
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 sm:gap-6">
-          {/* Flame Badge */}
-          <div className="flex items-center gap-4">
-            <div className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-full flex items-center justify-center bg-gradient-to-br from-emerald-950 via-[#0d281a] to-[#06140d] border-2 border-amber-500/60 shadow-[0_0_25px_rgba(245,158,11,0.35)] shrink-0">
-              <span className="text-3xl sm:text-4xl filter drop-shadow-[0_0_12px_rgba(245,158,11,0.7)] animate-bounce select-none">
-                🔥
-              </span>
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#0c2419] via-[#091b12] to-[#05130b] border border-emerald-600/50 p-4 sm:p-5 shadow-lg">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+          {/* Flame Badge & Numbers */}
+          <div className="flex items-center gap-3.5">
+            <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br from-amber-500/20 via-emerald-950 to-emerald-900/40 border border-amber-500/50 flex items-center justify-center shrink-0 shadow-sm">
+              <svg
+                className="w-8 h-8 text-amber-400 drop-shadow-[0_0_10px_rgba(245,158,11,0.5)]"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+              >
+                <path d="M12 2c.5 2.5 2 4.5 4 6 2.5 1.9 3.5 4.3 3.5 7 0 4.14-3.36 7.5-7.5 7.5S4.5 19.14 4.5 15c0-3.3 2-6.2 4-8.5.3 1.2 1 2.2 2 2.8 0-3.5 1-6.5 1.5-7.3z" />
+              </svg>
             </div>
 
             <div>
               <div className="flex items-baseline gap-2">
-                <span className="text-3xl sm:text-4xl font-black text-white font-mono">
+                <span className="text-3xl font-black text-white font-mono tracking-tight">
                   {currentStreak}
                 </span>
-                <span className="text-base sm:text-lg font-bold text-emerald-200">
+                <span className="text-base font-bold text-emerald-200">
                   {currentStreak === 1 ? "Day Streak" : "Days Streak"}
                 </span>
               </div>
-              <div className="text-xs sm:text-sm text-amber-300 font-semibold mt-0.5">
+              <div className="text-xs text-emerald-400 font-medium mt-0.5">
                 {currentStreak > 0
-                  ? "🔥 تلاوت کا تسلسل جاری ہے! شاباش!"
-                  : "آج کی تلاوت مکمل کر کے اپنی اسٹریک شروع کریں!"}
+                  ? "ماشاءاللہ! روزانہ تلاوت کا تسلسل برقرار ہے۔"
+                  : "آج کی تلاوت مکمل کریں اور اپنی اسٹریک شروع کریں۔"}
               </div>
-              <div className="text-[11px] sm:text-xs text-emerald-400/90 font-medium mt-1">
-                🏆 سب سے لمبی اسٹریک (Best Record): <span className="font-bold text-emerald-200">{longestStreak} {longestStreak === 1 ? "Day" : "Days"}</span>
+              <div className="text-[11px] text-emerald-400/80 mt-1">
+                سب سے بہترین ریکارڈ: <span className="font-bold text-white">{longestStreak} {longestStreak === 1 ? "Day" : "Days"}</span>
               </div>
             </div>
           </div>
@@ -154,7 +155,7 @@ export function StreakClient() {
           {/* Quick CTA to start reciting */}
           <Link
             href="/surahs"
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-500 hover:to-emerald-600 text-white font-bold text-xs sm:text-sm shadow-lg hover:shadow-emerald-500/30 active:scale-95 transition-all text-center"
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-500 hover:to-emerald-600 text-white font-bold text-xs sm:text-sm shadow-md active:scale-95 transition-all text-center"
           >
             <span>📖</span>
             <span>آج کی تلاوت کریں</span>
@@ -162,10 +163,10 @@ export function StreakClient() {
         </div>
 
         {/* 3 Summary KPIs this week */}
-        <div className="grid grid-cols-3 gap-2 sm:gap-3 mt-5 pt-4 border-t border-emerald-900/60">
-          <div className="bg-[#05140b]/80 border border-emerald-900/50 rounded-xl p-2.5 sm:p-3 text-center">
-            <span className="text-[10px] sm:text-xs text-emerald-300/80 font-medium block">
-              ⏱️ صرف کیا گیا وقت
+        <div className="grid grid-cols-3 gap-2 sm:gap-3 mt-4 pt-3.5 border-t border-emerald-900/60">
+          <div className="bg-[#05140b]/80 border border-emerald-900/60 rounded-xl p-2.5 text-center">
+            <span className="text-[11px] text-emerald-300/80 font-medium block">
+              صرف کیا گیا وقت
             </span>
             <span className="text-sm sm:text-base font-bold text-white mt-0.5 block font-mono">
               {formatTimeSpent(weekStats.totalSeconds)}
@@ -175,9 +176,9 @@ export function StreakClient() {
             </span>
           </div>
 
-          <div className="bg-[#05140b]/80 border border-emerald-900/50 rounded-xl p-2.5 sm:p-3 text-center">
-            <span className="text-[10px] sm:text-xs text-emerald-300/80 font-medium block">
-              📅 فعال دن (Days Active)
+          <div className="bg-[#05140b]/80 border border-emerald-900/60 rounded-xl p-2.5 text-center">
+            <span className="text-[11px] text-emerald-300/80 font-medium block">
+              حاضری کے دن
             </span>
             <span className="text-sm sm:text-base font-bold text-emerald-200 mt-0.5 block font-mono">
               {weekStats.daysActive} / 7
@@ -187,22 +188,22 @@ export function StreakClient() {
             </span>
           </div>
 
-          <div className="bg-[#05140b]/80 border border-emerald-900/50 rounded-xl p-2.5 sm:p-3 text-center">
-            <span className="text-[10px] sm:text-xs text-emerald-300/80 font-medium block">
-              📖 کل پڑھے گئے الفاظ
+          <div className="bg-[#05140b]/80 border border-emerald-900/60 rounded-xl p-2.5 text-center">
+            <span className="text-[11px] text-emerald-300/80 font-medium block">
+              کل پڑھے گئے الفاظ
             </span>
             <span className="text-sm sm:text-base font-bold text-white mt-0.5 block font-mono">
               {weekStats.totalWords}
             </span>
             <span className="text-[10px] text-emerald-400/70 block">
-              {weekStats.accuracy ? `${weekStats.accuracy}% Accuracy` : " الفاظ"}
+              {weekStats.accuracy ? `${weekStats.accuracy}% درستگی` : "الفاظ"}
             </span>
           </div>
         </div>
       </div>
 
       {/* Week Navigation Selector */}
-      <div className="flex items-center justify-between bg-[#0a2016]/90 border border-emerald-800/50 rounded-2xl px-3 sm:px-4 py-2.5 shadow-md">
+      <div className="flex items-center justify-between bg-[#0a2016]/90 border border-emerald-800/50 rounded-2xl px-3 sm:px-4 py-2 shadow-sm">
         <button
           onClick={() => setWeekOffset((prev) => prev - 1)}
           className="text-xs text-emerald-200 hover:text-white bg-emerald-950/80 border border-emerald-700/50 hover:border-emerald-500 rounded-lg px-2.5 py-1.5 transition-all flex items-center gap-1 active:scale-95 cursor-pointer"
@@ -234,60 +235,54 @@ export function StreakClient() {
         </button>
       </div>
 
-      {/* 7-Day Visual Diamonds Timeline Bar */}
-      <div className="bg-[#0c1f15]/90 border border-emerald-700/50 rounded-2xl p-3 sm:p-4 shadow-md">
+      {/* 7-Day Visual Timeline Bar (Clean Circles) */}
+      <div className="bg-[#0c2419] border border-emerald-700/50 rounded-2xl p-3 sm:p-4 shadow-sm">
         <div className="text-xs font-semibold text-emerald-200 mb-2.5 flex items-center justify-between">
-          <span>Weekly Streak Tracker (ہفتہ وار جائزہ)</span>
-          <span className="text-[11px] text-emerald-400">
-            {weekStats.daysActive} دن تلاوت کی
+          <span>Weekly Overview (ہفتہ وار جائزہ)</span>
+          <span className="text-[11px] text-emerald-400 font-normal">
+            {weekStats.daysActive} دن تلاوت مکمل
           </span>
         </div>
 
-        <div className="grid grid-cols-7 gap-1 sm:gap-2 text-center bg-[#05130b]/80 border border-emerald-900/70 rounded-xl p-2 sm:p-3">
+        <div className="grid grid-cols-7 gap-1 sm:gap-2 text-center bg-[#05130b]/80 border border-emerald-900/60 rounded-xl p-2.5 sm:p-3">
           {weekDays.map((item) => (
-            <div key={item.date} className="flex flex-col items-center">
+            <div key={item.date} className="flex flex-col items-center justify-center">
               {/* Day Label */}
               <span
-                className={`text-[10px] sm:text-xs font-semibold mb-1 select-none ${
-                  item.isToday
-                    ? "text-emerald-400 font-bold"
-                    : "text-emerald-300/70"
+                className={`text-[10px] sm:text-xs font-medium mb-1 select-none ${
+                  item.isToday ? "text-amber-300 font-bold" : "text-emerald-300/70"
                 }`}
               >
                 {item.dayLabel}
               </span>
 
-              {/* Diamond indicator */}
-              <div className="my-1">
+              {/* Clean Status Circle */}
+              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center my-1">
                 {item.hasRecited ? (
-                  <div className="w-6 h-6 sm:w-8 sm:h-8 rotate-45 rounded-[3px] bg-gradient-to-br from-emerald-400 to-emerald-600 shadow-[0_0_10px_rgba(16,185,129,0.5)] flex items-center justify-center">
-                    <span className="-rotate-45 text-white text-[10px] sm:text-xs font-black">
-                      ✓
-                    </span>
-                  </div>
-                ) : item.isPast ? (
-                  <div className="w-6 h-6 sm:w-8 sm:h-8 rotate-45 rounded-[3px] border border-emerald-900/90 bg-[#06150d] flex items-center justify-center opacity-65">
-                    <span className="-rotate-45 text-emerald-600 text-[10px] sm:text-xs">
-                      ☹
-                    </span>
+                  <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-emerald-500 text-white flex items-center justify-center shadow-sm shadow-emerald-500/40">
+                    <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
                   </div>
                 ) : item.isToday ? (
-                  <div className="w-6 h-6 sm:w-8 sm:h-8 rotate-45 rounded-[3px] border-2 border-emerald-400 bg-emerald-950/60 shadow-[0_0_10px_rgba(52,211,153,0.4)] animate-pulse flex items-center justify-center">
-                    <span className="-rotate-45 text-emerald-300 text-[9px] font-bold">
-                      ⏳
-                    </span>
+                  <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border-2 border-amber-400 bg-amber-500/10 flex items-center justify-center">
+                    <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
+                  </div>
+                ) : item.isPast ? (
+                  <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-emerald-950/40 border border-emerald-900/40 flex items-center justify-center">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-800/60" />
                   </div>
                 ) : (
-                  <div className="w-6 h-6 sm:w-8 sm:h-8 rotate-45 rounded-[3px] border border-emerald-800/40 bg-transparent opacity-40" />
+                  <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-emerald-900/30 bg-transparent" />
                 )}
               </div>
 
               {/* Day Number */}
-              <span className="text-[10px] text-emerald-400/80 font-mono mt-1">
+              <span className="text-[10px] text-emerald-400/80 font-mono mt-0.5">
                 {item.dayNumber}
               </span>
 
-              {/* Time spent badge */}
+              {/* Time spent */}
               <span
                 className={`text-[9px] font-mono mt-0.5 ${
                   item.hasRecited
@@ -303,107 +298,106 @@ export function StreakClient() {
       </div>
 
       {/* Day-by-Day Detailed Recitation Cards */}
-      <div className="space-y-3">
-        <h2 className="text-sm sm:text-base font-bold text-white flex items-center gap-2 px-1">
-          <span>📋</span>
-          <span>روزانہ کی تفصیلی رپورٹ (Day by Day Details)</span>
+      <div className="space-y-2.5">
+        <h2 className="text-xs sm:text-sm font-bold text-white flex items-center gap-2 px-1">
+          <span>روزانہ کی تفصیلی رپورٹ (Day by Day Breakdown)</span>
         </h2>
 
-        <div className="space-y-2.5">
+        <div className="space-y-2">
           {weekDays.map((d) => {
             return (
               <div
                 key={d.date}
-                className={`rounded-2xl p-3.5 sm:p-4 border transition-all ${
+                className={`rounded-2xl p-3 sm:p-3.5 border transition-all ${
                   d.isToday
-                    ? "bg-[#0c2419]/95 border-emerald-400/60 shadow-[0_0_20px_rgba(16,185,129,0.15)] ring-1 ring-emerald-500/30"
+                    ? "bg-[#0c2419] border-amber-500/50 shadow-sm"
                     : d.hasRecited
-                    ? "bg-[#091a13]/90 border-emerald-800/60 shadow-sm"
-                    : "bg-[#05110a]/70 border-emerald-950/70 opacity-80"
+                    ? "bg-[#091a13] border-emerald-800/60"
+                    : "bg-[#05110a]/60 border-emerald-950/60 opacity-75"
                 }`}
               >
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
                   {/* Day Info */}
                   <div className="flex items-center gap-3">
                     <div
-                      className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center shrink-0 ${
+                      className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
                         d.hasRecited
-                          ? "bg-emerald-500/20 border border-emerald-400/60 text-emerald-300 font-bold"
-                          : d.isPast
-                          ? "bg-rose-950/30 border border-rose-900/40 text-rose-400"
-                          : "bg-emerald-950/40 border border-emerald-900/40 text-emerald-600"
+                          ? "bg-emerald-500/20 border border-emerald-500/50 text-emerald-300 font-bold"
+                          : d.isToday
+                          ? "bg-amber-500/15 border border-amber-500/40 text-amber-300"
+                          : "bg-emerald-950/40 border border-emerald-900/40 text-emerald-700"
                       }`}
                     >
                       {d.hasRecited ? (
-                        <span className="text-emerald-300 font-black text-sm">✓</span>
-                      ) : d.isPast ? (
-                        <span className="text-rose-400 text-sm">☹</span>
+                        <svg className="w-4 h-4 text-emerald-300" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                        </svg>
+                      ) : d.isToday ? (
+                        <span className="w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse" />
                       ) : (
-                        <span className="text-emerald-500 text-xs">⏳</span>
+                        <span className="text-xs select-none">—</span>
                       )}
                     </div>
 
                     <div>
                       <div className="flex items-center gap-2">
-                        <span className="text-sm sm:text-base font-bold text-white">
+                        <span className="text-sm font-bold text-white">
                           {d.fullDayName} ({d.urduDayName})
                         </span>
                         {d.isToday && (
-                          <span className="bg-emerald-500 text-emerald-950 text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider">
-                            آج (Today)
+                          <span className="bg-amber-400 text-amber-950 text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider">
+                            آج
                           </span>
                         )}
                       </div>
-                      <span className="text-[11px] text-emerald-300/70 font-mono">
+                      <span className="text-[11px] text-emerald-400/70 font-mono">
                         {d.date}
                       </span>
                     </div>
                   </div>
 
                   {/* Recitation Metrics / Status */}
-                  <div className="flex items-center gap-3 sm:gap-4 text-xs">
+                  <div className="flex items-center gap-2 sm:gap-3 text-xs">
                     {/* Time Spent */}
                     <div className="bg-[#030e07] border border-emerald-900/60 rounded-xl px-2.5 py-1.5 text-center min-w-[70px]">
                       <span className="text-[10px] text-emerald-400/70 block">
-                        صرف کیا گیا وقت
+                        وقت
                       </span>
                       <span className="font-bold text-white font-mono block">
-                        {d.hasRecited ? formatTimeSpent(d.timeSpentSeconds) : "0 min"}
+                        {d.hasRecited ? formatTimeSpent(d.timeSpentSeconds) : "0m"}
                       </span>
                     </div>
 
-                    {/* Words & Mistakes */}
+                    {/* Words */}
                     <div className="bg-[#030e07] border border-emerald-900/60 rounded-xl px-2.5 py-1.5 text-center min-w-[70px]">
                       <span className="text-[10px] text-emerald-400/70 block">
-                        پڑھے گئے الفاظ
+                        الفاظ
                       </span>
                       <span className="font-bold text-emerald-200 font-mono block">
                         {d.wordsRevealed}
                       </span>
                     </div>
 
-                    {/* Recited / Missed Status Pill */}
-                    <div className="min-w-[80px] text-right sm:text-center">
+                    {/* Status Button / Pill */}
+                    <div className="min-w-[85px] text-right sm:text-center">
                       {d.hasRecited ? (
-                        <span className="inline-flex items-center gap-1 bg-emerald-950 border border-emerald-500/60 text-emerald-300 text-[11px] font-semibold px-2.5 py-1 rounded-full">
+                        <span className="inline-flex items-center gap-1 bg-emerald-950 border border-emerald-600/60 text-emerald-300 text-[11px] font-medium px-2.5 py-1 rounded-full">
                           <span>✓</span>
-                          <span>تلاوت کی گئی</span>
-                        </span>
-                      ) : d.isPast ? (
-                        <span className="inline-flex items-center gap-1 bg-rose-950/50 border border-rose-800/50 text-rose-300 text-[11px] font-semibold px-2.5 py-1 rounded-full">
-                          <span>✕</span>
-                          <span>نہیں پڑھی</span>
+                          <span>پڑھی گئی</span>
                         </span>
                       ) : d.isToday ? (
                         <Link
                           href="/surahs"
-                          className="inline-flex items-center gap-1 bg-amber-950 border border-amber-600/60 text-amber-300 hover:text-amber-100 text-[11px] font-bold px-2.5 py-1 rounded-full hover:scale-105 transition-all"
+                          className="inline-flex items-center gap-1 bg-amber-500 hover:bg-amber-400 text-amber-950 text-[11px] font-bold px-3 py-1 rounded-full active:scale-95 transition-all shadow-sm"
                         >
-                          <span>▶</span>
                           <span>ابھی پڑھیں</span>
                         </Link>
+                      ) : d.isPast ? (
+                        <span className="inline-flex items-center gap-1 text-emerald-700 text-[11px] px-2 py-1">
+                          <span>نہیں پڑھی</span>
+                        </span>
                       ) : (
-                        <span className="text-[11px] text-emerald-700 select-none">
+                        <span className="text-[11px] text-emerald-800">
                           آئندہ دن
                         </span>
                       )}
@@ -415,13 +409,13 @@ export function StreakClient() {
                 {d.hasRecited && d.surahs.length > 0 && (
                   <div className="mt-2.5 pt-2 border-t border-emerald-900/50 flex flex-wrap items-center gap-1.5">
                     <span className="text-[11px] text-emerald-400/80 font-medium mr-1">
-                      پڑھی گئی سورتیں:
+                      سورتیں:
                     </span>
                     {d.surahs.map((s) => (
                       <Link
                         key={s.number}
                         href={`/recite/${s.number}`}
-                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[#06150e] hover:bg-[#0c2418] border border-emerald-700/60 hover:border-emerald-500 text-emerald-200 text-xs font-semibold transition-all"
+                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[#06150e] hover:bg-[#0c2418] border border-emerald-700/60 hover:border-emerald-400 text-emerald-200 text-xs font-medium transition-all"
                       >
                         <span className="font-quran" dir="rtl">{s.arabicName}</span>
                         <span className="text-[10px] text-emerald-400/70">({s.name})</span>
@@ -436,16 +430,12 @@ export function StreakClient() {
       </div>
 
       {/* Hadith & Motivational Reflection */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-emerald-950/80 via-[#0a2318]/90 to-emerald-950/80 border border-emerald-700/40 p-4 text-center space-y-1.5 shadow-md">
-        <span className="text-xl">✨</span>
+      <div className="rounded-2xl bg-gradient-to-r from-emerald-950/80 via-[#0a2318]/90 to-emerald-950/80 border border-emerald-800/40 p-4 text-center space-y-1.5 shadow-sm">
         <p className="font-quran text-emerald-100 text-sm sm:text-base leading-relaxed" dir="rtl">
           &quot;أَحَبُّ الْأَعْمَالِ إِلَى اللَّهِ أَدْوَمُهَا وَإِنْ قَلَّ&quot;
         </p>
         <p className="text-xs text-emerald-300/80">
-          (صحیح بخاری — اللہ تعالیٰ کو سب سے پسندیدہ عمل وہ ہے جو مستقل کیا جائے، اگرچہ تھوڑا ہی کیوں نہ ہو)
-        </p>
-        <p className="text-[11px] text-emerald-400/70 mt-1">
-          روزانہ کم از کم چند آیات پڑھنے کی عادت بنائیں تاکہ آپ کا تسلسل اور ثواب قائم رہے!
+          (صحیح بخاری — اللہ تعالیٰ کے نزدیک سب سے پسندیدہ عمل وہ ہے جو پابندی سے کیا جائے، خواہ تھوڑا ہی کیوں نہ ہو)
         </p>
       </div>
     </div>
