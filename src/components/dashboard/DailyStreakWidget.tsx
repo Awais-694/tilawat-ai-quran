@@ -17,16 +17,16 @@ export function DailyStreakWidget({
   return (
     <Link
       href="/streak"
-      className="block group relative overflow-hidden rounded-2xl bg-[#0a2016]/90 hover:bg-[#0d261b] border border-emerald-700/60 hover:border-emerald-500/80 p-4 transition-all duration-200 shadow-md hover:shadow-emerald-950/40 cursor-pointer"
+      className="block group relative overflow-hidden rounded-2xl bg-[#0a2016]/95 hover:bg-[#0c241a] border border-emerald-700/60 hover:border-emerald-500/80 p-4 transition-all duration-200 shadow-md hover:shadow-emerald-950/50 cursor-pointer"
       title="View weekly streak details"
     >
-      {/* Top Header: Flame Badge, Streak Number, and View Details Button (No Arrows) */}
+      {/* Top Header: Flame Badge, Streak Number, and View Details Button */}
       <div className="flex items-center justify-between gap-3">
-        {/* Left: Flame Icon + Streak Text */}
-        <div className="flex items-center gap-3">
-          <div className="w-11 h-11 rounded-xl bg-amber-500/15 border border-amber-500/35 flex items-center justify-center shrink-0 shadow-sm group-hover:scale-105 transition-transform">
+        {/* Left: Flame Icon + Beautiful Display Typography */}
+        <div className="flex items-center gap-3.5">
+          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-500/20 via-amber-500/10 to-transparent border border-amber-500/30 flex items-center justify-center shrink-0 shadow-[0_0_15px_rgba(245,158,11,0.15)] group-hover:scale-105 transition-transform">
             <svg
-              className="w-6 h-6 text-amber-400 drop-shadow-[0_0_6px_rgba(245,158,11,0.5)]"
+              className="w-6 h-6 text-amber-400 drop-shadow-[0_0_8px_rgba(245,158,11,0.6)]"
               viewBox="0 0 24 24"
               fill="currentColor"
             >
@@ -34,23 +34,23 @@ export function DailyStreakWidget({
             </svg>
           </div>
 
-          <div>
-            <div className="flex items-baseline gap-1.5">
-              <span className="text-2xl font-black text-white font-mono tracking-tight leading-none">
+          <div className="space-y-0.5">
+            <div className="flex items-baseline gap-2">
+              <span className="font-display text-2xl sm:text-3xl font-bold text-white tracking-tight leading-none">
                 {streak}
               </span>
-              <span className="text-sm font-bold text-emerald-200 leading-none">
+              <span className="font-display text-base font-semibold text-emerald-100 tracking-tight leading-none">
                 {streak === 1 ? "Day Streak" : "Days Streak"}
               </span>
             </div>
-            <div className="text-[11px] text-emerald-400/80 font-medium mt-1">
-              Best: <span className="text-white font-semibold">{longestStreak} {longestStreak === 1 ? "day" : "days"}</span>
+            <div className="text-xs text-emerald-400/80 font-medium">
+              Personal Best: <span className="font-semibold text-white">{longestStreak} {longestStreak === 1 ? "day" : "days"}</span>
             </div>
           </div>
         </div>
 
-        {/* Right: Clean View Details Pill Button (Arrow Removed) */}
-        <div className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold text-emerald-200 bg-emerald-950/90 border border-emerald-700/60 group-hover:bg-emerald-800/80 group-hover:border-emerald-400 group-hover:text-white transition-all shrink-0 shadow-sm">
+        {/* Right: Clean View Details Pill Button */}
+        <div className="inline-flex items-center px-3.5 py-1.5 rounded-full text-xs font-semibold text-emerald-200 bg-emerald-950/80 border border-emerald-700/60 group-hover:bg-emerald-900 group-hover:border-emerald-400 group-hover:text-white transition-all shrink-0 shadow-sm">
           <span>Weekly Report</span>
         </div>
       </div>

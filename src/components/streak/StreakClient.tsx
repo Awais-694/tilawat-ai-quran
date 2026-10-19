@@ -111,7 +111,7 @@ export function StreakClient() {
 
   return (
     <div className="max-w-xl mx-auto space-y-4 pb-16 px-2 sm:px-0">
-      {/* Top Header Navigation - Clean Pill Buttons with No Arrow */}
+      {/* Top Header Navigation */}
       <div className="flex items-center justify-between min-h-[46px] border-b border-emerald-900/40 pb-3">
         {/* Back Button (No Arrow) */}
         <button
@@ -122,7 +122,7 @@ export function StreakClient() {
         </button>
 
         {/* Centered Page Title */}
-        <h1 className="text-base sm:text-lg font-bold text-white tracking-tight">
+        <h1 className="font-display text-base sm:text-lg font-bold text-white tracking-tight">
           Streak & Activity
         </h1>
 
@@ -141,11 +141,11 @@ export function StreakClient() {
       {/* Main Hero Streak Banner Card */}
       <div className="relative overflow-hidden rounded-2xl bg-[#0a2016] border border-emerald-700/60 p-4 sm:p-5 shadow-lg">
         <div className="flex items-center justify-between gap-3">
-          {/* Flame Icon & Streak Numbers */}
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-xl bg-amber-500/15 border border-amber-500/40 flex items-center justify-center shrink-0 shadow-sm">
+          {/* Flame Icon & Display Numbers */}
+          <div className="flex items-center gap-3.5">
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-500/20 via-amber-500/10 to-transparent border border-amber-500/30 flex items-center justify-center shrink-0 shadow-[0_0_15px_rgba(245,158,11,0.15)]">
               <svg
-                className="w-7 h-7 text-amber-400 drop-shadow-[0_0_8px_rgba(245,158,11,0.5)]"
+                className="w-7 h-7 text-amber-400 drop-shadow-[0_0_8px_rgba(245,158,11,0.6)]"
                 viewBox="0 0 24 24"
                 fill="currentColor"
               >
@@ -153,16 +153,16 @@ export function StreakClient() {
               </svg>
             </div>
 
-            <div>
-              <div className="flex items-baseline gap-1.5">
-                <span className="text-2xl sm:text-3xl font-black text-white font-mono tracking-tight leading-none">
+            <div className="space-y-0.5">
+              <div className="flex items-baseline gap-2">
+                <span className="font-display text-3xl sm:text-4xl font-bold text-white tracking-tight leading-none">
                   {currentStreak}
                 </span>
-                <span className="text-sm font-bold text-emerald-200 leading-none">
+                <span className="font-display text-base font-semibold text-emerald-100 tracking-tight leading-none">
                   {currentStreak === 1 ? "Day Streak" : "Days Streak"}
                 </span>
               </div>
-              <div className="text-[11px] text-emerald-400/80 mt-1">
+              <div className="text-xs text-emerald-400/80 font-medium">
                 Personal Best: <span className="font-semibold text-white">{longestStreak} {longestStreak === 1 ? "day" : "days"}</span>
               </div>
             </div>
@@ -180,29 +180,29 @@ export function StreakClient() {
 
         {/* 3 Summary KPIs this week */}
         <div className="grid grid-cols-3 gap-2 mt-3.5 pt-3 border-t border-emerald-900/60">
-          <div className="bg-[#05140b]/90 border border-emerald-900/60 rounded-xl p-2 text-center">
+          <div className="bg-[#05140b]/90 border border-emerald-900/60 rounded-xl p-2.5 text-center">
             <span className="text-[10px] text-emerald-400/80 font-medium block">
               Time
             </span>
-            <span className="text-sm sm:text-base font-bold text-white mt-0.5 block font-mono">
+            <span className="font-display text-sm sm:text-base font-bold text-white mt-0.5 block">
               {formatTimeSpent(weekStats.totalSeconds)}
             </span>
           </div>
 
-          <div className="bg-[#05140b]/90 border border-emerald-900/60 rounded-xl p-2 text-center">
+          <div className="bg-[#05140b]/90 border border-emerald-900/60 rounded-xl p-2.5 text-center">
             <span className="text-[10px] text-emerald-400/80 font-medium block">
               Active Days
             </span>
-            <span className="text-sm sm:text-base font-bold text-emerald-200 mt-0.5 block font-mono">
+            <span className="font-display text-sm sm:text-base font-bold text-emerald-200 mt-0.5 block">
               {weekStats.daysActive} / 7
             </span>
           </div>
 
-          <div className="bg-[#05140b]/90 border border-emerald-900/60 rounded-xl p-2 text-center">
+          <div className="bg-[#05140b]/90 border border-emerald-900/60 rounded-xl p-2.5 text-center">
             <span className="text-[10px] text-emerald-400/80 font-medium block">
               Words
             </span>
-            <span className="text-sm sm:text-base font-bold text-white mt-0.5 block font-mono">
+            <span className="font-display text-sm sm:text-base font-bold text-white mt-0.5 block">
               {weekStats.totalWords}
             </span>
           </div>
@@ -222,10 +222,10 @@ export function StreakClient() {
         </button>
 
         <div className="text-center">
-          <div className="text-xs sm:text-sm font-bold text-white leading-tight">
+          <div className="font-display text-xs sm:text-sm font-bold text-white leading-tight">
             {weekOffset === 0 ? "This Week" : weekOffset === -1 ? "Last Week" : `${Math.abs(weekOffset)} Weeks Ago`}
           </div>
-          <div className="text-[11px] text-emerald-400/80 font-mono mt-0.5">
+          <div className="text-[11px] text-emerald-400/80 mt-0.5 font-medium">
             {weekRangeText}
           </div>
         </div>
@@ -289,15 +289,15 @@ export function StreakClient() {
               </div>
 
               {/* Day Number */}
-              <span className="text-[10px] text-emerald-400/80 font-mono mt-0.5">
+              <span className="font-display text-[11px] text-emerald-400/90 font-semibold mt-0.5">
                 {item.dayNumber}
               </span>
 
               {/* Time spent */}
               <span
-                className={`text-[9px] font-mono mt-0.5 ${
+                className={`text-[9px] mt-0.5 ${
                   item.hasRecited
-                    ? "text-emerald-300 font-bold"
+                    ? "text-emerald-300 font-semibold"
                     : "text-emerald-800"
                 }`}
               >
@@ -361,7 +361,7 @@ export function StreakClient() {
                           </span>
                         )}
                       </div>
-                      <span className="text-[10px] text-emerald-400/70 font-mono">
+                      <span className="text-[10px] text-emerald-400/70">
                         {formatReadableDate(d.date)}
                       </span>
                     </div>
@@ -370,10 +370,10 @@ export function StreakClient() {
                   {/* Recitation Metrics / Status */}
                   <div className="flex items-center gap-2 text-xs">
                     <div className="text-right">
-                      <div className="font-bold text-white font-mono text-xs">
+                      <div className="font-semibold text-white text-xs">
                         {d.hasRecited ? formatTimeSpent(d.timeSpentSeconds) : "0m"}
                       </div>
-                      <div className="text-[10px] text-emerald-400/70 font-mono">
+                      <div className="text-[10px] text-emerald-400/70">
                         {d.wordsRevealed} words
                       </div>
                     </div>
@@ -433,7 +433,7 @@ export function StreakClient() {
         <p className="text-[11px] text-emerald-300/80">
           “The most beloved deeds to Allah are those that are most consistent, even if small.”
         </p>
-        <p className="text-[9px] text-emerald-500/70 font-mono">
+        <p className="text-[9px] text-emerald-500/70">
           — Sahih al-Bukhari
         </p>
       </div>
