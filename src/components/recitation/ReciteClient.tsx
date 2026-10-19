@@ -134,6 +134,7 @@ export function ReciteClient({
   const router = useRouter();
 
   const handleBack = () => {
+    void saveRef.current();
     if (typeof window !== "undefined" && window.history.length > 1) {
       router.back();
     } else {
@@ -149,7 +150,6 @@ export function ReciteClient({
   const savedMistakes = useRef(0);
   const sessionCounted = useRef(false);
   const initialLoadedRef = useRef(false);
-
   const [resumeInfo, setResumeInfo] = useState<{
     lastAyah: number;
     nextAyah: number;
@@ -162,19 +162,29 @@ export function ReciteClient({
     initialLoadedRef.current = true;
 
     db.progress.get(surahNumber).then((saved) => {
+      let wordsToResume = saved?.revealedWords ?? 0;
+      try {
+        const rawLast = localStorage.getItem("tilawat_last_recitation");
+        if (rawLast) {
+          const parsed = JSON.parse(rawLast);
+          if (parsed?.surahNumber === surahNumber && typeof parsed.revealedWords === "number") {
+            wordsToResume = Math.max(wordsToResume, parsed.revealedWords);
+          }
+        }
+      } catch {}
+
       if (
-        saved &&
-        saved.revealedWords > 0 &&
-        !saved.completed &&
-        saved.revealedWords < recTokens.length
+        wordsToResume > 0 &&
+        (!saved || !saved.completed) &&
+        wordsToResume < recTokens.length
       ) {
-        const lastReadToken = loaded.tokens[saved.revealedWords - 1];
-        const nextToken = loaded.tokens[saved.revealedWords];
+        const lastReadToken = loaded.tokens[wordsToResume - 1];
+        const nextToken = loaded.tokens[wordsToResume];
         const lastAyah = lastReadToken?.ayahNumber ?? 1;
         const nextAyah = nextToken?.ayahNumber ?? lastAyah;
 
-        jumpToProgress(saved.revealedWords);
-        savedRevealed.current = saved.revealedWords;
+        jumpToProgress(wordsToResume);
+        savedRevealed.current = wordsToResume;
 
         // Auto jump to the page of the current unread word
         const pg = nextToken?.page ?? loaded.pages[0];
@@ -184,7 +194,7 @@ export function ReciteClient({
         setResumeInfo({
           lastAyah,
           nextAyah,
-          words: saved.revealedWords,
+          words: wordsToResume,
         });
       }
     });
@@ -192,21 +202,36 @@ export function ReciteClient({
 
   const saveProgress = async () => {
     if (!loaded) return;
+    const effectiveRevealed = Math.max(revealed, displayRevealed);
+    if (effectiveRevealed === 0 && mistakes === 0) return;
     const today = new Date().toISOString().slice(0, 10);
-    const rDelta = Math.max(0, revealed - savedRevealed.current);
+    const rDelta = Math.max(0, effectiveRevealed - savedRevealed.current);
     const mDelta = Math.max(0, mistakes - savedMistakes.current);
     const ex = await db.progress.get(surahNumber);
-    const isDone = completed || revealed >= loaded.tokens.length;
-    const currentAyah = loaded.tokens[Math.min(revealed, loaded.tokens.length - 1)]?.ayahNumber;
+    const isDone = completed || effectiveRevealed >= loaded.tokens.length;
+    const currentAyah = loaded.tokens[Math.min(effectiveRevealed, loaded.tokens.length - 1)]?.ayahNumber || 1;
 
     await db.progress.put({
       surahNumber,
-      revealedWords: revealed,
+      revealedWords: effectiveRevealed,
       totalWords: loaded.tokens.length,
       completed: isDone || (ex?.completed ?? false),
       lastPracticedAt: Date.now(),
       lastAyahNumber: currentAyah,
     });
+    try {
+      localStorage.setItem(
+        "tilawat_last_recitation",
+        JSON.stringify({
+          surahNumber,
+          revealedWords: effectiveRevealed,
+          totalWords: loaded.tokens.length,
+          lastAyahNumber: currentAyah,
+          timestamp: Date.now(),
+        })
+      );
+    } catch {}
+
     if (rDelta || mDelta || sessionCounted.current) {
       const row = await db.activity.get(today);
       await db.activity.put({
@@ -217,16 +242,29 @@ export function ReciteClient({
       });
       sessionCounted.current = false;
     }
-    savedRevealed.current = revealed;
+    savedRevealed.current = effectiveRevealed;
     savedMistakes.current = mistakes;
   };
   const saveRef = useRef(saveProgress);
   saveRef.current = saveProgress;
+
   useEffect(() => {
-    if (!loaded || (revealed === 0 && mistakes === 0)) return;
-    const t = setTimeout(() => void saveRef.current(), 900);
+    const effectiveRevealed = Math.max(revealed, displayRevealed);
+    if (!loaded || (effectiveRevealed === 0 && mistakes === 0)) return;
+    const t = setTimeout(() => void saveRef.current(), 800);
     return () => clearTimeout(t);
-  }, [revealed, mistakes, loaded]);
+  }, [revealed, displayRevealed, mistakes, loaded]);
+
+  useEffect(() => {
+    const onBeforeUnload = () => {
+      void saveRef.current();
+    };
+    window.addEventListener("beforeunload", onBeforeUnload);
+    return () => {
+      window.removeEventListener("beforeunload", onBeforeUnload);
+      void saveRef.current();
+    };
+  }, []);
 
   // ---- galat lafz par red flash + kamzor lafz record ----
   const [flash, setFlash] = useState(false);
@@ -276,7 +314,7 @@ export function ReciteClient({
     }
   };
 
-  const resetAll = () => {
+  const handleReset = async () => {
     ws.stop();
     wh.stop();
     ws.resetFinals();
@@ -285,22 +323,18 @@ export function ReciteClient({
     savedRevealed.current = 0;
     savedMistakes.current = 0;
     setPageIdx(0);
-  };
-
-  const handleRestartFromBeginning = async () => {
-    resetAll();
     setResumeInfo(null);
     try {
-      await db.progress.put({
-        surahNumber,
-        revealedWords: 0,
-        totalWords: loaded?.tokens.length ?? 0,
-        completed: false,
-        lastPracticedAt: Date.now(),
-        lastAyahNumber: 1,
-      });
+      await db.progress.delete(surahNumber);
+      const rawLast = localStorage.getItem("tilawat_last_recitation");
+      if (rawLast) {
+        const parsed = JSON.parse(rawLast);
+        if (parsed?.surahNumber === surahNumber) {
+          localStorage.removeItem("tilawat_last_recitation");
+        }
+      }
     } catch (err) {
-      console.error("Failed to reset progress in db:", err);
+      console.error("Failed to delete progress from db:", err);
     }
   };
 
@@ -463,7 +497,7 @@ export function ReciteClient({
           </div>
 
           <button
-            onClick={handleRestartFromBeginning}
+            onClick={handleReset}
             className="inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-emerald-900/90 hover:bg-emerald-800 text-emerald-100 hover:text-white border border-emerald-600/70 text-xs font-semibold whitespace-nowrap transition-all active:scale-95 cursor-pointer shadow-md shrink-0 w-full sm:w-auto"
             title="سورت کو شروع سے پڑھنا شروع کریں"
           >
@@ -647,7 +681,7 @@ export function ReciteClient({
 
           {/* Reset Progress Button */}
           <button
-            onClick={resetAll}
+            onClick={handleReset}
             title="Reset current recitation session"
             className="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-full text-emerald-300/80 hover:text-white hover:bg-emerald-900/60 border border-emerald-900/60 hover:border-emerald-700 transition-all active:scale-95 cursor-pointer"
           >

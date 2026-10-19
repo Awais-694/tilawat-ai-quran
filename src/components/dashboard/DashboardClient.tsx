@@ -31,78 +31,99 @@ export function DashboardClient() {
   const [stats, setStats] = useState<Stats | null>(null);
   const [lastAyah, setLastAyah] = useState<number | null>(null);
 
+  const loadStats = async () => {
+    const activity = await db.activity.toArray();
+    const progress = await db.progress.toArray();
+    const totalWords = activity.reduce((s, a) => s + a.wordsRevealed, 0);
+    const totalMistakes = activity.reduce((s, a) => s + a.mistakes, 0);
+
+    // 1. Look for in-progress surahs with actual revealed words in DB
+    let active = progress
+      .filter((p) => !p.completed && p.revealedWords > 0)
+      .sort((a, b) => (b.lastPracticedAt || 0) - (a.lastPracticedAt || 0))[0] ?? null;
+
+    // 2. Check localStorage for the latest recitation (survives app closure / immediate navigation)
+    try {
+      const rawLast = localStorage.getItem("tilawat_last_recitation");
+      if (rawLast) {
+        const parsed = JSON.parse(rawLast);
+        if (parsed && typeof parsed.surahNumber === "number" && (parsed.revealedWords || 0) > 0) {
+          const lsTime = parsed.timestamp || 0;
+          const dbTime = active?.lastPracticedAt || 0;
+          if (!active || lsTime >= dbTime) {
+            active = {
+              surahNumber: parsed.surahNumber,
+              revealedWords: parsed.revealedWords || 0,
+              totalWords: parsed.totalWords || 0,
+              completed: false,
+              lastPracticedAt: lsTime || Date.now(),
+              lastAyahNumber: parsed.lastAyahNumber || 1,
+            };
+          }
+        }
+      }
+    } catch {}
+
+    // If user hasn't opened any surah yet or reset, default to Surah Al-Fatihah
+    if (!active) {
+      active = {
+        surahNumber: 1,
+        revealedWords: 0,
+        totalWords: 29,
+        completed: false,
+        lastPracticedAt: Date.now(),
+        lastAyahNumber: 1,
+      };
+    }
+
+    setStats({
+      streak: calcStreak(activity.filter((a) => a.wordsRevealed > 0).map((a) => a.date)),
+      accuracy:
+        totalWords + totalMistakes > 0
+          ? Math.round((totalWords / (totalWords + totalMistakes)) * 100)
+          : null,
+      inProgress: progress.filter((p) => p.revealedWords > 0 && !p.completed).slice(0, 4),
+      completedCount: progress.filter((p) => p.completed).length,
+      lastActive: active,
+    });
+
+    if (active) {
+      if (active.lastAyahNumber) {
+        setLastAyah(active.lastAyahNumber);
+      } else if (active.revealedWords > 0) {
+        // Resolve ayah dynamically from tokens if older record
+        const s = await loadSurah(active.surahNumber);
+        if (s) {
+          const idx = Math.max(0, Math.min(active.revealedWords - 1, s.tokens.length - 1));
+          setLastAyah(s.tokens[idx]?.ayahNumber || 1);
+        }
+      } else {
+        setLastAyah(1);
+      }
+    }
+  };
+
   useEffect(() => {
-    (async () => {
-      const activity = await db.activity.toArray();
-      const progress = await db.progress.toArray();
-      const totalWords = activity.reduce((s, a) => s + a.wordsRevealed, 0);
-      const totalMistakes = activity.reduce((s, a) => s + a.mistakes, 0);
-      // 1. Look for in-progress surahs in DB
-      let active = progress
-        .filter((p) => !p.completed)
-        .sort((a, b) => (b.lastPracticedAt || 0) - (a.lastPracticedAt || 0))[0] ?? null;
-
-      // 2. Check localStorage for the latest recitation (survives app closure / immediate navigation)
-      try {
-        const rawLast = localStorage.getItem("tilawat_last_recitation");
-        if (rawLast) {
-          const parsed = JSON.parse(rawLast);
-          if (parsed && typeof parsed.surahNumber === "number") {
-            const lsTime = parsed.timestamp || 0;
-            const dbTime = active?.lastPracticedAt || 0;
-            if (!active || lsTime >= dbTime) {
-              active = {
-                surahNumber: parsed.surahNumber,
-                revealedWords: parsed.revealedWords || 0,
-                totalWords: parsed.totalWords || 0,
-                completed: false,
-                lastPracticedAt: lsTime || Date.now(),
-                lastAyahNumber: parsed.lastAyahNumber || 1,
-              };
-            }
-          }
-        }
-      } catch {}
-
-      // If user hasn't opened any surah yet, default to Surah Al-Fatihah
-      if (!active) {
-        active = {
-          surahNumber: 1,
-          revealedWords: 0,
-          totalWords: 29,
-          completed: false,
-          lastPracticedAt: Date.now(),
-          lastAyahNumber: 1,
-        };
-      }
-
-      setStats({
-        streak: calcStreak(activity.filter((a) => a.wordsRevealed > 0).map((a) => a.date)),
-        accuracy:
-          totalWords + totalMistakes > 0
-            ? Math.round((totalWords / (totalWords + totalMistakes)) * 100)
-            : null,
-        inProgress: progress.filter((p) => p.revealedWords > 0 && !p.completed).slice(0, 4),
-        completedCount: progress.filter((p) => p.completed).length,
-        lastActive: active,
-      });
-
-      if (active) {
-        if (active.lastAyahNumber) {
-          setLastAyah(active.lastAyahNumber);
-        } else if (active.revealedWords > 0) {
-          // Resolve ayah dynamically from tokens if older record
-          const s = await loadSurah(active.surahNumber);
-          if (s) {
-            const idx = Math.max(0, Math.min(active.revealedWords - 1, s.tokens.length - 1));
-            setLastAyah(s.tokens[idx]?.ayahNumber || 1);
-          }
-        } else {
-          setLastAyah(1);
-        }
-      }
-    })();
+    void loadStats();
   }, []);
+
+  const handleResetSurah = async (surahNum: number, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    try {
+      await db.progress.delete(surahNum);
+      const rawLast = localStorage.getItem("tilawat_last_recitation");
+      if (rawLast) {
+        const parsed = JSON.parse(rawLast);
+        if (parsed?.surahNumber === surahNum) {
+          localStorage.removeItem("tilawat_last_recitation");
+        }
+      }
+      await loadStats();
+    } catch (err) {
+      console.error("Failed to reset surah progress:", err);
+    }
+  };
 
   const lastActiveMeta = stats?.lastActive ? getSurahMeta(stats.lastActive.surahNumber) : null;
   const lastActivePct =
@@ -189,18 +210,41 @@ export function DashboardClient() {
               <ProgressBar pct={lastActivePct} />
             </div>
 
-            {/* Mobile Thumb-Friendly Big Resume Button */}
-            <Link
-              href={`/recite/${stats.lastActive.surahNumber}`}
-              className="w-full py-3 sm:py-3.5 px-4 rounded-xl sm:rounded-2xl bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-white font-bold text-sm sm:text-base flex items-center justify-center gap-2 shadow-lg shadow-emerald-950/60 active:scale-[0.98] transition-all"
-            >
-              <svg className="w-4 h-4 text-white fill-current" viewBox="0 0 24 24">
-                <path d="M8 5v14l11-7z" />
-              </svg>
-              <span>
-                {stats.lastActive.revealedWords > 0 ? "Resume Recitation" : "Start Recitation"}
-              </span>
-            </Link>
+            {/* Action Buttons: Resume vs Reset */}
+            {stats.lastActive.revealedWords > 0 ? (
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 pt-1">
+                <Link
+                  href={`/recite/${stats.lastActive.surahNumber}`}
+                  className="flex-1 py-3 sm:py-3.5 px-4 rounded-xl sm:rounded-2xl bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-white font-bold text-sm sm:text-base flex items-center justify-center gap-2 shadow-lg shadow-emerald-950/60 active:scale-[0.98] transition-all"
+                >
+                  <svg className="w-4 h-4 text-white fill-current" viewBox="0 0 24 24">
+                    <path d="M8 5v14l11-7z" />
+                  </svg>
+                  <span>Resume Recitation ({lastAyah ? `آیت ${lastAyah} سے` : "Continue"})</span>
+                </Link>
+
+                <button
+                  onClick={(e) => handleResetSurah(stats.lastActive!.surahNumber, e)}
+                  title="سورت کی پیش رفت ریزیٹ کریں اور شروع سے پڑھیں"
+                  className="py-3 px-3.5 rounded-xl sm:rounded-2xl bg-emerald-950/80 hover:bg-rose-950/70 text-emerald-300 hover:text-rose-200 border border-emerald-800/70 hover:border-rose-700/70 text-xs sm:text-sm font-semibold flex items-center justify-center gap-1.5 transition-all active:scale-[0.98] cursor-pointer"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                  <span>Reset Progress</span>
+                </button>
+              </div>
+            ) : (
+              <Link
+                href={`/recite/${stats.lastActive.surahNumber}`}
+                className="w-full py-3 sm:py-3.5 px-4 rounded-xl sm:rounded-2xl bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-white font-bold text-sm sm:text-base flex items-center justify-center gap-2 shadow-lg shadow-emerald-950/60 active:scale-[0.98] transition-all"
+              >
+                <svg className="w-4 h-4 text-white fill-current" viewBox="0 0 24 24">
+                  <path d="M8 5v14l11-7z" />
+                </svg>
+                <span>Start Recitation</span>
+              </Link>
+            )}
           </div>
         </div>
       )}
