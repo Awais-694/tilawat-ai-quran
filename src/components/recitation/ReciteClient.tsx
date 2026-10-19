@@ -153,12 +153,6 @@ export function ReciteClient({
   const savedMistakes = useRef(0);
   const sessionCounted = useRef(false);
   const initialLoadedRef = useRef(false);
-  const [resumeInfo, setResumeInfo] = useState<{
-    lastAyah: number;
-    nextAyah: number;
-    words: number;
-  } | null>(null);
-
   // Restore progress on first load: Resume from exact Ayah where user left off!
   useEffect(() => {
     if (!loaded || initialLoadedRef.current || recTokens.length === 0) return;
@@ -181,24 +175,14 @@ export function ReciteClient({
         (!saved || !saved.completed) &&
         wordsToResume < recTokens.length
       ) {
-        const lastReadToken = loaded.tokens[wordsToResume - 1];
-        const nextToken = loaded.tokens[wordsToResume];
-        const lastAyah = lastReadToken?.ayahNumber ?? 1;
-        const nextAyah = nextToken?.ayahNumber ?? lastAyah;
-
         jumpToProgress(wordsToResume);
         savedRevealed.current = wordsToResume;
 
         // Auto jump to the page of the current unread word
+        const nextToken = loaded.tokens[wordsToResume];
         const pg = nextToken?.page ?? loaded.pages[0];
         const pi = loaded.pages.indexOf(pg);
         if (pi >= 0) setPageIdx(pi);
-
-        setResumeInfo({
-          lastAyah,
-          nextAyah,
-          words: wordsToResume,
-        });
       }
     });
   }, [loaded, surahNumber, recTokens.length, jumpToProgress]);
@@ -348,7 +332,6 @@ export function ReciteClient({
     savedRevealed.current = 0;
     savedMistakes.current = 0;
     setPageIdx(0);
-    setResumeInfo(null);
     try {
       await db.progress.delete(surahNumber);
       const rawLast = localStorage.getItem("tilawat_last_recitation");
@@ -391,7 +374,6 @@ export function ReciteClient({
       } catch (e) {
         console.error(e);
       }
-      setResumeInfo(null);
     }
   };
 
@@ -506,30 +488,6 @@ export function ReciteClient({
         </div>
       </div>
 
-      {/* Resume from last recitation banner */}
-      {resumeInfo && (
-        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-emerald-950/95 via-[#0a2318]/95 to-emerald-950/95 border border-emerald-500/60 p-3 sm:p-4 shadow-[0_8px_30px_rgba(0,0,0,0.5)] backdrop-blur-md flex flex-col sm:flex-row items-center justify-between gap-3 text-xs sm:text-sm">
-          <div className="flex items-center gap-2.5 text-emerald-200 text-center sm:text-right w-full sm:w-auto">
-            <span className="text-amber-300 text-lg sm:text-xl shrink-0">📌</span>
-            <div>
-              <p className="font-semibold text-white">
-                پچھلی تلاوت یہاں سے بحال کر دی گئی ہے:
-              </p>
-              <p className="text-emerald-300/90 text-[11px] sm:text-xs mt-0.5">
-                آپ نے پہلے آیت {toArabicDigits(resumeInfo.lastAyah)} تک تلاوت کی تھی۔ پڑھے گئے الفاظ ظاہر ہیں اور آگے کی آیات چھپی ہوئی ہیں۔ تلاوت آیت {toArabicDigits(resumeInfo.nextAyah)} سے وہیں سے جاری ہے۔
-              </p>
-            </div>
-          </div>
-
-          <button
-            onClick={handleReset}
-            className="inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-emerald-900/90 hover:bg-emerald-800 text-emerald-100 hover:text-white border border-emerald-600/70 text-xs font-semibold whitespace-nowrap transition-all active:scale-95 cursor-pointer shadow-md shrink-0 w-full sm:w-auto"
-            title="سورت کو شروع سے پڑھنا شروع کریں"
-          >
-            <span>🔄 شروع سے پڑھیں</span>
-          </button>
-        </div>
-      )}
 
       {/* Real Mushaf 16-Line Page Container */}
       <MushafPage
