@@ -10,6 +10,10 @@ export const metadata: Metadata = {
   description:
     "Recite and the ayat appear on the Mushaf page word by word. Recite a word wrong and nothing further is revealed until you correct it. Online + Offline.",
   manifest: "/manifest.json",
+  icons: {
+    icon: "/favicon.png",
+    apple: "/icons/apple-touch-icon.png",
+  },
 };
 
 export const viewport: Viewport = { themeColor: "#0f1a14" };
