@@ -240,14 +240,18 @@ export function matchMany(
       }
     }
 
-    // 6. Echo / stutter: speech engine repeated the word that was just matched immediately before
-    if (r > 0) {
-      const prevIdx = r - 1;
-      if (matches(prevIdx, w)) {
-        // Repeated word — skip without recording as mistake to keep fast flow uninterrupted
-        i++;
-        continue;
+    // 6. Echo / stutter or already-revealed words from rolling buffer in fast recitation
+    let alreadyMatched = false;
+    const lookback = Math.max(0, r - 8);
+    for (let k = r - 1; k >= lookback; k--) {
+      if (matches(k, w)) {
+        alreadyMatched = true;
+        break;
       }
+    }
+    if (alreadyMatched) {
+      i++;
+      continue;
     }
 
     // If w does not match current word r (nor compound/split forms), record as mistake and do NOT skip ahead

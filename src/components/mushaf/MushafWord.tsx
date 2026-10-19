@@ -24,7 +24,7 @@ export function MushafWord({ token }: { token: WordToken }) {
 
   return (
     <span
-      className={`transition-all duration-150 ${isHighlighted ? "inline-block" : "inline"} ${cls}`}
+      className={`transition-all duration-75 ${isHighlighted ? "inline-block" : "inline"} ${cls}`}
     >
       {token.display}
     </span>
