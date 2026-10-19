@@ -88,8 +88,16 @@ export function ReciteClient({
     [loaded]
   );
 
-  const { revealed, displayRevealed, mistakes, lastHeard, handleResult, reset, completed } =
-    useRecitation(recTokens);
+  const {
+    revealed,
+    displayRevealed,
+    mistakes,
+    lastHeard,
+    handleResult,
+    reset,
+    jumpToProgress,
+    completed,
+  } = useRecitation(recTokens);
 
   const ws = useSpeechRecognition(handleResult);
   const wh = useWhisper(handleResult);
@@ -136,10 +144,51 @@ export function ReciteClient({
   const activeEngine = enginePref === "auto" ? (online ? "webspeech" : "whisper") : enginePref;
   const listening = activeEngine === "webspeech" ? ws.listening : wh.listening;
 
-  // ---- progress saving (IndexedDB) ----
+  // ---- progress saving & restoring (IndexedDB) ----
   const savedRevealed = useRef(0);
   const savedMistakes = useRef(0);
   const sessionCounted = useRef(false);
+  const initialLoadedRef = useRef(false);
+
+  const [resumeInfo, setResumeInfo] = useState<{
+    lastAyah: number;
+    nextAyah: number;
+    words: number;
+  } | null>(null);
+
+  // Restore progress on first load: Resume from exact Ayah where user left off!
+  useEffect(() => {
+    if (!loaded || initialLoadedRef.current || recTokens.length === 0) return;
+    initialLoadedRef.current = true;
+
+    db.progress.get(surahNumber).then((saved) => {
+      if (
+        saved &&
+        saved.revealedWords > 0 &&
+        !saved.completed &&
+        saved.revealedWords < recTokens.length
+      ) {
+        const lastReadToken = loaded.tokens[saved.revealedWords - 1];
+        const nextToken = loaded.tokens[saved.revealedWords];
+        const lastAyah = lastReadToken?.ayahNumber ?? 1;
+        const nextAyah = nextToken?.ayahNumber ?? lastAyah;
+
+        jumpToProgress(saved.revealedWords);
+        savedRevealed.current = saved.revealedWords;
+
+        // Auto jump to the page of the current unread word
+        const pg = nextToken?.page ?? loaded.pages[0];
+        const pi = loaded.pages.indexOf(pg);
+        if (pi >= 0) setPageIdx(pi);
+
+        setResumeInfo({
+          lastAyah,
+          nextAyah,
+          words: saved.revealedWords,
+        });
+      }
+    });
+  }, [loaded, surahNumber, recTokens.length, jumpToProgress]);
 
   const saveProgress = async () => {
     if (!loaded) return;
@@ -147,12 +196,16 @@ export function ReciteClient({
     const rDelta = Math.max(0, revealed - savedRevealed.current);
     const mDelta = Math.max(0, mistakes - savedMistakes.current);
     const ex = await db.progress.get(surahNumber);
+    const isDone = completed || revealed >= loaded.tokens.length;
+    const currentAyah = loaded.tokens[Math.min(revealed, loaded.tokens.length - 1)]?.ayahNumber;
+
     await db.progress.put({
       surahNumber,
-      revealedWords: Math.max(ex?.revealedWords ?? 0, revealed),
+      revealedWords: revealed,
       totalWords: loaded.tokens.length,
-      completed: completed || (ex?.completed ?? false),
+      completed: isDone || (ex?.completed ?? false),
       lastPracticedAt: Date.now(),
+      lastAyahNumber: currentAyah,
     });
     if (rDelta || mDelta || sessionCounted.current) {
       const row = await db.activity.get(today);
@@ -234,6 +287,61 @@ export function ReciteClient({
     setPageIdx(0);
   };
 
+  const handleRestartFromBeginning = async () => {
+    resetAll();
+    setResumeInfo(null);
+    try {
+      await db.progress.put({
+        surahNumber,
+        revealedWords: 0,
+        totalWords: loaded?.tokens.length ?? 0,
+        completed: false,
+        lastPracticedAt: Date.now(),
+        lastAyahNumber: 1,
+      });
+    } catch (err) {
+      console.error("Failed to reset progress in db:", err);
+    }
+  };
+
+  const handleJumpToAyah = async (ayahNumber: number) => {
+    if (!loaded) return;
+    const targetIdx = loaded.tokens.findIndex((t) => t.ayahNumber === ayahNumber);
+    if (targetIdx >= 0) {
+      ws.stop();
+      wh.stop();
+      ws.resetFinals();
+      wh.resetFinals();
+      jumpToProgress(targetIdx);
+      savedRevealed.current = targetIdx;
+
+      // Navigate to the page of this ayah
+      const pg = loaded.tokens[targetIdx]?.page;
+      const pi = loaded.pages.indexOf(pg);
+      if (pi >= 0) setPageIdx(pi);
+
+      try {
+        await db.progress.put({
+          surahNumber,
+          revealedWords: targetIdx,
+          totalWords: loaded.tokens.length,
+          completed: false,
+          lastPracticedAt: Date.now(),
+          lastAyahNumber: ayahNumber,
+        });
+      } catch (e) {
+        console.error(e);
+      }
+      setResumeInfo(null);
+    }
+  };
+
+  const currentAyahNumber = useMemo(() => {
+    if (!loaded) return 1;
+    const idx = Math.min(displayRevealed, loaded.tokens.length - 1);
+    return loaded.tokens[idx]?.ayahNumber || 1;
+  }, [loaded, displayRevealed]);
+
   const playCurrentAyah = () => {
     if (!loaded) return;
     const idx = Math.min(displayRevealed, total - 1);
@@ -268,16 +376,35 @@ export function ReciteClient({
         {/* Subtle luminous top accent line */}
         <div className="absolute inset-x-0 top-0 h-[1.5px] bg-gradient-to-r from-transparent via-emerald-400/50 to-transparent" />
 
-        {/* Top Utility Bar: Back button */}
-        <div className="flex items-center justify-between gap-3 mb-2">
+        {/* Top Utility Bar: Back button & Ayah Jump Selector */}
+        <div className="flex items-center justify-between gap-2 mb-2 flex-wrap">
           {/* Back Button */}
           <button
             onClick={handleBack}
             title="Go back"
             className="inline-flex items-center justify-center px-4 py-1.5 rounded-full text-xs sm:text-sm font-semibold tracking-wide text-emerald-100 bg-[#0d2217]/90 hover:bg-[#133022] border border-emerald-600/50 hover:border-emerald-400/80 shadow-[0_2px_8px_rgba(0,0,0,0.35)] hover:shadow-[0_0_12px_rgba(16,185,129,0.25)] backdrop-blur-md active:scale-95 transition-all duration-200 cursor-pointer"
           >
-            Back
+            ← Back
           </button>
+
+          {/* Jump to specific Ayah */}
+          <div className="flex items-center gap-1.5 bg-[#06140d]/90 px-3 py-1 rounded-full border border-emerald-700/60 shadow-sm">
+            <span className="text-[11px] text-emerald-300/80 font-medium whitespace-nowrap">
+              آیت پر جائیں:
+            </span>
+            <select
+              aria-label="Select Ayah to recite"
+              value={currentAyahNumber}
+              onChange={(e) => handleJumpToAyah(Number(e.target.value))}
+              className="bg-transparent text-emerald-200 font-bold text-xs focus:outline-none cursor-pointer pr-1"
+            >
+              {loaded.ayahs.map((a) => (
+                <option key={a.n} value={a.n} className="bg-[#06140d] text-white">
+                  آیت {toArabicDigits(a.n)} ({a.n})
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
 
         {/* Centered Surah Identity & Information */}
@@ -320,6 +447,30 @@ export function ReciteClient({
         </div>
       </div>
 
+      {/* Resume from last recitation banner */}
+      {resumeInfo && (
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-emerald-950/95 via-[#0a2318]/95 to-emerald-950/95 border border-emerald-500/60 p-3 sm:p-4 shadow-[0_8px_30px_rgba(0,0,0,0.5)] backdrop-blur-md flex flex-col sm:flex-row items-center justify-between gap-3 text-xs sm:text-sm">
+          <div className="flex items-center gap-2.5 text-emerald-200 text-center sm:text-right w-full sm:w-auto">
+            <span className="text-amber-300 text-lg sm:text-xl shrink-0">📌</span>
+            <div>
+              <p className="font-semibold text-white">
+                پچھلی تلاوت یہاں سے بحال کر دی گئی ہے:
+              </p>
+              <p className="text-emerald-300/90 text-[11px] sm:text-xs mt-0.5">
+                آپ نے پہلے آیت {toArabicDigits(resumeInfo.lastAyah)} تک تلاوت کی تھی۔ پڑھے گئے الفاظ ظاہر ہیں اور آگے کی آیات چھپی ہوئی ہیں۔ تلاوت آیت {toArabicDigits(resumeInfo.nextAyah)} سے وہیں سے جاری ہے۔
+              </p>
+            </div>
+          </div>
+
+          <button
+            onClick={handleRestartFromBeginning}
+            className="inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-emerald-900/90 hover:bg-emerald-800 text-emerald-100 hover:text-white border border-emerald-600/70 text-xs font-semibold whitespace-nowrap transition-all active:scale-95 cursor-pointer shadow-md shrink-0 w-full sm:w-auto"
+            title="سورت کو شروع سے پڑھنا شروع کریں"
+          >
+            <span>🔄 شروع سے پڑھیں</span>
+          </button>
+        </div>
+      )}
 
       {/* Real Mushaf 16-Line Page Container */}
       <MushafPage
