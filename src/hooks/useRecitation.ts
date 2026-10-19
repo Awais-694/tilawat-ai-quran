@@ -151,11 +151,8 @@ export function useRecitation(tokens: WordToken[], initialRevealed: number = 0) 
           if (best.wrongWords.length) setWrongWords((w) => [...w, ...best.wrongWords]);
         } else if (carriedOnly) {
           carryRef.current = carriedOnly;
-        } else if (best && committed > 0) {
-          committed = best.revealed;
+        } else if (best) {
           carryRef.current = [];
-          revealedRef.current = committed;
-          setRevealed(committed);
           if (best.wrongWords.length) setWrongWords((w) => [...w, ...best.wrongWords]);
         }
       }
@@ -166,10 +163,24 @@ export function useRecitation(tokens: WordToken[], initialRevealed: number = 0) 
       if ((MUQATTA_AT[muqLive] || MUQATTA_AT_FORMS[muqLive]) && interimWords.length > 0) {
         interimWords = collapseMuqattaat(interimWords, muqLive).words;
       }
-      const live =
-        interimWords.length > 0
-          ? matchMany(expected, committed, interimWords, expectedForms).revealed
-          : committed;
+
+      // Interim feedback: ONLY allow preview of the immediate current word being spoken.
+      // Web Speech API models in browsers predict ahead and autocomplete entire verses (e.g. saying "الحمد" emits "الحمد لله رب العالمين").
+      // We must NEVER allow interim autocomplete to reveal future unrecited words or entire future ayahs!
+      let live = committed;
+      if (interimWords.length > 0) {
+        // Test if the first 1 or 2 speech tokens match the immediate expected token rLive
+        let candidate: string[] = [interimWords[0]];
+        if (
+          interimWords.length >= 2 &&
+          matchMany(expected, committed, [interimWords[0] + interimWords[1]], expectedForms).revealed > committed
+        ) {
+          candidate = [interimWords[0], interimWords[1]];
+        }
+        const interimMatch = matchMany(expected, committed, candidate, expectedForms);
+        // Live interim preview can at most advance by the current spoken word (or +2 if words were merged in speech)
+        live = Math.min(interimMatch.revealed, committed + 2);
+      }
       setDisplayRevealed(Math.max(committed, live));
       const heard = (finalText + " " + interimText).trim();
       if (heard) setLastHeard(heard);

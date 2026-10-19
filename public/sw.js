@@ -36,8 +36,19 @@ self.addEventListener("fetch", (e) => {
     return;
   }
 
-  // PDFs ko service worker bilkul intercept na kare taake byte-range requests direct stream hon
+  // PDFs: try network first, but if offline serve from cache if available
   if (url.pathname.endsWith(".pdf") || url.pathname.includes(".pdf")) {
+    e.respondWith(
+      (async () => {
+        try {
+          return await fetch(e.request);
+        } catch {
+          const cached = await caches.match(e.request);
+          if (cached) return cached;
+          return new Response("PDF Offline", { status: 503, statusText: "Offline" });
+        }
+      })()
+    );
     return;
   }
 

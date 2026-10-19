@@ -1,8 +1,13 @@
 "use client";
 
-import { useState, useMemo, useEffect, Suspense } from "react";
+import { useState, useMemo, useEffect, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import surahsMeta from "@/data/surahs-meta.json";
+import {
+  saveTarjamaPdf,
+  getTarjamaPdf,
+  deleteTarjamaPdf,
+} from "@/lib/storage/tarjamaStorage";
 
 function TarjamaContent() {
   const router = useRouter();
@@ -11,6 +16,14 @@ function TarjamaContent() {
   // State: Default to Surah 1 (Al-Fatiha) or URL ?surah=X
   const [selectedSurahNumber, setSelectedSurahNumber] = useState<number>(1);
   const [isFullscreen, setIsFullscreen] = useState(false);
+
+  // Offline PDF storage states
+  const [isOfflineSaved, setIsOfflineSaved] = useState(false);
+  const [offlineBlobUrl, setOfflineBlobUrl] = useState<string | null>(null);
+  const [pdfSize, setPdfSize] = useState<number | null>(null);
+  const [isDownloading, setIsDownloading] = useState(false);
+  const [statusMessage, setStatusMessage] = useState<string | null>(null);
+  const deviceFileInputRef = useRef<HTMLInputElement | null>(null);
 
   // Read URL query parameter ?surah=X if provided
   useEffect(() => {
@@ -22,6 +35,38 @@ function TarjamaContent() {
       }
     }
   }, [searchParams]);
+
+  // Check and load offline PDF whenever selectedSurahNumber changes
+  useEffect(() => {
+    let active = true;
+    getTarjamaPdf(selectedSurahNumber)
+      .then((blob) => {
+        if (!active) return;
+        if (blob) {
+          const url = URL.createObjectURL(blob);
+          setOfflineBlobUrl((prev) => {
+            if (prev) URL.revokeObjectURL(prev);
+            return url;
+          });
+          setIsOfflineSaved(true);
+          setPdfSize(blob.size);
+        } else {
+          setOfflineBlobUrl((prev) => {
+            if (prev) URL.revokeObjectURL(prev);
+            return null;
+          });
+          setIsOfflineSaved(false);
+          setPdfSize(null);
+        }
+      })
+      .catch((err) => {
+        console.error("Failed to check offline PDF:", err);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [selectedSurahNumber]);
 
   // Auto-update Service Worker to ensure fresh PDF streaming
   useEffect(() => {
@@ -69,11 +114,85 @@ function TarjamaContent() {
     }
   };
 
-  // Individual Surah PDF URL (Page 1 is the beginning of this exact Surah)
+  // Individual Surah PDF URL
   const surahPdfFile = `/tarjama/surahs/${selectedSurahNumber}.pdf`;
   const currentPdfUrl = useMemo(() => {
-    return `${surahPdfFile}#view=FitH&toolbar=1&navpanes=1`;
-  }, [surahPdfFile]);
+    const base = offlineBlobUrl || surahPdfFile;
+    return `${base}#view=FitH&toolbar=1&navpanes=1`;
+  }, [offlineBlobUrl, surahPdfFile]);
+
+  // Download & Save PDF locally into IndexedDB and browser downloads
+  const handleDownloadOffline = async () => {
+    if (isDownloading) return;
+    setIsDownloading(true);
+    setStatusMessage("ڈاؤنلوڈ جاری ہے... براہ کرم انتظار کریں");
+    try {
+      const res = await fetch(surahPdfFile);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const blob = await res.blob();
+      await saveTarjamaPdf(selectedSurahNumber, blob, currentSurah.name);
+
+      // Create blob URL for in-app viewing
+      const blobUrl = URL.createObjectURL(blob);
+      setOfflineBlobUrl((prev) => {
+        if (prev) URL.revokeObjectURL(prev);
+        return blobUrl;
+      });
+      setIsOfflineSaved(true);
+      setPdfSize(blob.size);
+
+      // Also trigger device file download so user has the file in gallery/files
+      const a = document.createElement("a");
+      a.href = blobUrl;
+      a.download = `${selectedSurahNumber}-${currentSurah.name}-Tarjama.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+
+      setStatusMessage("سورت کا ترجمہ ایپ میں محفوظ ہو گیا ہے اور ڈیوائس میں ڈاؤنلوڈ بھی ہو چکا ہے!");
+      setTimeout(() => setStatusMessage(null), 4000);
+    } catch (err) {
+      console.error("Offline download failed:", err);
+      setStatusMessage("ڈاؤنلوڈ میں خرابی آئی۔ براہ کرم انٹرنیٹ چیک کریں یا دوبارہ کوشش کریں۔");
+      setTimeout(() => setStatusMessage(null), 5000);
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
+  // Open file from device (if user already downloaded it earlier to their phone)
+  const handleDeviceFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      await saveTarjamaPdf(selectedSurahNumber, file, currentSurah.name);
+      const url = URL.createObjectURL(file);
+      setOfflineBlobUrl((prev) => {
+        if (prev) URL.revokeObjectURL(prev);
+        return url;
+      });
+      setIsOfflineSaved(true);
+      setPdfSize(file.size);
+      setStatusMessage("پی ڈی ایف کامیابی سے ایپ میں شامل اور محفوظ ہو گئی ہے!");
+      setTimeout(() => setStatusMessage(null), 4000);
+    } catch (err) {
+      console.error("Failed to load device PDF:", err);
+      setStatusMessage("فائل لوڈ کرنے میں خرابی آئی۔");
+      setTimeout(() => setStatusMessage(null), 4000);
+    }
+  };
+
+  const handleDeleteOffline = async () => {
+    if (confirm(`کیا آپ سورت ${currentSurah.name} کی آف لائن پی ڈی ایف ایپ سے حذف کرنا چاہتے ہیں؟`)) {
+      await deleteTarjamaPdf(selectedSurahNumber);
+      if (offlineBlobUrl) URL.revokeObjectURL(offlineBlobUrl);
+      setOfflineBlobUrl(null);
+      setIsOfflineSaved(false);
+      setPdfSize(null);
+      setStatusMessage("آف لائن پی ڈی ایف حذف کر دی گئی۔");
+      setTimeout(() => setStatusMessage(null), 3000);
+    }
+  };
 
   return (
     <div
@@ -83,6 +202,23 @@ function TarjamaContent() {
           : ""
       }`}
     >
+      {/* Hidden file input for picking previously downloaded PDF from phone/gallery */}
+      <input
+        ref={deviceFileInputRef}
+        type="file"
+        accept="application/pdf"
+        className="hidden"
+        onChange={handleDeviceFileSelect}
+      />
+
+      {/* Floating Status Notification Toast */}
+      {statusMessage && (
+        <div className="fixed top-4 right-4 z-50 px-4 py-2.5 rounded-xl bg-emerald-950/95 border border-emerald-400 text-emerald-100 text-xs sm:text-sm font-medium shadow-[0_10px_35px_rgba(0,0,0,0.8)] backdrop-blur-md flex items-center gap-2 animate-bounce">
+          <span>✨</span>
+          <span>{statusMessage}</span>
+        </div>
+      )}
+
       {/* Top Header Card */}
       {!isFullscreen && (
         <div className="relative overflow-visible rounded-2xl sm:rounded-3xl bg-gradient-to-br from-[#0c1e15]/95 via-[#07160f]/95 to-[#040e09]/95 border border-[#1d442f]/80 p-3 sm:p-4 shadow-[0_12px_40px_rgba(0,0,0,0.5)] backdrop-blur-md">
@@ -160,7 +296,7 @@ function TarjamaContent() {
               )}
             </button>
 
-            {/* Mobile Next Surah Button (kept alongside on mobile row) */}
+            {/* Mobile Next Surah Button */}
             <button
               onClick={handleNextSurah}
               disabled={!nextSurah}
@@ -202,11 +338,25 @@ function TarjamaContent() {
               <span className="text-[10px] sm:text-xs font-semibold px-2 py-0.5 rounded-full bg-amber-950/80 border border-amber-600/50 text-amber-200">
                 {currentSurah.revelationType === "Meccan" ? "مکی سورت" : "مدنی سورت"}
               </span>
+
+              {/* Offline Status Badge */}
+              {isOfflineSaved ? (
+                <span className="text-[10px] sm:text-xs font-semibold px-2.5 py-0.5 rounded-full bg-emerald-900/90 border border-emerald-400 text-emerald-200 flex items-center gap-1 shadow-[0_0_12px_rgba(16,185,129,0.35)]">
+                  <svg className="w-3 h-3 text-emerald-400" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                  </svg>
+                  <span>آف لائن دستیاب {pdfSize ? `(${(pdfSize / (1024 * 1024)).toFixed(1)} MB)` : ""}</span>
+                </span>
+              ) : (
+                <span className="text-[10px] sm:text-xs font-medium px-2 py-0.5 rounded-full bg-slate-900/70 border border-slate-700/70 text-slate-300">
+                  آن لائن موڈ
+                </span>
+              )}
             </div>
           </div>
 
           {/* Right: Next Surah & Utility Actions (Desktop) */}
-          <div className="order-3 flex items-center justify-center md:justify-end gap-1.5 w-full md:w-auto">
+          <div className="order-3 flex items-center justify-center md:justify-end gap-1.5 w-full md:w-auto flex-wrap">
             {/* Desktop Next Surah Button */}
             <button
               onClick={handleNextSurah}
@@ -221,6 +371,18 @@ function TarjamaContent() {
               <svg className="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
               </svg>
+            </button>
+
+            {/* Load from Device Button */}
+            <button
+              onClick={() => deviceFileInputRef.current?.click()}
+              className="px-2.5 py-1.5 rounded-xl bg-[#081f14] hover:bg-emerald-900/60 border border-emerald-800/80 text-emerald-200 text-xs font-medium flex items-center gap-1 transition-all active:scale-95 cursor-pointer"
+              title="ڈیوائس / گیلری میں پہلے سے موجود پی ڈی ایف منتخب کریں"
+            >
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12.75V12A2.25 2.25 0 014.5 9.75h15A2.25 2.25 0 0121.75 12v.75m-8.69-6.44l-2.12-2.12a1.5 1.5 0 00-1.061-.44H4.5A2.25 2.25 0 002.25 6v12a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9a2.25 2.25 0 00-2.25-2.25h-5.379a1.5 1.5 0 01-1.06-.44z" />
+              </svg>
+              <span className="hidden sm:inline">ڈیوائس سے کھولیں</span>
             </button>
 
             {/* Fullscreen Button */}
@@ -246,7 +408,7 @@ function TarjamaContent() {
               )}
             </button>
 
-            {/* Direct Open in New Tab Button */}
+            {/* Direct Open in New Tab Button (works 100% offline with blobUrl) */}
             <a
               href={currentPdfUrl}
               target="_blank"
@@ -260,18 +422,47 @@ function TarjamaContent() {
               <span className="hidden sm:inline">Tab</span>
             </a>
 
-            {/* Download Button */}
-            <a
-              href={surahPdfFile}
-              download={`${currentSurah.name}-Tarjama.pdf`}
-              className="px-3 py-1.5 rounded-xl bg-emerald-700/80 hover:bg-emerald-600 border border-emerald-500/80 text-white text-xs font-semibold flex items-center gap-1.5 shadow-[0_0_12px_rgba(16,185,129,0.3)] transition-all active:scale-95 cursor-pointer"
-              title="Download this Surah translation to read offline anytime"
-            >
-              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2.3" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
-              </svg>
-              <span>Download</span>
-            </a>
+            {/* Smart Offline Download / Saved Status Button */}
+            {isOfflineSaved ? (
+              <button
+                onClick={handleDeleteOffline}
+                className="px-3 py-1.5 rounded-xl bg-emerald-900/90 hover:bg-red-950/90 border border-emerald-500/80 hover:border-red-600/80 text-emerald-200 hover:text-red-200 text-xs font-semibold flex items-center gap-1.5 shadow-[0_0_12px_rgba(16,185,129,0.3)] transition-all active:scale-95 cursor-pointer group"
+                title="یہ سورت آف لائن محفوظ ہے۔ کلک کر کے حذف کر سکتے ہیں"
+              >
+                <svg className="w-3.5 h-3.5 text-emerald-400 group-hover:hidden" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                </svg>
+                <svg className="w-3.5 h-3.5 text-red-400 hidden group-hover:inline" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+                </svg>
+                <span className="group-hover:hidden">محفوظ ہے ✓</span>
+                <span className="hidden group-hover:inline">حذف کریں</span>
+              </button>
+            ) : (
+              <button
+                onClick={handleDownloadOffline}
+                disabled={isDownloading}
+                className="px-3 py-1.5 rounded-xl bg-emerald-700/90 hover:bg-emerald-600 border border-emerald-400/80 text-white text-xs font-semibold flex items-center gap-1.5 shadow-[0_0_14px_rgba(16,185,129,0.4)] transition-all active:scale-95 cursor-pointer disabled:opacity-50"
+                title="Download this Surah translation to read offline inside the app"
+              >
+                {isDownloading ? (
+                  <>
+                    <svg className="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+                    </svg>
+                    <span>ڈاؤنلوڈ جاری ہے...</span>
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2.3" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                    </svg>
+                    <span>ڈاؤنلوڈ آف لائن</span>
+                  </>
+                )}
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -283,27 +474,37 @@ function TarjamaContent() {
         }`}
       >
         <object
-          key={`surah-pdf-${selectedSurahNumber}`}
+          key={`surah-pdf-${selectedSurahNumber}-${offlineBlobUrl ? "offline" : "online"}`}
           data={currentPdfUrl}
           type="application/pdf"
           className="w-full h-full border-0"
         >
-          {/* Fallback for devices without inline PDF support (e.g. some mobile browsers) */}
+          {/* Fallback for devices without inline PDF support (e.g. mobile Chrome) */}
           <div className="flex flex-col items-center justify-center p-6 sm:p-10 text-center h-full bg-gradient-to-b from-[#091f14] to-[#040e09] text-white">
-            <div className="w-16 h-16 rounded-2xl bg-emerald-900/60 border border-emerald-600/50 flex items-center justify-center text-3xl mb-4 shadow-[0_0_25px_rgba(16,185,129,0.25)] text-emerald-200 animate-pulse">
+            <div className="w-16 h-16 rounded-2xl bg-emerald-900/60 border border-emerald-600/50 flex items-center justify-center text-3xl mb-3 shadow-[0_0_25px_rgba(16,185,129,0.25)] text-emerald-200 animate-pulse">
               📖
             </div>
-            <h3 className="text-xl sm:text-2xl font-bold text-white mb-1.5 font-quran" dir="rtl">
+            <h3 className="text-xl sm:text-2xl font-bold text-white mb-1 font-quran" dir="rtl">
               {currentSurah.arabicName}
             </h3>
             <p className="text-sm font-semibold text-emerald-300 mb-1">
               {currentSurah.name} ({currentSurah.translation})
             </p>
-            <p className="text-xs text-emerald-400/80 mb-5">
-              {currentSurah.numberOfAyahs} آیات • {currentSurah.revelationType === "Meccan" ? "مکی" : "مدنی"}
-            </p>
 
-            <div className="flex flex-col gap-2.5 w-full max-w-sm">
+            {isOfflineSaved ? (
+              <div className="my-2.5 px-3 py-1.5 rounded-full bg-emerald-950/90 border border-emerald-500/70 text-emerald-200 text-xs font-semibold inline-flex items-center gap-1.5 shadow-[0_0_12px_rgba(16,185,129,0.3)]">
+                <svg className="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                </svg>
+                <span>یہ سورت ایپ میں آف لائن دستیاب ہے! {pdfSize ? `(${(pdfSize / (1024 * 1024)).toFixed(1)} MB)` : ""}</span>
+              </div>
+            ) : (
+              <p className="text-xs text-amber-300/80 mb-3 max-w-md">
+                اگر آپ آف لائن ہیں اور یہ پی ڈی ایف آپ کے فون کی گیلری / ڈاؤنلوڈز میں موجود ہے تو نیچے &quot;ڈیوائس سے منتخب کریں&quot; دبائیں۔
+              </p>
+            )}
+
+            <div className="flex flex-col gap-2.5 w-full max-w-sm mt-2">
               <a
                 href={currentPdfUrl}
                 target="_blank"
@@ -313,19 +514,31 @@ function TarjamaContent() {
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
                 </svg>
-                <span>براہ راست آن لائن ترجمہ پڑھیں (Read Online)</span>
+                <span>براہِ راست ترجمہ پڑھیں (Read Translation)</span>
               </a>
 
-              <a
-                href={surahPdfFile}
-                download={`${currentSurah.name}-Tarjama.pdf`}
-                className="w-full py-2 px-3 rounded-xl bg-[#092215] hover:bg-[#0f2e1e] border border-emerald-600/70 text-emerald-100 text-xs font-semibold flex items-center justify-center gap-1.5 transition-all active:scale-95 cursor-pointer text-center"
+              {!isOfflineSaved && (
+                <button
+                  onClick={handleDownloadOffline}
+                  disabled={isDownloading}
+                  className="w-full py-2.5 px-3 rounded-xl bg-[#0d2e1c] hover:bg-[#133e26] border border-emerald-500/70 text-emerald-100 text-xs font-semibold flex items-center justify-center gap-1.5 transition-all active:scale-95 cursor-pointer text-center"
+                >
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                  </svg>
+                  <span>{isDownloading ? "محفوظ ہو رہا ہے..." : "ڈاؤنلوڈ برائے آف لائن (Save Offline)"}</span>
+                </button>
+              )}
+
+              <button
+                onClick={() => deviceFileInputRef.current?.click()}
+                className="w-full py-2 px-3 rounded-xl bg-[#06170e] hover:bg-[#0a2416] border border-emerald-700/60 text-emerald-200 text-xs font-medium flex items-center justify-center gap-1.5 transition-all active:scale-95 cursor-pointer text-center"
               >
-                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12.75V12A2.25 2.25 0 014.5 9.75h15A2.25 2.25 0 0121.75 12v.75m-8.69-6.44l-2.12-2.12a1.5 1.5 0 00-1.061-.44H4.5A2.25 2.25 0 002.25 6v12a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9a2.25 2.25 0 00-2.25-2.25h-5.379a1.5 1.5 0 01-1.06-.44z" />
                 </svg>
-                <span>ڈاؤنلوڈ پی ڈی ایف (Offline)</span>
-              </a>
+                <span>📂 ڈاؤنلوڈ شدہ پی ڈی ایف ڈیوائس سے منتخب کریں</span>
+              </button>
             </div>
           </div>
         </object>

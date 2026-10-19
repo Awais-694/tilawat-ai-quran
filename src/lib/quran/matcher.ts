@@ -158,21 +158,7 @@ export function matchMany(
       }
       if (startsWithR) continue;
     }
-    // 5. Lookahead: Fast recitation where word r was elided or misrecognized, but user is at r2
-    if (r2 < expectedNormalized.length && matches(r2, w)) {
-      wrongWords.push(expectedNormalized[r]);
-      r = skipEmpty(expectedNormalized, r2 + 1);
-      i++;
-      continue;
-    }
-    const r3 = skipEmpty(expectedNormalized, r2 + 1);
-    if (r3 < expectedNormalized.length && matches(r3, w)) {
-      wrongWords.push(expectedNormalized[r]);
-      wrongWords.push(expectedNormalized[r2]);
-      r = skipEmpty(expectedNormalized, r3 + 1);
-      i++;
-      continue;
-    }
+    // If w does not match current word r (nor compound/split forms), record as mistake and do NOT skip ahead
     wrongWords.push(w);
     i++;
   }
