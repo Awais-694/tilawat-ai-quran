@@ -11,6 +11,8 @@ export interface SurahProgress {
   completed: boolean;
   lastPracticedAt: number;
   lastAyahNumber?: number; // last recited ayah number
+  completedAt?: number;
+  completedTimes?: number;
 }
 
 export interface DailyActivity {

@@ -12,6 +12,7 @@ interface Stats {
   accuracy: number | null;
   inProgress: SurahProgress[];
   completedCount: number;
+  completedList: SurahProgress[];
   lastActive: SurahProgress | null;
 }
 
@@ -37,17 +38,38 @@ export function DashboardClient() {
     const totalWords = activity.reduce((s, a) => s + a.wordsRevealed, 0);
     const totalMistakes = activity.reduce((s, a) => s + a.mistakes, 0);
 
-    // 1. Look for in-progress surahs with actual revealed words in DB
-    let active = progress
-      .filter((p) => !p.completed && p.revealedWords > 0)
-      .sort((a, b) => (b.lastPracticedAt || 0) - (a.lastPracticedAt || 0))[0] ?? null;
+    // 1. Completed Surahs: Surahs that are finished
+    // Unique by surahNumber (Map ensures exactly one entry per surah)
+    const completedMap = new Map<number, SurahProgress>();
+    for (const p of progress) {
+      if (p.completed || (p.completedTimes ?? 0) > 0 || (p.totalWords > 0 && p.revealedWords >= p.totalWords)) {
+        completedMap.set(p.surahNumber, p);
+      }
+    }
+    const completedList = Array.from(completedMap.values()).sort(
+      (a, b) => (b.completedAt || b.lastPracticedAt || 0) - (a.completedAt || a.lastPracticedAt || 0)
+    );
 
-    // 2. Check localStorage for the latest recitation (survives app closure / immediate navigation)
+    // 2. In-Progress Surahs: ONLY half-recited surahs!
+    // (revealedWords > 0, revealedWords < totalWords, and NOT currently completed)
+    const inProgressList = progress
+      .filter((p) => !p.completed && p.revealedWords > 0 && (p.totalWords ? p.revealedWords < p.totalWords : true))
+      .sort((a, b) => (b.lastPracticedAt || 0) - (a.lastPracticedAt || 0));
+
+    // 3. Resume Card Item: ONLY a currently half-read surah!
+    let active = inProgressList[0] ?? null;
+
     try {
       const rawLast = localStorage.getItem("tilawat_last_recitation");
       if (rawLast) {
         const parsed = JSON.parse(rawLast);
-        if (parsed && typeof parsed.surahNumber === "number" && (parsed.revealedWords || 0) > 0) {
+        if (
+          parsed &&
+          typeof parsed.surahNumber === "number" &&
+          !parsed.completed &&
+          (parsed.revealedWords || 0) > 0 &&
+          (parsed.revealedWords || 0) < (parsed.totalWords || Infinity)
+        ) {
           const lsTime = parsed.timestamp || 0;
           const dbTime = active?.lastPracticedAt || 0;
           if (!active || lsTime >= dbTime) {
@@ -64,7 +86,7 @@ export function DashboardClient() {
       }
     } catch {}
 
-    // If user hasn't opened any surah yet or reset, default to Surah Al-Fatihah
+    // If no surah is half-read, default to ready state for Surah 1 Al-Fatihah
     if (!active) {
       active = {
         surahNumber: 1,
@@ -82,8 +104,9 @@ export function DashboardClient() {
         totalWords + totalMistakes > 0
           ? Math.round((totalWords / (totalWords + totalMistakes)) * 100)
           : null,
-      inProgress: progress.filter((p) => p.revealedWords > 0 && !p.completed).slice(0, 4),
-      completedCount: progress.filter((p) => p.completed).length,
+      inProgress: inProgressList.slice(0, 4),
+      completedCount: completedList.length,
+      completedList,
       lastActive: active,
     });
 
@@ -91,7 +114,6 @@ export function DashboardClient() {
       if (active.lastAyahNumber) {
         setLastAyah(active.lastAyahNumber);
       } else if (active.revealedWords > 0) {
-        // Resolve ayah dynamically from tokens if older record
         const s = await loadSurah(active.surahNumber);
         if (s) {
           const idx = Math.max(0, Math.min(active.revealedWords - 1, s.tokens.length - 1));
@@ -122,6 +144,24 @@ export function DashboardClient() {
       await loadStats();
     } catch (err) {
       console.error("Failed to reset surah progress:", err);
+    }
+  };
+
+  const handleDeleteCompleted = async (surahNum: number, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    try {
+      await db.progress.delete(surahNum);
+      const rawLast = localStorage.getItem("tilawat_last_recitation");
+      if (rawLast) {
+        const parsed = JSON.parse(rawLast);
+        if (parsed?.surahNumber === surahNum) {
+          localStorage.removeItem("tilawat_last_recitation");
+        }
+      }
+      await loadStats();
+    } catch (err) {
+      console.error("Failed to delete completed surah:", err);
     }
   };
 
@@ -272,6 +312,92 @@ export function DashboardClient() {
           />
         </div>
       </div>
+
+      {/* Completed Surahs Section */}
+      {stats && stats.completedList.length > 0 && (
+        <div className="bg-[#0a2217]/90 border border-emerald-600/50 rounded-2xl sm:rounded-3xl p-4 sm:p-5 shadow-[0_8px_30px_rgba(0,0,0,0.45)] backdrop-blur-md space-y-3.5">
+          {/* Section Header */}
+          <div className="flex items-center justify-between border-b border-emerald-800/50 pb-2.5">
+            <div className="flex items-center gap-2">
+              <span className="w-6 h-6 rounded-full bg-emerald-500/20 border border-emerald-400/60 flex items-center justify-center text-emerald-300 text-xs font-bold shadow-sm">
+                ✓
+              </span>
+              <h2 className="text-sm sm:text-base font-bold text-white tracking-wide">
+                Completed Surahs
+              </h2>
+              <span className="text-[11px] font-quran text-emerald-300/80 mr-1" dir="rtl">
+                (مکمل شدہ سورتیں)
+              </span>
+            </div>
+            <span className="text-[11px] sm:text-xs font-semibold text-emerald-300 bg-emerald-950/80 border border-emerald-700/60 px-2.5 py-0.5 rounded-full shadow-sm">
+              {stats.completedList.length} {stats.completedList.length === 1 ? "Surah" : "Surahs"}
+            </span>
+          </div>
+
+          {/* Completed Surahs List (Each surah appears strictly once) */}
+          <div className="flex flex-col gap-2">
+            {stats.completedList.map((p) => {
+              const meta = getSurahMeta(p.surahNumber);
+              return (
+                <div
+                  key={p.surahNumber}
+                  className="flex items-center justify-between gap-2.5 bg-[#07160f]/90 border border-emerald-800/60 rounded-xl p-3 sm:px-4 sm:py-3 hover:bg-[#0c2419] hover:border-emerald-600/70 transition-all shadow-sm"
+                >
+                  {/* Left: Surah number + English name + Completed tag */}
+                  <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
+                    <span className="w-8 h-8 rounded-xl bg-gradient-to-b from-emerald-700/90 to-emerald-900 border border-emerald-500/60 flex items-center justify-center text-xs font-bold text-white shrink-0 shadow-sm">
+                      {meta?.number}
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-xs sm:text-sm font-bold text-white truncate">
+                          {meta?.name}
+                        </span>
+                        <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-300 bg-emerald-950 border border-emerald-600/50 px-2 py-0.5 rounded-full shrink-0">
+                          <span>✓</span> Completed
+                        </span>
+                      </div>
+                      <div className="text-[11px] text-emerald-300/60 truncate mt-0.5">
+                        {meta?.numberOfAyahs} Ayahs • {p.totalWords || meta?.numberOfAyahs} words recited
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Right: Arabic Name & Actions */}
+                  <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+                    <span className="font-quran text-lg sm:text-2xl text-emerald-200 leading-none select-none hidden xs:inline" dir="rtl">
+                      {meta?.arabicName}
+                    </span>
+
+                    {/* Recite Again Button */}
+                    <Link
+                      href={`/recite/${p.surahNumber}`}
+                      className="px-2.5 sm:px-3 py-1.5 rounded-lg bg-emerald-900/70 hover:bg-emerald-800 text-emerald-100 hover:text-white border border-emerald-700/60 text-xs font-semibold flex items-center gap-1 transition-all active:scale-95 shadow-sm cursor-pointer"
+                      title="سورت کو دوبارہ پڑھیں"
+                    >
+                      <svg className="w-3.5 h-3.5 text-emerald-300" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                      </svg>
+                      <span className="hidden sm:inline">Recite Again</span>
+                    </Link>
+
+                    {/* Delete from Completed Button */}
+                    <button
+                      onClick={(e) => handleDeleteCompleted(p.surahNumber, e)}
+                      className="p-1.5 sm:p-2 rounded-lg text-emerald-400/60 hover:text-rose-300 hover:bg-rose-950/70 border border-transparent hover:border-rose-800/60 transition-all active:scale-90 cursor-pointer"
+                      title="مکمل شدہ فہرست سے ڈیلیٹ کریں"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* In Progress Surahs */}
       {stats && stats.inProgress.length > 0 && (

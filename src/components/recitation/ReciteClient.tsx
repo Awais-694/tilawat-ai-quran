@@ -215,21 +215,37 @@ export function ReciteClient({
       surahNumber,
       revealedWords: effectiveRevealed,
       totalWords: loaded.tokens.length,
-      completed: isDone || (ex?.completed ?? false),
+      completed: isDone,
+      completedAt: isDone ? (ex?.completedAt ?? Date.now()) : ex?.completedAt,
+      completedTimes: isDone
+        ? (ex?.completedTimes ?? 0) + (ex?.completed ? 0 : 1)
+        : (ex?.completedTimes ?? 0),
       lastPracticedAt: Date.now(),
       lastAyahNumber: currentAyah,
     });
     try {
-      localStorage.setItem(
-        "tilawat_last_recitation",
-        JSON.stringify({
-          surahNumber,
-          revealedWords: effectiveRevealed,
-          totalWords: loaded.tokens.length,
-          lastAyahNumber: currentAyah,
-          timestamp: Date.now(),
-        })
-      );
+      if (isDone) {
+        // If completed, remove from tilawat_last_recitation so Resume card never shows a completed surah
+        const raw = localStorage.getItem("tilawat_last_recitation");
+        if (raw) {
+          const p = JSON.parse(raw);
+          if (p?.surahNumber === surahNumber) {
+            localStorage.removeItem("tilawat_last_recitation");
+          }
+        }
+      } else {
+        localStorage.setItem(
+          "tilawat_last_recitation",
+          JSON.stringify({
+            surahNumber,
+            revealedWords: effectiveRevealed,
+            totalWords: loaded.tokens.length,
+            lastAyahNumber: currentAyah,
+            completed: false,
+            timestamp: Date.now(),
+          })
+        );
+      }
     } catch {}
 
     if (rDelta || mDelta || sessionCounted.current) {
@@ -247,6 +263,12 @@ export function ReciteClient({
   };
   const saveRef = useRef(saveProgress);
   saveRef.current = saveProgress;
+
+  useEffect(() => {
+    if (completed) {
+      void saveRef.current();
+    }
+  }, [completed]);
 
   useEffect(() => {
     const effectiveRevealed = Math.max(revealed, displayRevealed);
