@@ -153,6 +153,7 @@ export function ReciteClient({
   const savedMistakes = useRef(0);
   const sessionCounted = useRef(false);
   const initialLoadedRef = useRef(false);
+  const lastSavedTime = useRef(Date.now());
   // Restore progress on first load: Resume from exact Ayah where user left off!
   useEffect(() => {
     if (!loaded || initialLoadedRef.current || recTokens.length === 0) return;
@@ -235,13 +236,23 @@ export function ReciteClient({
       }
     } catch {}
 
+    const now = Date.now();
+    const timeDeltaSec = Math.max(1, Math.round((now - lastSavedTime.current) / 1000));
+    lastSavedTime.current = now;
+
     if (rDelta || mDelta || sessionCounted.current) {
       const row = await db.activity.get(today);
+      const prevSurahs = row?.surahsPracticed ?? [];
+      const updatedSurahs = Array.from(new Set([...prevSurahs, surahNumber]));
+      // Calculate realistic active time (cap idle time to max 10 minutes)
+      const validTimeAdd = timeDeltaSec <= 600 ? timeDeltaSec : Math.round(rDelta * 1.5);
       await db.activity.put({
         date: today,
         wordsRevealed: (row?.wordsRevealed ?? 0) + rDelta,
         mistakes: (row?.mistakes ?? 0) + mDelta,
         sessions: (row?.sessions ?? 0) + (sessionCounted.current ? 1 : 0),
+        timeSpentSeconds: (row?.timeSpentSeconds ?? 0) + validTimeAdd,
+        surahsPracticed: updatedSurahs,
       });
       sessionCounted.current = false;
     }

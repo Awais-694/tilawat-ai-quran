@@ -4,28 +4,26 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { db, type SurahProgress } from "@/lib/storage/db";
 import { getSurahMeta, loadSurah } from "@/lib/quran/data";
+import { DailyStreakWidget } from "./DailyStreakWidget";
 import { StatCard } from "./StatCard";
 import { ProgressBar } from "@/components/common/ProgressBar";
+import {
+  calcCurrentStreak,
+  calcLongestStreak,
+  getRolling7Days,
+  type DayStreakItem,
+} from "@/lib/quran/streak";
+import type { DailyActivity } from "@/lib/storage/db";
 
 interface Stats {
   streak: number;
+  longestStreak: number;
+  rollingDays: DayStreakItem[];
   accuracy: number | null;
   inProgress: SurahProgress[];
   completedCount: number;
   completedList: SurahProgress[];
   lastActive: SurahProgress | null;
-}
-
-function calcStreak(dates: string[]): number {
-  const set = new Set(dates);
-  let streak = 0;
-  const d = new Date();
-  if (!set.has(d.toISOString().slice(0, 10))) d.setDate(d.getDate() - 1);
-  while (set.has(d.toISOString().slice(0, 10))) {
-    streak++;
-    d.setDate(d.getDate() - 1);
-  }
-  return streak;
 }
 
 export function DashboardClient() {
@@ -98,8 +96,19 @@ export function DashboardClient() {
       };
     }
 
+    const actMap = new Map<string, DailyActivity>();
+    for (const a of activity) {
+      actMap.set(a.date, a);
+    }
+    const activeDates = activity.filter((a) => a.wordsRevealed > 0).map((a) => a.date);
+    const streak = calcCurrentStreak(activeDates);
+    const longestStreak = calcLongestStreak(activeDates);
+    const rollingDays = getRolling7Days(actMap);
+
     setStats({
-      streak: calcStreak(activity.filter((a) => a.wordsRevealed > 0).map((a) => a.date)),
+      streak,
+      longestStreak,
+      rollingDays,
       accuracy:
         totalWords + totalMistakes > 0
           ? Math.round((totalWords / (totalWords + totalMistakes)) * 100)
@@ -289,28 +298,27 @@ export function DashboardClient() {
         </div>
       )}
 
-      {/* Recitation Overview Stats (Words Today & Total Correct Words Removed) */}
-      <div className="space-y-2">
-        <div className="text-[11px] sm:text-xs font-semibold text-emerald-300/80 uppercase tracking-wider px-1">
-          Recitation Overview
-        </div>
-        <div className="grid grid-cols-3 gap-2 sm:gap-3">
-          <StatCard
-            label="Daily Streak"
-            value={stats ? `${stats.streak} ${stats.streak === 1 ? "day" : "days"}` : "…"}
-            sublabel="Daily recitation habit"
-          />
-          <StatCard
-            label="Accuracy"
-            value={stats?.accuracy !== null && stats ? `${stats.accuracy}%` : "—"}
-            sublabel="AI speech score"
-          />
-          <StatCard
-            label="Completed"
-            value={stats ? `${stats.completedCount} / 114` : "…"}
-            sublabel="Full Surahs"
-          />
-        </div>
+      {/* Daily Streak Featured Interactive Widget (Clickable to /streak) */}
+      {stats && (
+        <DailyStreakWidget
+          streak={stats.streak}
+          longestStreak={stats.longestStreak}
+          days={stats.rollingDays}
+        />
+      )}
+
+      {/* Recitation Overview Secondary Stats: Accuracy & Completed Surahs */}
+      <div className="grid grid-cols-2 gap-2 sm:gap-3">
+        <StatCard
+          label="Accuracy"
+          value={stats?.accuracy !== null && stats ? `${stats.accuracy}%` : "—"}
+          sublabel="AI speech score"
+        />
+        <StatCard
+          label="Completed"
+          value={stats ? `${stats.completedCount} / 114` : "…"}
+          sublabel="Full Surahs"
+        />
       </div>
 
       {/* Completed Surahs Section */}
