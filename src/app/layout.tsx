@@ -26,11 +26,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <SwRegister />
         <ThemeInit />
         <header className="sticky top-0 z-40 backdrop-blur-xl bg-[#08140e]/95 border-b border-emerald-900/60 shadow-[0_4px_25px_rgba(0,0,0,0.5)] w-full">
-          <nav className="max-w-4xl mx-auto flex items-center justify-between px-2.5 sm:px-6 py-2 sm:py-2.5 gap-2">
+          <nav className="max-w-4xl mx-auto flex items-center justify-between px-3.5 sm:px-6 py-2.5 sm:py-3 gap-3">
             {/* Brand Logo & Name */}
             <Link
               href="/"
-              className="group flex items-center gap-1.5 sm:gap-2.5 transition-all shrink-0 active:scale-95"
+              className="group flex items-center gap-2 sm:gap-2.5 transition-all shrink-0 active:scale-95"
             >
               <div className="relative flex items-center justify-center w-8 h-8 rounded-xl bg-gradient-to-br from-emerald-600/30 via-emerald-800/40 to-[#04140c] border border-emerald-500/50 shadow-[0_0_12px_rgba(16,185,129,0.25)] group-hover:border-emerald-400 transition-all">
                 <svg
@@ -47,7 +47,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   />
                 </svg>
               </div>
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-1.5">
                 <span className="text-base sm:text-lg font-extrabold tracking-tight text-white group-hover:text-emerald-100 transition-colors">
                   Tilawat
                 </span>
@@ -58,12 +58,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             </Link>
 
             {/* Navigation Tabs & Settings */}
-            <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
-              {/* Clean Segmented Navigation Capsule - Compact on mobile, labeled on desktop */}
-              <div className="flex items-center gap-0.5 sm:gap-1 p-0.5 sm:p-1 rounded-2xl bg-[#05140d]/95 border border-emerald-800/60 shadow-sm">
+            <div className="flex items-center gap-2.5 sm:gap-4 shrink-0">
+              {/* Clean Segmented Navigation Capsule with balanced spacing */}
+              <div className="flex items-center gap-1 sm:gap-1.5 p-1 sm:p-1.5 rounded-2xl bg-[#06170f]/95 border border-emerald-800/70 shadow-[0_2px_10px_rgba(0,0,0,0.35)]">
                 <Link
                   href="/surahs"
-                  className="p-1.5 sm:px-3 sm:py-1.5 rounded-xl text-xs sm:text-sm font-semibold text-emerald-200 hover:text-white hover:bg-emerald-800/50 active:scale-95 transition-all flex items-center gap-1.5"
+                  className="px-2.5 py-1.5 sm:px-3.5 sm:py-1.5 rounded-xl text-xs sm:text-sm font-semibold text-emerald-200 hover:text-white hover:bg-emerald-800/50 active:scale-95 transition-all flex items-center justify-center gap-1.5"
                   title="Quran Surahs Index"
                 >
                   <svg className="w-4 h-4 text-emerald-400 shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
@@ -74,18 +74,19 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
                 <Link
                   href="/tarjama"
-                  className="p-1.5 sm:px-3 sm:py-1.5 rounded-xl text-xs sm:text-sm font-semibold text-emerald-200 hover:text-white hover:bg-emerald-800/50 active:scale-95 transition-all flex items-center gap-1.5"
+                  className="px-2.5 py-1.5 sm:px-3.5 sm:py-1.5 rounded-xl text-xs sm:text-sm font-semibold text-emerald-200 hover:text-white hover:bg-emerald-800/50 active:scale-95 transition-all flex items-center justify-center gap-1.5"
                   title="Tafseer & Translation (Kanz-ul-Irfan)"
                 >
                   <svg className="w-4 h-4 text-emerald-400 shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 10h6m-6 3h4" />
                   </svg>
                   <span className="hidden sm:inline">Tafseer</span>
                 </Link>
 
                 <Link
                   href="/stats"
-                  className="p-1.5 sm:px-3 sm:py-1.5 rounded-xl text-xs sm:text-sm font-semibold text-emerald-200 hover:text-white hover:bg-emerald-800/50 active:scale-95 transition-all flex items-center gap-1.5"
+                  className="px-2.5 py-1.5 sm:px-3.5 sm:py-1.5 rounded-xl text-xs sm:text-sm font-semibold text-emerald-200 hover:text-white hover:bg-emerald-800/50 active:scale-95 transition-all flex items-center justify-center gap-1.5"
                   title="Recitation Progress & Stats"
                 >
                   <svg className="w-4 h-4 text-emerald-400 shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
@@ -95,10 +96,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 </Link>
               </div>
 
-              {/* Settings Gear Button */}
+              {/* Settings Gear Button with refined spacing */}
               <Link
                 href="/settings"
-                className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl sm:rounded-2xl bg-[#05140d]/95 hover:bg-emerald-800/60 border border-emerald-800/60 hover:border-emerald-500/80 shadow-sm text-emerald-300 hover:text-white flex items-center justify-center transition-all duration-200 active:scale-95 shrink-0"
+                className="w-8.5 h-8.5 sm:w-9 sm:h-9 p-2 rounded-xl sm:rounded-2xl bg-[#06170f]/95 hover:bg-emerald-800/60 border border-emerald-800/70 hover:border-emerald-500/80 shadow-[0_2px_10px_rgba(0,0,0,0.35)] text-emerald-300 hover:text-white flex items-center justify-center transition-all duration-200 active:scale-95 shrink-0"
                 title="Settings"
                 aria-label="Settings"
               >
