@@ -108,13 +108,10 @@ export function ReciteClient({
   const ws = useSpeechRecognition(handleResult);
   const wh = useWhisper(handleResult);
 
-  // Completion Celebration state
-  const [completionDismissed, setCompletionDismissed] = useState(false);
+  // Simple auto-dismissing completion toast state
+  const [showToast, setShowToast] = useState(false);
+  const [toastFading, setToastFading] = useState(false);
   const completionSoundFired = useRef(false);
-
-  const nextSurahMeta = useMemo(() => {
-    return surahNumber < 114 ? getSurahMeta(surahNumber + 1) : null;
-  }, [surahNumber]);
 
   useEffect(() => {
     if (completed) {
@@ -123,10 +120,24 @@ export function ReciteClient({
         playCompletionSound();
         if (ws.listening) ws.stop();
         if (wh.listening) wh.stop();
+
+        setShowToast(true);
+        setToastFading(false);
+
+        const fadeTimer = setTimeout(() => {
+          setToastFading(true);
+          const hideTimer = setTimeout(() => {
+            setShowToast(false);
+          }, 700);
+          return () => clearTimeout(hideTimer);
+        }, 3600);
+
+        return () => clearTimeout(fadeTimer);
       }
     } else {
       completionSoundFired.current = false;
-      setCompletionDismissed(false);
+      setShowToast(false);
+      setToastFading(false);
     }
   }, [completed, ws, wh]);
 
@@ -674,125 +685,34 @@ export function ReciteClient({
         })}
       </MushafPage>
 
-      {/* Post-dismissal Compact Celebration Ribbon */}
-      {completed && completionDismissed && (
-        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-[#0d2618]/95 via-[#103622] to-[#0d2618]/95 border border-emerald-500/60 p-3.5 sm:p-4 shadow-xl backdrop-blur-md flex items-center justify-between gap-3 text-left">
-          <div className="flex items-center gap-3">
-            <span className="text-xl sm:text-2xl font-quran text-amber-300 font-bold select-none drop-shadow-[0_2px_8px_rgba(251,191,36,0.3)]" dir="rtl">
+      {/* Simple, Beautiful Floating Ma Sha Allah Popup (Auto-dismisses in seconds, no scroll needed) */}
+      {showToast && (
+        <div
+          onClick={() => setShowToast(false)}
+          title="Tap to dismiss"
+          className={`fixed top-4 sm:top-6 left-1/2 -translate-x-1/2 z-50 px-5 sm:px-7 py-3 sm:py-3.5 rounded-2xl bg-[#091a11]/95 border border-emerald-400/50 shadow-[0_12px_45px_rgba(0,0,0,0.7),0_0_25px_rgba(16,185,129,0.3)] backdrop-blur-xl flex items-center gap-3 sm:gap-4 select-none cursor-pointer transition-all duration-700 ${
+            toastFading
+              ? "opacity-0 -translate-y-3 pointer-events-none scale-95"
+              : "opacity-100 translate-y-0 scale-100 animate-in fade-in slide-in-from-top-4 duration-500"
+          }`}
+          role="status"
+          aria-live="polite"
+        >
+          {/* Subtle Golden Check Badge */}
+          <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-gradient-to-br from-amber-400/30 to-emerald-600/30 border border-amber-400/50 flex items-center justify-center shrink-0 shadow-[0_0_15px_rgba(251,191,36,0.35)]">
+            <svg className="w-4 h-4 sm:w-5 sm:h-5 text-amber-300 drop-shadow-[0_0_8px_rgba(251,191,36,0.6)]" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+
+          {/* Simple and authentic Arabic Calligraphy & Subtitle */}
+          <div className="flex flex-col text-left">
+            <span className="text-xl sm:text-2xl font-quran text-amber-300 font-bold leading-tight drop-shadow-[0_2px_8px_rgba(251,191,36,0.35)]" dir="rtl">
               مَا شَاءَ اللّٰهُ
             </span>
-            <div>
-              <div className="text-xs sm:text-sm font-bold text-white">
-                سورة {loaded.meta.name} مکمل ہو گئی
-              </div>
-              <div className="text-[11px] text-emerald-300/80">
-                All {loaded.meta.numberOfAyahs} ayahs and {total} words verified
-              </div>
-            </div>
-          </div>
-          <button
-            onClick={() => setCompletionDismissed(false)}
-            className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-semibold shadow-sm active:scale-95 transition-all cursor-pointer whitespace-nowrap"
-          >
-            Show Celebration
-          </button>
-        </div>
-      )}
-
-      {/* Exquisite Centered Celebration Modal (No Scrolling Needed!) */}
-      {completed && !completionDismissed && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-md animate-in fade-in duration-300">
-          <div className="relative w-full max-w-md sm:max-w-lg overflow-hidden rounded-3xl bg-gradient-to-b from-[#0c2417] via-[#071910] to-[#030d08] border border-emerald-400/40 p-6 sm:p-8 text-center shadow-[0_0_80px_rgba(16,185,129,0.35),0_25px_60px_rgba(0,0,0,0.85)] ring-1 ring-white/10 animate-in zoom-in-95 duration-300">
-            {/* Ambient Background Radial Glow */}
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_var(--tw-gradient-stops))] from-emerald-500/20 via-transparent to-transparent pointer-events-none" />
-
-            {/* Top Close Button (✕) */}
-            <button
-              onClick={() => setCompletionDismissed(true)}
-              title="Close and view Mushaf page"
-              className="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 active:scale-95 text-white/70 hover:text-white flex items-center justify-center transition-all cursor-pointer z-10"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-
-            {/* Top Medallion Badge */}
-            <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-4 rounded-3xl bg-gradient-to-br from-amber-400/25 via-emerald-600/30 to-[#02140a] border border-amber-400/50 flex items-center justify-center shadow-[0_0_35px_rgba(245,158,11,0.3)]">
-              <svg className="w-8 h-8 sm:w-10 sm:h-10 text-amber-300 drop-shadow-[0_0_12px_rgba(251,191,36,0.6)]" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-              </svg>
-            </div>
-
-            {/* Glowing Golden Calligraphy */}
-            <h2 className="text-4xl sm:text-5xl font-quran font-bold text-transparent bg-clip-text bg-gradient-to-r from-amber-200 via-emerald-100 to-amber-200 drop-shadow-[0_4px_20px_rgba(251,191,36,0.35)] select-none leading-relaxed mb-1" dir="rtl">
-              مَا شَاءَ اللّٰهُ
-            </h2>
-
-            <div className="text-base sm:text-lg font-bold text-white tracking-wide">
+            <span className="text-xs sm:text-sm font-semibold text-emerald-100 tracking-wide">
               سورة {loaded.meta.name} مکمل ہو گئی
-            </div>
-            <p className="text-xs sm:text-sm text-emerald-300/80 mt-1 mb-5">
-              All {loaded.meta.numberOfAyahs} ayahs and {total} words recited and verified.
-            </p>
-
-            {/* Stat Badges Row */}
-            <div className="grid grid-cols-3 gap-2 py-3 px-3.5 mb-6 rounded-2xl bg-[#040e08]/80 border border-emerald-900/60 shadow-inner">
-              <div className="text-center">
-                <div className="text-[11px] text-emerald-400/80 font-medium">آیات</div>
-                <div className="text-base sm:text-lg font-bold text-white font-mono">{loaded.meta.numberOfAyahs}</div>
-              </div>
-              <div className="text-center border-x border-emerald-900/60">
-                <div className="text-[11px] text-emerald-400/80 font-medium">الفاظ</div>
-                <div className="text-base sm:text-lg font-bold text-emerald-300 font-mono">{total}</div>
-              </div>
-              <div className="text-center">
-                <div className="text-[11px] text-emerald-400/80 font-medium">غلطیاں</div>
-                <div className="text-base sm:text-lg font-bold text-amber-300 font-mono">{mistakes}</div>
-              </div>
-            </div>
-
-            {/* Action Buttons */}
-            <div className="space-y-2.5">
-              {nextSurahMeta ? (
-                <button
-                  onClick={() => router.push(`/recite/${nextSurahMeta.number}`)}
-                  className="w-full py-3.5 px-5 rounded-2xl bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-white font-bold text-sm sm:text-base flex items-center justify-center gap-2 shadow-[0_8px_25px_rgba(16,185,129,0.35)] active:scale-[0.98] transition-all cursor-pointer"
-                >
-                  <span>Next Surah: {nextSurahMeta.name}</span>
-                  <span className="font-quran text-base sm:text-lg font-normal" dir="rtl">{nextSurahMeta.arabicName}</span>
-                  <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                  </svg>
-                </button>
-              ) : null}
-
-              <div className="flex items-center gap-2 pt-1">
-                <button
-                  onClick={() => {
-                    reset();
-                    setCompletionDismissed(false);
-                  }}
-                  className="flex-1 py-2.5 px-3 rounded-xl bg-white/10 hover:bg-white/15 border border-white/20 text-white text-xs sm:text-sm font-semibold flex items-center justify-center gap-1.5 active:scale-95 transition-all cursor-pointer"
-                >
-                  <svg className="w-4 h-4 text-emerald-300" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                  </svg>
-                  <span>Recite Again</span>
-                </button>
-
-                <button
-                  onClick={() => setCompletionDismissed(true)}
-                  className="flex-1 py-2.5 px-3 rounded-xl bg-emerald-950/70 hover:bg-emerald-900/80 border border-emerald-700/60 text-emerald-200 text-xs sm:text-sm font-semibold flex items-center justify-center gap-1.5 active:scale-95 transition-all cursor-pointer"
-                >
-                  <svg className="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                  </svg>
-                  <span>View Mushaf</span>
-                </button>
-              </div>
-            </div>
+            </span>
           </div>
         </div>
       )}
