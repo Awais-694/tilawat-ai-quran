@@ -116,7 +116,7 @@ export function StreakClient() {
         {/* Back Button (No Arrow) */}
         <button
           onClick={handleBack}
-          className="inline-flex items-center justify-center px-4 py-1.5 rounded-full text-xs font-semibold text-emerald-100 bg-[#0d2217] hover:bg-[#133022] border border-emerald-600/50 hover:border-emerald-400 active:scale-95 transition-all shadow-sm cursor-pointer"
+          className="inline-flex items-center justify-center px-4 py-1.5 rounded-xl text-xs sm:text-sm font-semibold tracking-wide text-white bg-white/10 hover:bg-white/15 active:bg-white/20 border border-white/20 hover:border-emerald-400/50 shadow-[0_2px_10px_rgba(0,0,0,0.3)] backdrop-blur-md active:scale-95 transition-all duration-200 cursor-pointer"
         >
           Back
         </button>

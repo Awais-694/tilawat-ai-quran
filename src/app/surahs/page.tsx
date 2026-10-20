@@ -73,9 +73,9 @@ export default function SurahsPage() {
         <Link
           href="/"
           title="Back to Home Dashboard"
-          className="inline-flex items-center justify-center px-4 py-1.5 rounded-full text-xs sm:text-sm font-semibold tracking-wide text-emerald-100 bg-[#0d2217]/90 hover:bg-[#133022] border border-emerald-600/50 hover:border-emerald-400/80 shadow-[0_2px_8px_rgba(0,0,0,0.35)] backdrop-blur-md active:scale-95 transition-all duration-200 cursor-pointer"
+          className="inline-flex items-center justify-center px-4 py-1.5 rounded-xl text-xs sm:text-sm font-semibold tracking-wide text-white bg-white/10 hover:bg-white/15 active:bg-white/20 border border-white/20 hover:border-emerald-400/50 shadow-[0_2px_10px_rgba(0,0,0,0.3)] backdrop-blur-md active:scale-95 transition-all duration-200 cursor-pointer"
         >
-          ← Back
+          Back
         </Link>
 
         <h1 className="text-lg sm:text-2xl font-bold text-white tracking-wide text-center">
