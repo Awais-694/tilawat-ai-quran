@@ -666,11 +666,11 @@ export function ReciteClient({
         </div>
       )}
 
-      {/* Sleek, Modern Floating Control Island (Neutral Obsidian Glass) */}
+      {/* Sleek, Modern Floating Control Island (Neutral Obsidian Luxury) */}
       <div className="sticky bottom-2 sm:bottom-3 z-30 flex flex-col items-center gap-1 px-2">
-        <div className="flex items-center justify-center gap-2 sm:gap-3 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-[#161a18]/92 backdrop-blur-2xl border border-white/15 shadow-[0_16px_45px_rgba(0,0,0,0.5),0_0_1px_rgba(255,255,255,0.25)]">
+        <div className="flex items-center justify-center gap-2 sm:gap-3.5 px-3 sm:px-4 py-2 rounded-full bg-[#141a17] border border-white/20 shadow-[0_16px_50px_rgba(0,0,0,0.65),0_0_1px_rgba(255,255,255,0.3)]">
           {/* Left: Enhanced Page Navigator & Auto-Turn */}
-          <div className="flex items-center gap-1 rounded-full bg-black/40 border border-white/10 p-1">
+          <div className="flex items-center gap-1 rounded-full bg-black/50 border border-white/10 px-1 py-1">
             {/* Previous Page Arrow */}
             <button
               onClick={() => {
@@ -679,7 +679,7 @@ export function ReciteClient({
               }}
               disabled={pageIdx === 0}
               title="Previous page"
-              className="w-8 h-8 sm:w-8.5 sm:h-8.5 flex items-center justify-center rounded-xl bg-white/10 hover:bg-white/20 active:bg-white/30 border border-white/15 text-white disabled:opacity-20 disabled:hover:bg-white/10 disabled:hover:text-white/40 transition-all duration-150 cursor-pointer shadow-sm active:scale-95"
+              className="w-8 h-8 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 active:scale-95 text-white disabled:opacity-20 disabled:hover:bg-white/10 disabled:hover:text-white/40 transition-all cursor-pointer shadow-sm"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
@@ -687,12 +687,12 @@ export function ReciteClient({
             </button>
 
             {/* Page Counter */}
-            <div className="flex items-center px-2 py-0.5 select-none">
+            <div className="flex items-center px-2 select-none">
               <span className="text-xs sm:text-sm font-bold text-white font-mono tracking-tight">
                 {pageIdx + 1}
               </span>
               <span className="text-[11px] text-white/40 px-1 font-medium">/</span>
-              <span className="text-xs sm:text-sm font-medium text-white/60 font-mono">
+              <span className="text-xs sm:text-sm font-medium text-emerald-400 font-mono">
                 {loaded.pages.length}
               </span>
             </div>
@@ -705,7 +705,7 @@ export function ReciteClient({
               }}
               disabled={pageIdx >= loaded.pages.length - 1}
               title="Next page"
-              className="w-8 h-8 sm:w-8.5 sm:h-8.5 flex items-center justify-center rounded-xl bg-white/10 hover:bg-white/20 active:bg-white/30 border border-white/15 text-white disabled:opacity-20 disabled:hover:bg-white/10 disabled:hover:text-white/40 transition-all duration-150 cursor-pointer shadow-sm active:scale-95"
+              className="w-8 h-8 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 active:scale-95 text-white disabled:opacity-20 disabled:hover:bg-white/10 disabled:hover:text-white/40 transition-all cursor-pointer shadow-sm"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
@@ -716,9 +716,9 @@ export function ReciteClient({
             <button
               onClick={() => setAutoFollow((prev) => !prev)}
               title={autoFollow ? "Auto-turn pages enabled (tap to disable)" : "Auto-turn pages disabled (tap to enable)"}
-              className={`hidden sm:flex items-center gap-1.5 px-2 py-1 rounded-lg text-[11px] font-semibold border transition-all duration-150 cursor-pointer ${
+              className={`hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold border transition-all cursor-pointer ${
                 autoFollow
-                  ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/40 shadow-[0_0_10px_rgba(16,185,129,0.25)]"
+                  ? "bg-emerald-500/25 text-emerald-300 border-emerald-400/50 shadow-[0_0_10px_rgba(16,185,129,0.3)]"
                   : "bg-white/5 text-white/40 border-white/10 hover:text-white/70 hover:bg-white/10"
               }`}
             >
@@ -740,9 +740,9 @@ export function ReciteClient({
             <button
               onClick={playCurrentAyah}
               title="Listen to reference recitation"
-              className="w-8.5 h-8.5 sm:w-9 sm:h-9 flex items-center justify-center rounded-xl bg-white/10 hover:bg-emerald-500/20 active:bg-emerald-500/30 border border-white/15 hover:border-emerald-400/50 text-white/90 hover:text-emerald-300 transition-all duration-150 active:scale-95 cursor-pointer shadow-sm"
+              className="w-9 h-9 sm:w-9.5 sm:h-9.5 flex items-center justify-center rounded-full bg-white/10 hover:bg-emerald-500/25 active:scale-95 border border-white/15 hover:border-emerald-400/50 text-white hover:text-emerald-300 transition-all cursor-pointer shadow-sm"
             >
-              <svg className="w-4 h-4 sm:w-4.5 sm:h-4.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+              <svg className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-emerald-300" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
               </svg>
             </button>
@@ -751,9 +751,9 @@ export function ReciteClient({
             <button
               onClick={handleReset}
               title="Reset recitation session"
-              className="w-8.5 h-8.5 sm:w-9 sm:h-9 flex items-center justify-center rounded-xl bg-white/10 hover:bg-amber-500/20 active:bg-amber-500/30 border border-white/15 hover:border-amber-400/50 text-white/90 hover:text-amber-300 transition-all duration-150 active:scale-95 cursor-pointer shadow-sm"
+              className="w-9 h-9 sm:w-9.5 sm:h-9.5 flex items-center justify-center rounded-full bg-white/10 hover:bg-amber-500/25 active:scale-95 border border-white/15 hover:border-amber-400/50 text-white hover:text-amber-300 transition-all cursor-pointer shadow-sm"
             >
-              <svg className="w-4 h-4 sm:w-4.5 sm:h-4.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+              <svg className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-amber-300" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
               </svg>
             </button>
