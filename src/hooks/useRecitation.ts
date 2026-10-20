@@ -12,11 +12,17 @@ import type { WordToken } from "@/types/quran";
 export function useRecitation(tokens: WordToken[], initialRevealed: number = 0) {
   const expected = useMemo(() => tokens.map((t) => t.normalized), [tokens]);
   const expectedForms = useMemo(() => tokens.map((t) => t.forms ?? []), [tokens]);
-  // Basmala (ayahNumber 0) ke lafz shuru me hain; user aksar ayat 1 se shuru
+  // Basmala ke lafz shuru me hain; user aksar ayat 1 se shuru
   // karta hai — is liye itne lafz skip kiye ja sakte hain.
   const basmalaLen = useMemo(() => {
     let n = 0;
     while (n < tokens.length && tokens[n].ayahNumber === 0) n++;
+    if (n === 0 && tokens.length >= 4) {
+      // Check if tokens 0..3 are the Basmala in Ayah 1 (e.g. Surah Al-Fatiha)
+      if (tokens[0]?.normalized === "بسم" && tokens[1]?.normalized === "الله") {
+        while (n < tokens.length && tokens[n].ayahNumber <= 1) n++;
+      }
+    }
     return n;
   }, [tokens]);
   const [revealed, setRevealed] = useState(initialRevealed);

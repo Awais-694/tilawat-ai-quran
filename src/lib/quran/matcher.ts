@@ -72,6 +72,27 @@ export function wordMatches(target: string, heard: string): boolean {
   const hAliases = WORD_ALIASES[heard] || WORD_ALIASES[hNorm];
   if (hAliases && (hAliases.includes(target) || hAliases.includes(tNorm))) return true;
 
+  // Taa Marbuta / Taa open variation in construct state (e.g. "رحمه" vs "رحمت", "نعمه" vs "نعمت")
+  if (
+    (tNorm.endsWith("ه") && hNorm.endsWith("ت") && tNorm.slice(0, -1) === hNorm.slice(0, -1)) ||
+    (tNorm.endsWith("ت") && hNorm.endsWith("ه") && tNorm.slice(0, -1) === hNorm.slice(0, -1))
+  ) {
+    return true;
+  }
+
+  // Wasl initial Alef omission/addition in fast connected recitation (e.g. "اهدنا" vs "هدنا")
+  if (tNorm.length >= 3 && tNorm.startsWith("ا") && tNorm.slice(1) === hNorm) return true;
+  if (hNorm.length >= 3 && hNorm.startsWith("ا") && hNorm.slice(1) === tNorm) return true;
+
+  // Wasl Sun letter assimilation (e.g. "الصراط" heard as "اسراط" or "السراط")
+  if (
+    (tNorm === "الصراط" || tNorm.startsWith("ال")) &&
+    hNorm.startsWith("ا") &&
+    tNorm.slice(2) === hNorm.slice(1)
+  ) {
+    return true;
+  }
+
   // Stems check: strip Arabic prepositions/prefixes (و، ف، ب، ل، ك، ال، وال، فال، بال، لل)
   const tStems = stripPrefixes(tNorm);
   const hStems = stripPrefixes(hNorm);
@@ -91,9 +112,10 @@ export function wordMatches(target: string, heard: string): boolean {
   if (tNorm.length >= 3 && tNorm.endsWith("ا") && tNorm.slice(0, -1) === hNorm) return true;
   if (hNorm.length >= 3 && hNorm.endsWith("ا") && hNorm.slice(0, -1) === tNorm) return true;
 
-  // Handle phonetic Tanween noon transcription (e.g. "عظيمن" vs "عظيما")
-  if (tNorm.length >= 4 && tNorm.endsWith("ا") && hNorm.endsWith("ن") && tNorm.slice(0, -1) === hNorm.slice(0, -1)) return true;
-  if (hNorm.length >= 4 && hNorm.endsWith("ا") && tNorm.endsWith("ن") && hNorm.slice(0, -1) === tNorm.slice(0, -1)) return true;
+  // Handle phonetic Tanween noon transcription (e.g. "عظيمن" vs "عظيما", "احدن" vs "احد")
+  if (tNorm.length >= 3 && tNorm.endsWith("ا") && hNorm.endsWith("ن") && tNorm.slice(0, -1) === hNorm.slice(0, -1)) return true;
+  if (hNorm.length >= 3 && hNorm.endsWith("ا") && tNorm.endsWith("ن") && hNorm.slice(0, -1) === tNorm.slice(0, -1)) return true;
+  if (hNorm.length >= 3 && hNorm.endsWith("ن") && hNorm.slice(0, -1) === tNorm) return true;
 
   // Consonant skeleton matching for Madd vowels / dagger alif variations (e.g. "الرحمن" vs "الرحمان")
   const skT = consonantSkeleton(tNorm);
@@ -174,7 +196,7 @@ export function matchMany(
       i += 3;
       continue;
     }
-    // 4. Two Quran words merged into one heard word (e.g. "رب العالمين" -> "ربالعالمين", "ولا الضالين" -> "والضالين")
+    // 4. Two Quran words merged into one heard word (e.g. "رب العالمين" -> "ربالعالمين", "ولا الضالين" -> "والضالين", "حبل من" -> "حبلمن")
     const r2 = skipEmpty(expectedNormalized, r + 1);
     if (r2 < expectedNormalized.length) {
       const combos = new Set<string>();
@@ -238,12 +260,29 @@ export function matchMany(
         }
         if (startsWithR) continue;
       }
+
+      // 6. Fast Recitation Lookahead:
+      // In fast connected recitation, STT occasionally omits or blurs a short connective particle (و، ف، من، في، لا، ما، هو، ان، قد، ثم).
+      // If the heard word matches r2 and (a) subsequent words confirm the sequence or (b) r is a short particle, advance smoothly without deadlocking!
+      if (matches(r2, w)) {
+        const isShortParticle = formsAt(r).some(
+          (f) => f.length <= 3 && ["و", "ف", "من", "في", "لا", "ما", "هو", "ان", "قد", "ثم", "عن", "بل", "او", "اذ", "اذا"].includes(f)
+        );
+        const nextMatchesR3 = (i + 1 < heardWords.length && r3 < expectedNormalized.length && matches(r3, heardWords[i + 1])) || (i + 1 >= heardWords.length && isShortParticle);
+        if (nextMatchesR3 || isShortParticle) {
+          r = skipEmpty(expectedNormalized, r2 + 1);
+          i++;
+          continue;
+        }
+      }
     }
 
-    // 6. Echo / stutter or already-revealed words from rolling buffer in fast recitation
+    // 7. Full History Rolling Buffer Check:
+    // In continuous speech recognition, heardWords can be a long rolling buffer of the entire recitation session.
+    // Check if w was already matched in ANY previous token (0 to r - 1).
+    // If it was already matched earlier in the sequence, skip it cleanly WITHOUT flagging as a mistake!
     let alreadyMatched = false;
-    const lookback = Math.max(0, r - 8);
-    for (let k = r - 1; k >= lookback; k--) {
+    for (let k = r - 1; k >= 0; k--) {
       if (matches(k, w)) {
         alreadyMatched = true;
         break;

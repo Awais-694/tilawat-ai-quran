@@ -75,6 +75,8 @@ export function ReciteClient({
                 normalizeArabic(t.display.replace(/ئ/g, "ؤ")),
                 normalizeArabic(t.display.replace(/[ظض]/g, "ذ")),
                 normalizeArabic(t.display.replace(/[ذض]/g, "ز")),
+                normalizeArabic(t.display.replace(/ص/g, "س")),
+                normalizeArabic(t.display.replace(/ط/g, "ت")),
                 normalizeArabic(t.display.replace(/ح/g, "ه")),
               ]),
             ].filter((f) => f !== normalized);
