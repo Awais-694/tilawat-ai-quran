@@ -59,12 +59,9 @@ export function useRecitation(tokens: WordToken[], initialRevealed: number = 0) 
       let committed = revealedRef.current;
 
       if (rawNew.length > 0 || carryRef.current.length > 0) {
-        // Candidate start positions: current + basmala skips (user aksar
-        // basmala kahe baghair ayat 1 se shuru karta hai).
-        const starts: number[] = [committed];
-        if (committed < basmalaLen) {
-          for (let s = committed + 1; s <= basmalaLen; s++) starts.push(s);
-        }
+        // Candidate start positions: only allow skipping Basmala if at the very beginning (committed === 0)
+        const starts: number[] =
+          committed === 0 && basmalaLen > 0 ? [0, basmalaLen] : [committed];
         // Har candidate ke liye: muqatta'at (e.g. الم, يس) ke liye bole gaye
         // harfon ke naam ("الف لام ميم", "يا سين", ya single alias "ياسين") ko mushaf token me collapse karo.
         const procFor = (s: number): { proc: string[]; carryAfter: string[] } => {

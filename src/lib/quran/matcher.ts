@@ -102,9 +102,10 @@ export function wordMatches(target: string, heard: string): boolean {
       if (phoneticCanon(ts) === phoneticCanon(hs)) return true;
       const skT = consonantSkeleton(ts);
       const skH = consonantSkeleton(hs);
-      if (skT.length >= 2 && skT === skH) return true;
-      const maxL = Math.max(ts.length, hs.length);
-      if (maxL >= 3 && editDistance(ts, hs) <= 1) return true;
+      if (skT.length >= 4 && skT === skH) return true;
+      const minL = Math.min(ts.length, hs.length);
+      // Only allow 1-edit typo on long stems (>= 5 letters) to prevent false matches between 3-letter roots (e.g. فلق vs خلق)
+      if (minL >= 5 && editDistance(ts, hs) <= 1) return true;
     }
   }
 
@@ -117,15 +118,14 @@ export function wordMatches(target: string, heard: string): boolean {
   if (hNorm.length >= 3 && hNorm.endsWith("ا") && tNorm.endsWith("ن") && hNorm.slice(0, -1) === tNorm.slice(0, -1)) return true;
   if (hNorm.length >= 3 && hNorm.endsWith("ن") && hNorm.slice(0, -1) === tNorm) return true;
 
-  // Consonant skeleton matching for Madd vowels / dagger alif variations (e.g. "الرحمن" vs "الرحمان")
+  // Consonant skeleton matching for long Madd vowels / dagger alif variations (e.g. "الرحمن" vs "الرحمان")
   const skT = consonantSkeleton(tNorm);
   const skH = consonantSkeleton(hNorm);
-  if (skT.length >= 2 && skT === skH) return true;
+  if (skT.length >= 4 && skT === skH) return true;
 
-  const maxLen = Math.max(tNorm.length, hNorm.length);
-  // Fuzzy match for minor browser speech transcription variations
-  if (maxLen >= 2 && editDistance(tNorm, hNorm) <= 1) return true;
-  if (maxLen >= 5 && editDistance(tNorm, hNorm) <= 2) return true;
+  const minLen = Math.min(tNorm.length, hNorm.length);
+  // Fuzzy match only for longer words (>= 6 characters) with minor browser speech transcription variations
+  if (minLen >= 6 && editDistance(tNorm, hNorm) <= 1) return true;
   return false;
 }
 
@@ -178,7 +178,7 @@ export function matchMany(
   let i = 0;
   while (i < heardWords.length) {
     const w = heardWords[i];
-    // 1. Direct match for current word
+    // 1. Direct match for current expected token r
     if (matches(r, w)) {
       r = skipEmpty(expectedNormalized, r + 1);
       i++;
@@ -209,11 +209,6 @@ export function matchMany(
         }
       }
       if (combos.has(w.replace(/ا+/g, "ا"))) {
-        r = skipEmpty(expectedNormalized, r2 + 1);
-        i++;
-        continue;
-      }
-      if (formsAt(r).some((f) => f === "ولا" || f === "و" || f === "ف") && matches(r2, w)) {
         r = skipEmpty(expectedNormalized, r2 + 1);
         i++;
         continue;
@@ -260,24 +255,9 @@ export function matchMany(
         }
         if (startsWithR) continue;
       }
-
-      // 6. Fast Recitation Lookahead:
-      // In fast connected recitation, STT occasionally omits or blurs a short connective particle (و، ف، من، في، لا، ما، هو، ان، قد، ثم).
-      // If the heard word matches r2 and (a) subsequent words confirm the sequence or (b) r is a short particle, advance smoothly without deadlocking!
-      if (matches(r2, w)) {
-        const isShortParticle = formsAt(r).some(
-          (f) => f.length <= 3 && ["و", "ف", "من", "في", "لا", "ما", "هو", "ان", "قد", "ثم", "عن", "بل", "او", "اذ", "اذا"].includes(f)
-        );
-        const nextMatchesR3 = (i + 1 < heardWords.length && r3 < expectedNormalized.length && matches(r3, heardWords[i + 1])) || (i + 1 >= heardWords.length && isShortParticle);
-        if (nextMatchesR3 || isShortParticle) {
-          r = skipEmpty(expectedNormalized, r2 + 1);
-          i++;
-          continue;
-        }
-      }
     }
 
-    // 7. Full History Rolling Buffer Check:
+    // 6. Full History Rolling Buffer Check:
     // In continuous speech recognition, heardWords can be a long rolling buffer of the entire recitation session.
     // Check if w was already matched in ANY previous token (0 to r - 1).
     // If it was already matched earlier in the sequence, skip it cleanly WITHOUT flagging as a mistake!
