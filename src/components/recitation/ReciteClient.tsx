@@ -128,9 +128,9 @@ export function ReciteClient({
           setToastFading(true);
           const hideTimer = setTimeout(() => {
             setShowToast(false);
-          }, 700);
+          }, 600);
           return () => clearTimeout(hideTimer);
-        }, 3600);
+        }, 3000);
 
         return () => clearTimeout(fadeTimer);
       }
@@ -685,12 +685,12 @@ export function ReciteClient({
         })}
       </MushafPage>
 
-      {/* Simple, Beautiful Centered Ma Sha Allah Popup (Auto-dismisses in seconds, no scroll needed) */}
+      {/* Simple Centered Ma Sha Allah Popup (Pure Arabic Calligraphy, exactly 3 seconds) */}
       {showToast && (
         <div
           onClick={() => setShowToast(false)}
           title="Tap to dismiss"
-          className={`fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 px-8 py-5 rounded-3xl bg-[#081810]/95 border border-emerald-400/50 shadow-[0_20px_60px_rgba(0,0,0,0.85),0_0_35px_rgba(16,185,129,0.35)] backdrop-blur-xl flex flex-col items-center justify-center text-center select-none cursor-pointer transition-all duration-700 ${
+          className={`fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 px-8 sm:px-10 py-4 sm:py-5 rounded-2xl sm:rounded-3xl bg-[#081810]/95 border border-emerald-400/50 shadow-[0_20px_60px_rgba(0,0,0,0.85),0_0_35px_rgba(16,185,129,0.35)] backdrop-blur-xl flex items-center justify-center text-center select-none cursor-pointer transition-all duration-700 ${
             toastFading
               ? "opacity-0 scale-95 pointer-events-none"
               : "opacity-100 scale-100 animate-in fade-in zoom-in-95 duration-500"
@@ -698,16 +698,11 @@ export function ReciteClient({
           role="status"
           aria-live="polite"
         >
-          {/* Authentic Calligraphy */}
           <span
-            className="text-3xl sm:text-4xl md:text-5xl font-quran text-amber-300 font-bold leading-tight drop-shadow-[0_4px_16px_rgba(251,191,36,0.5)]"
+            className="text-3xl sm:text-4xl md:text-5xl font-quran text-amber-300 font-bold leading-none drop-shadow-[0_4px_16px_rgba(251,191,36,0.5)] select-none px-2"
             dir="rtl"
           >
             مَا شَاءَ اللّٰهُ
-          </span>
-
-          <span className="text-xs sm:text-sm font-semibold text-emerald-100/90 tracking-wide mt-2 font-urdu" dir="rtl">
-            سورة {loaded.meta.name} مکمل ہو گئی
           </span>
         </div>
       )}
