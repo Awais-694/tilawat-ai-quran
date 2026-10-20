@@ -118,6 +118,39 @@ export function wordMatches(target: string, heard: string): boolean {
   if (hNorm.length >= 3 && hNorm.endsWith("ا") && tNorm.endsWith("ن") && hNorm.slice(0, -1) === tNorm.slice(0, -1)) return true;
   if (hNorm.length >= 3 && hNorm.endsWith("ن") && hNorm.slice(0, -1) === tNorm) return true;
 
+  // Tajweed: Iqlab phonetic transcription (e.g. "من" heard as "مم", "عن" heard as "عم", "ان" heard as "ام")
+  if (
+    tNorm.length >= 2 &&
+    tNorm.endsWith("ن") &&
+    hNorm === tNorm.slice(0, -1) + "م"
+  ) {
+    return true;
+  }
+
+  // Tajweed: Idgham phonetic transcription of Nun Saakin into Lam / Raa / Meem / Waw / Yaa
+  // (e.g. "يكن" heard as "يكل" before "له", "من" heard as "مر" before "ربهم")
+  if (
+    tNorm.length >= 2 &&
+    tNorm.endsWith("ن") &&
+    (hNorm === tNorm.slice(0, -1) + "ل" ||
+      hNorm === tNorm.slice(0, -1) + "ر" ||
+      hNorm === tNorm.slice(0, -1) + "م" ||
+      hNorm === tNorm.slice(0, -1) + "و" ||
+      hNorm === tNorm.slice(0, -1) + "ي")
+  ) {
+    return true;
+  }
+
+  // Tajweed: Silat-ul-Haa pronoun elongation in fast recitation (e.g. "له" heard as "لهو" / "لاه", "به" heard as "بهي")
+  if (
+    tNorm.endsWith("ه") &&
+    (hNorm === tNorm + "و" ||
+      hNorm === tNorm + "ي" ||
+      (tNorm.length <= 3 && hNorm === tNorm.slice(0, -1) + "اه"))
+  ) {
+    return true;
+  }
+
   // Consonant skeleton matching for long Madd vowels / dagger alif variations (e.g. "الرحمن" vs "الرحمان")
   const skT = consonantSkeleton(tNorm);
   const skH = consonantSkeleton(hNorm);
@@ -196,64 +229,123 @@ export function matchMany(
       i += 3;
       continue;
     }
-    // 4. Two Quran words merged into one heard word (e.g. "رب العالمين" -> "ربالعالمين", "ولا الضالين" -> "والضالين", "حبل من" -> "حبلمن")
+    // 4. Two Quran words merged into one heard word
+    // Across all 114 Surahs, fast Hafiz recitation merges two consecutive words:
+    // - Direct concatenation (رب + العالمين -> ربالعالمين, اياك + نعبد -> اياكنعبد)
+    // - Wasl / Alif elision (ولا + الضالين -> والضالين / ولضالين, اهدنا + الصراط -> اهدناصراط, في + الارض -> فالارض)
+    // - Idgham of Nun Saakin / Tanween (من + ربهم -> مربهم / مرربهم, يكن + له -> يكله, من + مسد -> ممسد, حبل + من -> حبلمن)
+    // - Iqlab before Baa (من + بعد -> ممبعد)
     const r2 = skipEmpty(expectedNormalized, r + 1);
     if (r2 < expectedNormalized.length) {
-      const combos = new Set<string>();
-      for (const a of formsAt(r)) {
-        for (const b of formsAt(r2)) {
-          combos.add((a + b).replace(/ا+/g, "ا"));
-          if (a === "ولا" && b.startsWith("ال")) {
-            combos.add(("وال" + b.slice(2)).replace(/ا+/g, "ا"));
+      const getPrefixes = (token: string): string[] => {
+        const out = new Set<string>([token]);
+        const n = token.replace(/ا+/g, "ا");
+        out.add(n);
+        // Idgham / Iqlab: Nun Saakin dropped or converted to Meem
+        if (n.length >= 2 && n.endsWith("ن")) {
+          out.add(n.slice(0, -1));
+          out.add(n.slice(0, -1) + "م");
+        }
+        // Wasl: drop final vowel before next word (ا, ي, و, ى)
+        if (n.length >= 2 && (n.endsWith("ا") || n.endsWith("ي") || n.endsWith("و") || n.endsWith("ى"))) {
+          out.add(n.slice(0, -1));
+        }
+        if (n === "ولا") {
+          out.add("وال");
+          out.add("ول");
+        }
+        return Array.from(out).filter((p) => p.length > 0);
+      };
+
+      const formsA = formsAt(r);
+      const formsB = formsAt(r2);
+      let matchedTwo = false;
+
+      // Check all prefix variations of token r against w
+      for (const a of formsA) {
+        const prefixes = getPrefixes(a);
+        for (const pref of prefixes) {
+          if (w.startsWith(pref) && w.length > pref.length) {
+            const rest = w.slice(pref.length);
+            // Check if rest matches token r2 directly
+            if (matches(r2, rest)) {
+              matchedTwo = true;
+              break;
+            }
+            // Check Wasl / Idgham variations of rest matching r2
+            for (const b of formsB) {
+              const bNorm = b.replace(/ا+/g, "ا");
+              if (wordMatches(b, rest)) {
+                matchedTwo = true;
+                break;
+              }
+              // Wasl Alif drop: rest is "عالمين" for "العالمين", or "صراط" for "الصراط"
+              if (bNorm.startsWith("ال") && (wordMatches(bNorm.slice(2), rest) || wordMatches(bNorm.slice(1), rest) || wordMatches(b, "ال" + rest))) {
+                matchedTwo = true;
+                break;
+              }
+              // Hamzatul Wasl: rest is "هدنا" for "اهدنا" or "سم" for "اسم"
+              if (bNorm.startsWith("ا") && (wordMatches(bNorm.slice(1), rest) || wordMatches(b, "ا" + rest))) {
+                matchedTwo = true;
+                break;
+              }
+              // Geminate Idgham: rest begins with doubled letter (e.g. "رربهم" for "ربهم", "لله" for "له")
+              if (rest.length >= 2 && rest[0] === rest[1] && wordMatches(b, rest.slice(1))) {
+                matchedTwo = true;
+                break;
+              }
+            }
+            if (matchedTwo) break;
           }
         }
+        if (matchedTwo) break;
       }
-      if (combos.has(w.replace(/ا+/g, "ا"))) {
+
+      if (matchedTwo) {
         r = skipEmpty(expectedNormalized, r2 + 1);
         i++;
         continue;
       }
-      let startsWithR = false;
-      for (const a of formsAt(r)) {
-        if (w.startsWith(a) && w.length > a.length) {
-          const rest = w.slice(a.length);
-          for (const b of formsAt(r2)) {
-            if (wordMatches(b, rest)) {
-              r = skipEmpty(expectedNormalized, r2 + 1);
-              i++;
-              startsWithR = true;
-              break;
-            }
-          }
-        }
-        if (startsWithR) break;
-      }
-      if (startsWithR) continue;
 
       // 5. Three Quran words merged into one heard word (e.g. "يا ايها الذين" -> "ياايهاالذين")
       const r3 = skipEmpty(expectedNormalized, r2 + 1);
       if (r3 < expectedNormalized.length) {
-        for (const a of formsAt(r)) {
-          if (w.startsWith(a) && w.length > a.length) {
-            const rest = w.slice(a.length);
-            for (const b of formsAt(r2)) {
-              if (rest.startsWith(b) && rest.length > b.length) {
-                const rest2 = rest.slice(b.length);
-                for (const c of formsAt(r3)) {
-                  if (wordMatches(c, rest2)) {
-                    r = skipEmpty(expectedNormalized, r3 + 1);
-                    i++;
-                    startsWithR = true;
-                    break;
+        let matchedThree = false;
+        for (const a of formsA) {
+          const prefixesA = getPrefixes(a);
+          for (const prefA of prefixesA) {
+            if (w.startsWith(prefA) && w.length > prefA.length) {
+              const remA = w.slice(prefA.length);
+              for (const b of formsB) {
+                const prefixesB = getPrefixes(b);
+                for (const prefB of prefixesB) {
+                  if (remA.startsWith(prefB) && remA.length > prefB.length) {
+                    const remB = remA.slice(prefB.length);
+                    if (matches(r3, remB)) {
+                      matchedThree = true;
+                      break;
+                    }
+                    for (const c of formsAt(r3)) {
+                      if (wordMatches(c, remB)) {
+                        matchedThree = true;
+                        break;
+                      }
+                    }
+                    if (matchedThree) break;
                   }
                 }
+                if (matchedThree) break;
               }
-              if (startsWithR) break;
+              if (matchedThree) break;
             }
           }
-          if (startsWithR) break;
+          if (matchedThree) break;
         }
-        if (startsWithR) continue;
+        if (matchedThree) {
+          r = skipEmpty(expectedNormalized, r3 + 1);
+          i++;
+          continue;
+        }
       }
     }
 

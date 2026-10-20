@@ -152,6 +152,30 @@ export function useRecitation(tokens: WordToken[], initialRevealed: number = 0) 
           revealedRef.current = committed;
           setRevealed(committed);
           if (best.wrongWords.length) setWrongWords((w) => [...w, ...best.wrongWords]);
+        } else if (interimAlts && interimAlts.length > 0) {
+          let altMatched = false;
+          for (const alt of interimAlts) {
+            const altWords = wordsOf(alt);
+            if (altWords.length > 0) {
+              const altMatch = matchMany(expected, committed, altWords, expectedForms);
+              if (altMatch.revealed > committed) {
+                committed = altMatch.revealed;
+                carryRef.current = [];
+                revealedRef.current = committed;
+                setRevealed(committed);
+                altMatched = true;
+                break;
+              }
+            }
+          }
+          if (!altMatched) {
+            if (carriedOnly) {
+              carryRef.current = carriedOnly;
+            } else if (best) {
+              carryRef.current = [];
+              if (best.wrongWords.length) setWrongWords((w) => [...w, ...best.wrongWords]);
+            }
+          }
         } else if (carriedOnly) {
           carryRef.current = carriedOnly;
         } else if (best) {
