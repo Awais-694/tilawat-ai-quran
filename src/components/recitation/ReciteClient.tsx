@@ -14,6 +14,7 @@ import { ProgressBar } from "@/components/common/ProgressBar";
 import { FeedbackPanel } from "@/components/recitation/FeedbackPanel";
 import { MicButton } from "@/components/recitation/MicButton";
 import { playAyah } from "@/lib/audio/player";
+import { playMicStartSound, playMicStopSound } from "@/lib/audio/soundEffects";
 import { db } from "@/lib/storage/db";
 import {
   getEnginePref,
@@ -363,14 +364,20 @@ export function ReciteClient({
 
   const toggleMic = () => {
     if (activeEngine === "webspeech") {
-      if (ws.listening) ws.stop();
-      else {
+      if (ws.listening) {
+        playMicStopSound();
+        ws.stop();
+      } else {
+        playMicStartSound();
         sessionCounted.current = true;
         ws.start();
       }
     } else {
-      if (wh.listening) wh.stop();
-      else {
+      if (wh.listening) {
+        playMicStopSound();
+        wh.stop();
+      } else {
+        playMicStartSound();
         sessionCounted.current = true;
         void wh.start();
       }
