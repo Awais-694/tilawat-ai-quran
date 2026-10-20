@@ -685,35 +685,30 @@ export function ReciteClient({
         })}
       </MushafPage>
 
-      {/* Simple, Beautiful Floating Ma Sha Allah Popup (Auto-dismisses in seconds, no scroll needed) */}
+      {/* Simple, Beautiful Centered Ma Sha Allah Popup (Auto-dismisses in seconds, no scroll needed) */}
       {showToast && (
         <div
           onClick={() => setShowToast(false)}
           title="Tap to dismiss"
-          className={`fixed top-4 sm:top-6 left-1/2 -translate-x-1/2 z-50 px-5 sm:px-7 py-3 sm:py-3.5 rounded-2xl bg-[#091a11]/95 border border-emerald-400/50 shadow-[0_12px_45px_rgba(0,0,0,0.7),0_0_25px_rgba(16,185,129,0.3)] backdrop-blur-xl flex items-center gap-3 sm:gap-4 select-none cursor-pointer transition-all duration-700 ${
+          className={`fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 px-8 py-5 rounded-3xl bg-[#081810]/95 border border-emerald-400/50 shadow-[0_20px_60px_rgba(0,0,0,0.85),0_0_35px_rgba(16,185,129,0.35)] backdrop-blur-xl flex flex-col items-center justify-center text-center select-none cursor-pointer transition-all duration-700 ${
             toastFading
-              ? "opacity-0 -translate-y-3 pointer-events-none scale-95"
-              : "opacity-100 translate-y-0 scale-100 animate-in fade-in slide-in-from-top-4 duration-500"
+              ? "opacity-0 scale-95 pointer-events-none"
+              : "opacity-100 scale-100 animate-in fade-in zoom-in-95 duration-500"
           }`}
           role="status"
           aria-live="polite"
         >
-          {/* Subtle Golden Check Badge */}
-          <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-gradient-to-br from-amber-400/30 to-emerald-600/30 border border-amber-400/50 flex items-center justify-center shrink-0 shadow-[0_0_15px_rgba(251,191,36,0.35)]">
-            <svg className="w-4 h-4 sm:w-5 sm:h-5 text-amber-300 drop-shadow-[0_0_8px_rgba(251,191,36,0.6)]" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-            </svg>
-          </div>
+          {/* Authentic Calligraphy */}
+          <span
+            className="text-3xl sm:text-4xl md:text-5xl font-quran text-amber-300 font-bold leading-tight drop-shadow-[0_4px_16px_rgba(251,191,36,0.5)]"
+            dir="rtl"
+          >
+            مَا شَاءَ اللّٰهُ
+          </span>
 
-          {/* Simple and authentic Arabic Calligraphy & Subtitle */}
-          <div className="flex flex-col text-left">
-            <span className="text-xl sm:text-2xl font-quran text-amber-300 font-bold leading-tight drop-shadow-[0_2px_8px_rgba(251,191,36,0.35)]" dir="rtl">
-              مَا شَاءَ اللّٰهُ
-            </span>
-            <span className="text-xs sm:text-sm font-semibold text-emerald-100 tracking-wide">
-              سورة {loaded.meta.name} مکمل ہو گئی
-            </span>
-          </div>
+          <span className="text-xs sm:text-sm font-semibold text-emerald-100/90 tracking-wide mt-2 font-urdu" dir="rtl">
+            سورة {loaded.meta.name} مکمل ہو گئی
+          </span>
         </div>
       )}
 
