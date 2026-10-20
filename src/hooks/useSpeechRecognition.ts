@@ -45,8 +45,8 @@ export function useSpeechRecognition(onResult: ResultHandler) {
   const finalsAll = useRef<string[]>([]);
   const sessionFinalsAppended = useRef(0);
 
-  const emit = (interim: string, interimAlts?: string[]) =>
-    handlerRef.current(finalsAll.current.join(" "), interim, interimAlts);
+  const emit = (interim: string) =>
+    handlerRef.current(finalsAll.current.join(" "), interim);
 
   const start = () => {
     if (!supported) return;
@@ -57,12 +57,10 @@ export function useSpeechRecognition(onResult: ResultHandler) {
     rec.lang = "ar-SA";
     rec.continuous = true;
     rec.interimResults = true;
-    try { (rec as unknown as { maxAlternatives: number }).maxAlternatives = 5; } catch { /* ignore */ }
     sessionFinalsAppended.current = 0;
     rec.onresult = (e) => {
       let finalsInSession = 0;
       let interimText = "";
-      const altsSet = new Set<string>();
 
       for (let i = 0; i < e.results.length; i++) {
         const r = e.results[i];
@@ -75,47 +73,15 @@ export function useSpeechRecognition(onResult: ResultHandler) {
             }
             sessionFinalsAppended.current = finalsInSession;
           }
-          // Collect alternatives for final results
-          const rAny = r as unknown as Record<number, SRAlternative | undefined> & { length: number };
-          if (rAny.length > 1) {
-            for (let a = 1; a < rAny.length; a++) {
-              const altChunk = rAny[a]?.transcript?.trim();
-              if (altChunk) altsSet.add(altChunk);
-            }
-          }
         } else {
           const chunk = r[0].transcript.trim();
           if (chunk) {
             interimText += (interimText ? " " : "") + chunk;
           }
-          const rAny = r as unknown as Record<number, SRAlternative | undefined> & { length: number };
-          if (rAny.length > 1) {
-            for (let a = 1; a < rAny.length; a++) {
-              const altChunk = rAny[a]?.transcript?.trim();
-              if (altChunk) altsSet.add(altChunk);
-            }
-          }
         }
       }
 
-      // In fast recitation, build multi-word alternative hypotheses across all interim chunks
-      for (let a = 1; a < 5; a++) {
-        const altChunks: string[] = [];
-        for (let i = 0; i < e.results.length; i++) {
-          const r = e.results[i];
-          if (!r.isFinal) {
-            const rAny = r as unknown as Record<number, SRAlternative | undefined>;
-            const altText = rAny[a]?.transcript?.trim() || r[0].transcript?.trim();
-            if (altText) altChunks.push(altText);
-          }
-        }
-        if (altChunks.length > 0) {
-          const joined = altChunks.join(" ");
-          if (joined && joined !== interimText) altsSet.add(joined);
-        }
-      }
-
-      emit(interimText.trim(), altsSet.size > 0 ? Array.from(altsSet) : undefined);
+      emit(interimText.trim());
     };
     rec.onerror = (e) => {
       if (e.error === "no-speech") {

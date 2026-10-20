@@ -234,9 +234,9 @@ export function matchMany(
     // - Direct concatenation (رب + العالمين -> ربالعالمين, اياك + نعبد -> اياكنعبد)
     // - Wasl / Alif elision (ولا + الضالين -> والضالين / ولضالين, اهدنا + الصراط -> اهدناصراط, في + الارض -> فالارض)
     // - Idgham of Nun Saakin / Tanween (من + ربهم -> مربهم / مرربهم, يكن + له -> يكله, من + مسد -> ممسد, حبل + من -> حبلمن)
-    // - Iqlab before Baa (من + بعد -> ممبعد)
-    const r2 = skipEmpty(expectedNormalized, r + 1);
-    if (r2 < expectedNormalized.length) {
+    // Only merge words within the SAME ayah (no ayah boundary marker between r and r2)
+    const r2 = r + 1;
+    if (r2 < expectedNormalized.length && expectedNormalized[r2] !== "") {
       const getPrefixes = (token: string): string[] => {
         const out = new Set<string>([token]);
         const n = token.replace(/ا+/g, "ا");
@@ -308,8 +308,9 @@ export function matchMany(
       }
 
       // 5. Three Quran words merged into one heard word (e.g. "يا ايها الذين" -> "ياايهاالذين")
-      const r3 = skipEmpty(expectedNormalized, r2 + 1);
-      if (r3 < expectedNormalized.length) {
+      // Only merge words within the SAME ayah (no ayah boundary marker between r2 and r3)
+      const r3 = r2 + 1;
+      if (r3 < expectedNormalized.length && expectedNormalized[r3] !== "") {
         let matchedThree = false;
         for (const a of formsA) {
           const prefixesA = getPrefixes(a);

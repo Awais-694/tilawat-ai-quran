@@ -152,30 +152,6 @@ export function useRecitation(tokens: WordToken[], initialRevealed: number = 0) 
           revealedRef.current = committed;
           setRevealed(committed);
           if (best.wrongWords.length) setWrongWords((w) => [...w, ...best.wrongWords]);
-        } else if (interimAlts && interimAlts.length > 0) {
-          let altMatched = false;
-          for (const alt of interimAlts) {
-            const altWords = wordsOf(alt);
-            if (altWords.length > 0) {
-              const altMatch = matchMany(expected, committed, altWords, expectedForms);
-              if (altMatch.revealed > committed) {
-                committed = altMatch.revealed;
-                carryRef.current = [];
-                revealedRef.current = committed;
-                setRevealed(committed);
-                altMatched = true;
-                break;
-              }
-            }
-          }
-          if (!altMatched) {
-            if (carriedOnly) {
-              carryRef.current = carriedOnly;
-            } else if (best) {
-              carryRef.current = [];
-              if (best.wrongWords.length) setWrongWords((w) => [...w, ...best.wrongWords]);
-            }
-          }
         } else if (carriedOnly) {
           carryRef.current = carriedOnly;
         } else if (best) {
@@ -193,26 +169,29 @@ export function useRecitation(tokens: WordToken[], initialRevealed: number = 0) 
 
       // Live interim matching for fast recitation:
       // Match incoming words in sequence against the expected Quran tokens starting from committed.
-      // matchMany enforces strict sequential order (no skipping unrecited words).
+      // Strict Guards:
+      // 1. Ayah Boundary Guard: Interim speech results CANNOT leap into the next Ayah.
+      //    Words of the next Ayah are never visible until the current Ayah is fully completed.
+      // 2. Word Count Lookahead Guard: Interim cannot advance more tokens than the words actually spoken.
       let live = committed;
-      if (interimWords.length > 0) {
-        const interimMatch = matchMany(expected, committed, interimWords, expectedForms);
-        live = Math.min(interimMatch.revealed, expected.length);
-      }
+      if (interimWords.length > 0 && committed < tokens.length) {
+        const curAyah = tokens[committed]?.ayahNumber ?? 1;
+        let maxAyahEnd = committed;
+        while (maxAyahEnd < tokens.length && tokens[maxAyahEnd].ayahNumber === curAyah) {
+          maxAyahEnd++;
+        }
+        maxAyahEnd = skipEmpty(expected, maxAyahEnd);
 
-      // If speech recognition alternatives are available, check if an alternative matches further
-      if (interimAlts && interimAlts.length > 0) {
-        for (const alt of interimAlts) {
-          let altWords = wordsOf(alt);
-          if ((MUQATTA_AT[muqLive] || MUQATTA_AT_FORMS[muqLive]) && altWords.length > 0) {
-            altWords = collapseMuqattaat(altWords, muqLive).words;
-          }
-          if (altWords.length > 0) {
-            const altMatch = matchMany(expected, committed, altWords, expectedForms);
-            if (altMatch.revealed > live) {
-              live = Math.min(altMatch.revealed, expected.length);
-            }
-          }
+        const maxAllowed = Math.min(
+          maxAyahEnd,
+          committed + interimWords.length + 1,
+          expected.length
+        );
+
+        const interimMatch = matchMany(expected, committed, interimWords, expectedForms);
+        const cappedMatch = Math.min(interimMatch.revealed, maxAllowed);
+        if (cappedMatch > committed) {
+          live = cappedMatch;
         }
       }
 
@@ -228,7 +207,7 @@ export function useRecitation(tokens: WordToken[], initialRevealed: number = 0) 
       const heard = (finalText + " " + interimText).trim();
       if (heard) setLastHeard(heard);
     },
-    [expected, expectedForms, basmalaLen]
+    [expected, expectedForms, basmalaLen, tokens]
   );
 
   const reset = useCallback(() => {
