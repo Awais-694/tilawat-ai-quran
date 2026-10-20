@@ -128,9 +128,9 @@ export function ReciteClient({
           setToastFading(true);
           const hideTimer = setTimeout(() => {
             setShowToast(false);
-          }, 600);
+          }, 500);
           return () => clearTimeout(hideTimer);
-        }, 3000);
+        }, 2000);
 
         return () => clearTimeout(fadeTimer);
       }
