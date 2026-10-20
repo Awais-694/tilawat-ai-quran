@@ -661,9 +661,9 @@ export function ReciteClient({
 
       {/* Professional Floating Control Toolbar */}
       <div className="sticky bottom-3 z-30 flex flex-col items-center gap-1.5 px-2">
-        <div className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2.5 p-1.5 sm:p-2 rounded-2xl sm:rounded-full bg-[#0a1a12]/95 backdrop-blur-xl border border-emerald-700/60 shadow-[0_12px_40px_rgba(0,0,0,0.6)]">
+        <div className="flex items-center justify-center gap-2 sm:gap-3.5 px-3 sm:px-4 py-2 sm:py-2.5 rounded-full bg-gradient-to-r from-[#06170e]/95 via-[#092215]/95 to-[#06170e]/95 backdrop-blur-2xl border border-emerald-600/40 shadow-[0_16px_50px_rgba(0,0,0,0.7),0_0_25px_rgba(16,185,129,0.15)]">
           {/* Page Navigator Pill */}
-          <div className="flex items-center rounded-full bg-[#05130d]/80 border border-emerald-900/70 p-0.5">
+          <div className="flex items-center rounded-full bg-[#030e08]/90 border border-emerald-800/70 p-0.5 sm:p-1 shadow-inner">
             <button
               onClick={() => {
                 setAutoFollow(false);
@@ -708,7 +708,7 @@ export function ReciteClient({
           <button
             onClick={playCurrentAyah}
             title="Listen to reference recitation"
-            className="flex items-center gap-1.5 px-3 sm:px-3.5 py-2 rounded-full text-xs font-semibold text-emerald-200 bg-emerald-950/80 hover:bg-emerald-900 border border-emerald-700/60 hover:border-emerald-500/80 transition-all active:scale-95 shadow-sm cursor-pointer"
+            className="flex items-center gap-1.5 px-3 sm:px-3.5 py-2.5 rounded-full text-xs font-semibold text-emerald-200 bg-[#061e12]/90 hover:bg-emerald-900/80 border border-emerald-700/60 hover:border-emerald-400/80 transition-all active:scale-95 shadow-sm cursor-pointer"
           >
             <svg className="w-4 h-4 text-emerald-300" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
@@ -720,7 +720,7 @@ export function ReciteClient({
           <button
             onClick={handleReset}
             title="Reset current recitation session"
-            className="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-full text-emerald-300/80 hover:text-white hover:bg-emerald-900/60 border border-emerald-900/60 hover:border-emerald-700 transition-all active:scale-95 cursor-pointer"
+            className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-full text-emerald-300 hover:text-white bg-[#061e12]/90 hover:bg-emerald-900/80 border border-emerald-800/70 hover:border-emerald-500/80 transition-all active:scale-95 shadow-sm cursor-pointer"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
