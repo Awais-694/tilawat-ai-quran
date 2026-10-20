@@ -2,51 +2,96 @@
 
 import { useEffect, useState } from "react";
 
-// Module-level variable persists during SPA client navigation (Back, Next, etc.)
-// but is reset whenever the app is refreshed or newly opened in browser
-let hasShownThisSession = false;
+// Declare window global augmentation
+declare global {
+  interface Window {
+    __BISMILLAH_PAGE_LOAD_ID?: string;
+    __BISMILLAH_SHOWN_IN_LOAD?: boolean;
+  }
+}
 
 export function BismillahSplash() {
   const [visible, setVisible] = useState(false);
   const [fading, setFading] = useState(false);
 
   useEffect(() => {
-    // Check if browser navigation was Back/Forward
-    let isBackForwardNav = false;
+    if (typeof window === "undefined") return;
+
+    // Fast check: if already displayed in this browser document load, exit immediately
+    if (window.__BISMILLAH_SHOWN_IN_LOAD) {
+      return;
+    }
+
+    // Initialize unique page load identifier once per full browser document load
+    if (!window.__BISMILLAH_PAGE_LOAD_ID) {
+      window.__BISMILLAH_PAGE_LOAD_ID = `${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+    }
+
+    // Check browser navigation type
+    let isBackForward = false;
+    let isReload = false;
     try {
       const navEntry = performance.getEntriesByType("navigation")[0] as PerformanceNavigationTiming | undefined;
-      if (navEntry && navEntry.type === "back_forward") {
-        isBackForwardNav = true;
-      } else if (
-        typeof window !== "undefined" &&
-        (window.performance as unknown as { navigation?: { type: number } })?.navigation?.type === 2
-      ) {
-        isBackForwardNav = true;
+      if (navEntry) {
+        if (navEntry.type === "back_forward") isBackForward = true;
+        if (navEntry.type === "reload") isReload = true;
+      } else if (window.performance && (window.performance as unknown as { navigation?: { type: number } }).navigation) {
+        const type = (window.performance as unknown as { navigation: { type: number } }).navigation.type;
+        if (type === 2) isBackForward = true;
+        if (type === 1) isReload = true;
       }
     } catch {
-      // fallback safe
+      // safe fallback
     }
 
-    // Only show if it hasn't shown yet in this session AND it's not a back/forward navigation
-    if (!hasShownThisSession && !isBackForwardNav) {
-      hasShownThisSession = true;
-      setVisible(true);
-
-      const timer = setTimeout(() => {
-        setFading(true);
-        const hideTimer = setTimeout(() => {
-          setVisible(false);
-        }, 700);
-        return () => clearTimeout(hideTimer);
-      }, 2400);
-
-      return () => clearTimeout(timer);
-    } else {
-      hasShownThisSession = true;
+    // Never display on browser back/forward history navigation
+    if (isBackForward) {
+      window.__BISMILLAH_SHOWN_IN_LOAD = true;
+      return;
     }
+
+    // Check sessionStorage to verify whether this is an internal client-side route navigation
+    // (e.g. clicking "Weekly Report", "Back", "Surahs", etc.) vs a fresh reload or app open
+    let isSameClientSession = false;
+    try {
+      const storedPageLoadId = sessionStorage.getItem("tilawat_bismillah_page_load");
+      if (storedPageLoadId === window.__BISMILLAH_PAGE_LOAD_ID) {
+        isSameClientSession = true;
+      }
+    } catch {
+      // safe fallback
+    }
+
+    // Client-side route transitions (like clicking "Weekly Report" or "Back")
+    // must NEVER trigger the splash screen!
+    if (isSameClientSession && !isReload) {
+      window.__BISMILLAH_SHOWN_IN_LOAD = true;
+      return;
+    }
+
+    // Mark as shown for this document load and session
+    window.__BISMILLAH_SHOWN_IN_LOAD = true;
+    try {
+      sessionStorage.setItem("tilawat_bismillah_page_load", window.__BISMILLAH_PAGE_LOAD_ID);
+    } catch {
+      // ignore
+    }
+
+    // Display splash screen on fresh app open or browser reload
+    setVisible(true);
+
+    const timer = setTimeout(() => {
+      setFading(true);
+      const hideTimer = setTimeout(() => {
+        setVisible(false);
+      }, 700);
+      return () => clearTimeout(hideTimer);
+    }, 2400);
+
+    return () => clearTimeout(timer);
   }, []);
 
-  // Listen to BFCache restore (pageshow with persisted) to ensure it stays hidden on browser back
+  // Ensure BFCache restore (pageshow with persisted) never displays splash
   useEffect(() => {
     const handlePageShow = (e: PageTransitionEvent) => {
       if (e.persisted) {
@@ -58,7 +103,9 @@ export function BismillahSplash() {
   }, []);
 
   const handleDismiss = () => {
-    hasShownThisSession = true;
+    if (typeof window !== "undefined") {
+      window.__BISMILLAH_SHOWN_IN_LOAD = true;
+    }
     setFading(true);
     setTimeout(() => setVisible(false), 300);
   };
