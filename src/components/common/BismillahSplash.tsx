@@ -2,23 +2,63 @@
 
 import { useEffect, useState } from "react";
 
+// Module-level variable persists during SPA client navigation (Back, Next, etc.)
+// but is reset whenever the app is refreshed or newly opened in browser
+let hasShownThisSession = false;
+
 export function BismillahSplash() {
-  const [visible, setVisible] = useState(true);
+  const [visible, setVisible] = useState(false);
   const [fading, setFading] = useState(false);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setFading(true);
-      const hideTimer = setTimeout(() => {
-        setVisible(false);
-      }, 700);
-      return () => clearTimeout(hideTimer);
-    }, 2400);
+    // Check if browser navigation was Back/Forward
+    let isBackForwardNav = false;
+    try {
+      const navEntry = performance.getEntriesByType("navigation")[0] as PerformanceNavigationTiming | undefined;
+      if (navEntry && navEntry.type === "back_forward") {
+        isBackForwardNav = true;
+      } else if (
+        typeof window !== "undefined" &&
+        (window.performance as unknown as { navigation?: { type: number } })?.navigation?.type === 2
+      ) {
+        isBackForwardNav = true;
+      }
+    } catch {
+      // fallback safe
+    }
 
-    return () => clearTimeout(timer);
+    // Only show if it hasn't shown yet in this session AND it's not a back/forward navigation
+    if (!hasShownThisSession && !isBackForwardNav) {
+      hasShownThisSession = true;
+      setVisible(true);
+
+      const timer = setTimeout(() => {
+        setFading(true);
+        const hideTimer = setTimeout(() => {
+          setVisible(false);
+        }, 700);
+        return () => clearTimeout(hideTimer);
+      }, 2400);
+
+      return () => clearTimeout(timer);
+    } else {
+      hasShownThisSession = true;
+    }
+  }, []);
+
+  // Listen to BFCache restore (pageshow with persisted) to ensure it stays hidden on browser back
+  useEffect(() => {
+    const handlePageShow = (e: PageTransitionEvent) => {
+      if (e.persisted) {
+        setVisible(false);
+      }
+    };
+    window.addEventListener("pageshow", handlePageShow);
+    return () => window.removeEventListener("pageshow", handlePageShow);
   }, []);
 
   const handleDismiss = () => {
+    hasShownThisSession = true;
     setFading(true);
     setTimeout(() => setVisible(false), 300);
   };
