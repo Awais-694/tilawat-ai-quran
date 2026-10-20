@@ -169,26 +169,49 @@ export function useRecitation(tokens: WordToken[], initialRevealed: number = 0) 
 
       // Live interim matching for fast recitation:
       // Match incoming words in sequence against the expected Quran tokens starting from committed.
-      // Strict Guards:
-      // 1. Ayah Boundary Guard: Interim speech results CANNOT leap into the next Ayah.
-      //    Words of the next Ayah are never visible until the current Ayah is fully completed.
-      // 2. Word Count Lookahead Guard: Interim cannot advance more tokens than the words actually spoken.
+      // Dynamic Ayah Boundary & Spoken-Word Guards:
+      // 1. If the current Ayah is not yet finished, interim CANNOT reveal any word from the next Ayah.
+      // 2. If the user recites fast in one continuous breath and 100% completes the current Ayah,
+      //    the spoken words of the next Ayah reveal INSTANTLY without waiting for speech pauses.
+      // 3. Under no circumstances can interim reveal beyond the immediate next Ayah.
+      // 4. Interim can NEVER reveal more tokens than the words actually uttered by the speaker.
       let live = committed;
       if (interimWords.length > 0 && committed < tokens.length) {
         const curAyah = tokens[committed]?.ayahNumber ?? 1;
-        let maxAyahEnd = committed;
-        while (maxAyahEnd < tokens.length && tokens[maxAyahEnd].ayahNumber === curAyah) {
-          maxAyahEnd++;
+        // Find where the current Ayah ends
+        let curAyahEnd = committed;
+        while (curAyahEnd < tokens.length && tokens[curAyahEnd].ayahNumber === curAyah) {
+          curAyahEnd++;
         }
-        maxAyahEnd = skipEmpty(expected, maxAyahEnd);
+        curAyahEnd = skipEmpty(expected, curAyahEnd);
 
+        // Run strict sequential match on interim words
+        const interimMatch = matchMany(expected, committed, interimWords, expectedForms);
+
+        // Determine allowable boundary based on whether the current Ayah was fully completed
+        let maxBoundary: number;
+        if (interimMatch.revealed >= curAyahEnd) {
+          // Current Ayah was completely and correctly recited!
+          // Allow the recited words of the immediate next Ayah to reveal instantly.
+          const nextAyah = curAyah + 1;
+          let nextAyahEnd = curAyahEnd;
+          while (nextAyahEnd < tokens.length && tokens[nextAyahEnd].ayahNumber === nextAyah) {
+            nextAyahEnd++;
+          }
+          nextAyahEnd = skipEmpty(expected, nextAyahEnd);
+          maxBoundary = nextAyahEnd;
+        } else {
+          // Current Ayah is still in progress: strictly forbid revealing ANY word of the next Ayah
+          maxBoundary = curAyahEnd;
+        }
+
+        // Strict Lookahead Limit: Cannot reveal more tokens than words actually spoken (+1 for compound/clitics)
         const maxAllowed = Math.min(
-          maxAyahEnd,
+          maxBoundary,
           committed + interimWords.length + 1,
           expected.length
         );
 
-        const interimMatch = matchMany(expected, committed, interimWords, expectedForms);
         const cappedMatch = Math.min(interimMatch.revealed, maxAllowed);
         if (cappedMatch > committed) {
           live = cappedMatch;
