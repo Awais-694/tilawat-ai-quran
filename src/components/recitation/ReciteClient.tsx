@@ -666,11 +666,11 @@ export function ReciteClient({
         </div>
       )}
 
-      {/* Professional Floating Control Toolbar */}
-      <div className="sticky bottom-3 z-30 flex flex-col items-center gap-1.5 px-2">
-        <div className="flex items-center justify-center gap-2 sm:gap-3.5 px-3 sm:px-4 py-2 sm:py-2.5 rounded-full bg-gradient-to-r from-[#06170e]/95 via-[#092215]/95 to-[#06170e]/95 backdrop-blur-2xl border border-emerald-600/40 shadow-[0_16px_50px_rgba(0,0,0,0.7),0_0_25px_rgba(16,185,129,0.15)]">
-          {/* Page Navigator Pill */}
-          <div className="flex items-center rounded-full bg-[#030e08]/90 border border-emerald-800/70 p-0.5 sm:p-1 shadow-inner">
+      {/* Sleek, Soft Floating Control Toolbar */}
+      <div className="sticky bottom-2 sm:bottom-3 z-30 flex flex-col items-center gap-1 px-2">
+        <div className="flex items-center justify-center gap-1.5 sm:gap-2.5 px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-full bg-[#081e14]/85 backdrop-blur-xl border border-emerald-500/25 shadow-[0_8px_30px_rgba(0,0,0,0.4),0_0_20px_rgba(16,185,129,0.1)]">
+          {/* Soft Compact Page Navigator Pill with Integrated Auto-turn */}
+          <div className="flex items-center gap-0.5 rounded-full bg-emerald-950/40 border border-emerald-500/20 px-1 py-0.5">
             <button
               onClick={() => {
                 setAutoFollow(false);
@@ -678,14 +678,14 @@ export function ReciteClient({
               }}
               disabled={pageIdx === 0}
               title="Previous page"
-              className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-full text-emerald-300 hover:text-white hover:bg-emerald-800/60 disabled:opacity-25 disabled:hover:bg-transparent disabled:hover:text-emerald-300 transition-colors cursor-pointer"
+              className="w-6 h-6 sm:w-6.5 sm:h-6.5 flex items-center justify-center rounded-full text-emerald-300/80 hover:text-white hover:bg-emerald-500/20 disabled:opacity-20 transition-colors cursor-pointer"
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
               </svg>
             </button>
 
-            <span className="px-1.5 text-[11px] sm:text-xs font-mono font-medium text-emerald-200 select-none whitespace-nowrap">
+            <span className="px-1 text-[11px] sm:text-xs font-mono font-medium text-emerald-200/90 select-none whitespace-nowrap">
               {pageIdx + 1} / {loaded.pages.length}
             </span>
 
@@ -696,11 +696,25 @@ export function ReciteClient({
               }}
               disabled={pageIdx >= loaded.pages.length - 1}
               title="Next page"
-              className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-full text-emerald-300 hover:text-white hover:bg-emerald-800/60 disabled:opacity-25 disabled:hover:bg-transparent disabled:hover:text-emerald-300 transition-colors cursor-pointer"
+              className="w-6 h-6 sm:w-6.5 sm:h-6.5 flex items-center justify-center rounded-full text-emerald-300/80 hover:text-white hover:bg-emerald-500/20 disabled:opacity-20 transition-colors cursor-pointer"
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
               </svg>
+            </button>
+
+            {/* Subtle inline Auto-Turn toggle */}
+            <button
+              onClick={() => setAutoFollow((prev) => !prev)}
+              title={autoFollow ? "Auto-turn pages enabled (tap to disable)" : "Auto-turn pages disabled (tap to enable)"}
+              className={`ml-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-medium transition-colors cursor-pointer flex items-center gap-1 ${
+                autoFollow
+                  ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"
+                  : "text-emerald-400/40 hover:text-emerald-300 hover:bg-white/5"
+              }`}
+            >
+              <span className={`w-1.5 h-1.5 rounded-full ${autoFollow ? "bg-emerald-400 animate-pulse" : "bg-emerald-700"}`} />
+              <span className="hidden sm:inline">Auto</span>
             </button>
           </div>
 
@@ -711,40 +725,28 @@ export function ReciteClient({
             disabled={activeEngine === "webspeech" && !ws.supported}
           />
 
-          {/* Audio Reference Player */}
+          {/* Audio Reference Player (Soft Compact Ghost Button) */}
           <button
             onClick={playCurrentAyah}
             title="Listen to reference recitation"
-            className="flex items-center gap-1.5 px-3 sm:px-3.5 py-2.5 rounded-full text-xs font-semibold text-emerald-200 bg-[#061e12]/90 hover:bg-emerald-900/80 border border-emerald-700/60 hover:border-emerald-400/80 transition-all active:scale-95 shadow-sm cursor-pointer"
-          >
-            <svg className="w-4 h-4 text-emerald-300" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
-            </svg>
-            <span className="hidden sm:inline">Listen</span>
-          </button>
-
-          {/* Reset Progress Button */}
-          <button
-            onClick={handleReset}
-            title="Reset current recitation session"
-            className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-full text-emerald-300 hover:text-white bg-[#061e12]/90 hover:bg-emerald-900/80 border border-emerald-800/70 hover:border-emerald-500/80 transition-all active:scale-95 shadow-sm cursor-pointer"
+            className="w-8 h-8 sm:w-8.5 sm:h-8.5 flex items-center justify-center rounded-full text-emerald-300/80 hover:text-white bg-emerald-950/40 hover:bg-emerald-800/40 border border-emerald-500/20 hover:border-emerald-400/40 transition-all active:scale-95 cursor-pointer shadow-sm"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+            </svg>
+          </button>
+
+          {/* Reset Progress Button (Soft Compact Ghost Button) */}
+          <button
+            onClick={handleReset}
+            title="Reset recitation session"
+            className="w-8 h-8 sm:w-8.5 sm:h-8.5 flex items-center justify-center rounded-full text-emerald-300/80 hover:text-white bg-emerald-950/40 hover:bg-emerald-800/40 border border-emerald-500/20 hover:border-emerald-400/40 transition-all active:scale-95 cursor-pointer shadow-sm"
+          >
+            <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
             </svg>
           </button>
         </div>
-
-        {/* Clean auto-follow indicator pill */}
-        <label className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#07160f]/90 border border-emerald-900/60 text-[11px] text-emerald-300/80 hover:text-emerald-100 cursor-pointer backdrop-blur-md shadow-sm transition-colors">
-          <input
-            type="checkbox"
-            checked={autoFollow}
-            onChange={(e) => setAutoFollow(e.target.checked)}
-            className="w-3.5 h-3.5 rounded border-emerald-700 bg-emerald-950 text-emerald-500 focus:ring-0 focus:ring-offset-0 cursor-pointer"
-          />
-          <span>Auto-turn pages with recitation</span>
-        </label>
       </div>
 
       {/* Warnings & Engine Status at Bottom */}

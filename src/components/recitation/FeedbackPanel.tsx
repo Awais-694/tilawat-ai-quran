@@ -23,29 +23,26 @@ export function FeedbackPanel({
 
   if (!open) {
     return (
-      <div className="flex justify-center mt-3 mb-6">
+      <div className="flex justify-center mt-1.5 mb-3">
         <button
           onClick={() => setOpen(true)}
-          className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-medium text-emerald-200/90 bg-[#07160f]/90 hover:bg-[#0c2418] border border-emerald-800/60 hover:border-emerald-600/70 shadow-md backdrop-blur-md active:scale-95 transition-all cursor-pointer"
+          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium text-emerald-300/70 hover:text-emerald-200 bg-emerald-950/30 hover:bg-emerald-900/40 border border-emerald-500/15 backdrop-blur-md active:scale-95 transition-all cursor-pointer"
           title="Click to view voice recognition status and heard text"
         >
           <span
-            className={`w-2 h-2 rounded-full ${
-              listening ? "bg-emerald-400 animate-pulse" : "bg-emerald-700"
+            className={`w-1.5 h-1.5 rounded-full ${
+              listening ? "bg-emerald-400 animate-pulse" : "bg-emerald-600/70"
             }`}
           />
-          <span className="text-white font-medium text-[11px] sm:text-xs">
+          <span className="font-medium text-[11px]">
             {listening ? "Live Voice Active" : "Voice Status"}
           </span>
-          <span className="text-emerald-400/60 font-mono text-[10px] sm:text-[11px]">
-            ({revealed}/{total} words)
+          <span className="text-emerald-400/50 font-mono text-[10px]">
+            ({revealed}/{total})
           </span>
-          <span className="text-emerald-400 text-[10px] sm:text-[11px] ml-1 flex items-center gap-1 font-semibold">
-            <span>Show Status</span>
-            <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-            </svg>
-          </span>
+          <svg className="w-3 h-3 text-emerald-400/60 ml-0.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+          </svg>
         </button>
       </div>
     );
