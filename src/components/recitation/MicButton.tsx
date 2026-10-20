@@ -13,33 +13,33 @@ export function MicButton({
       disabled={disabled}
       title={listening ? "Stop Reciting (Tap to finish)" : "Start Reciting (Tap to speak)"}
       aria-label={listening ? "Stop Reciting" : "Start Reciting"}
-      className={`group relative flex items-center justify-center w-11 h-11 sm:w-12 sm:h-12 rounded-full p-0.5 transition-all duration-300 active:scale-95 hover:scale-105 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer shrink-0 ${
+      className={`group relative flex items-center justify-center w-13 h-13 sm:w-15 sm:h-15 rounded-full p-1 transition-all duration-300 active:scale-95 hover:scale-105 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer shrink-0 -my-1 ${
         listening
-          ? "bg-rose-500/20 shadow-[0_0_25px_rgba(244,63,94,0.5)] ring-1 ring-rose-400/70"
-          : "bg-emerald-500/20 shadow-[0_4px_18px_rgba(16,185,129,0.35)] ring-1 ring-emerald-400/40 hover:ring-emerald-300/70 hover:shadow-[0_0_24px_rgba(16,185,129,0.5)]"
+          ? "bg-rose-500/25 shadow-[0_0_30px_rgba(244,63,94,0.6)] ring-2 ring-rose-400/80"
+          : "bg-emerald-500/25 shadow-[0_0_28px_rgba(16,185,129,0.55)] ring-2 ring-emerald-400/60 hover:ring-emerald-300 hover:shadow-[0_0_38px_rgba(16,185,129,0.75)]"
       }`}
     >
       {/* Outer ambient pulsing ripple for listening state */}
       {listening && (
         <>
-          <span className="animate-ping absolute inset-0 rounded-full bg-rose-500 opacity-25" />
-          <span className="animate-pulse absolute -inset-0.5 rounded-full bg-rose-400/20" />
+          <span className="animate-ping absolute inset-0 rounded-full bg-rose-500 opacity-30" />
+          <span className="animate-pulse absolute -inset-1 rounded-full bg-rose-400/20" />
         </>
       )}
 
       {/* Button Core */}
       <span
-        className={`relative z-10 flex items-center justify-center w-full h-full rounded-full transition-all duration-300 shadow-sm ${
+        className={`relative z-10 flex items-center justify-center w-full h-full rounded-full transition-all duration-300 shadow-md ${
           listening
-            ? "bg-gradient-to-b from-rose-500 to-rose-700 text-white border-t border-rose-300/60"
-            : "bg-gradient-to-b from-[#2ce8a6] via-[#10b981] to-[#059669] text-white border-t border-emerald-200/60 shadow-[inset_0_1px_2px_rgba(255,255,255,0.4)]"
+            ? "bg-gradient-to-b from-rose-500 via-rose-600 to-rose-700 text-white border-t border-rose-300/80 shadow-[inset_0_2px_4px_rgba(255,255,255,0.35)]"
+            : "bg-gradient-to-b from-[#2ce8a6] via-[#10b981] to-[#047857] text-white border-t border-emerald-200/80 shadow-[inset_0_2px_4px_rgba(255,255,255,0.45)]"
         }`}
       >
         {listening ? (
           <span className="relative flex items-center justify-center">
             {/* Crisp Stop Icon */}
             <svg
-              className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.3)]"
+              className="w-5 h-5 sm:w-5.5 sm:h-5.5 text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.35)]"
               fill="currentColor"
               viewBox="0 0 24 24"
             >
@@ -48,7 +48,7 @@ export function MicButton({
           </span>
         ) : (
           <svg
-            className="w-5 h-5 sm:w-5.5 sm:h-5.5 text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.25)] transition-transform duration-200 group-hover:scale-105"
+            className="w-6 h-6 sm:w-6.5 sm:h-6.5 text-white drop-shadow-[0_2px_6px_rgba(0,0,0,0.3)] transition-transform duration-200 group-hover:scale-110"
             fill="currentColor"
             viewBox="0 0 24 24"
           >
