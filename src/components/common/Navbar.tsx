@@ -4,10 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const NAV_ITEMS = [
-  { href: "/surahs", label: "Recite", match: (p: string) => p.startsWith("/surahs") || p.startsWith("/recite") },
-  { href: "/read", label: "Read", match: (p: string) => p.startsWith("/read") },
-  { href: "/tajweed", label: "Tajweed", match: (p: string) => p.startsWith("/tajweed") },
-  { href: "/tarjama", label: "Tafseer", match: (p: string) => p.startsWith("/tarjama") },
+  { href: "/tarjama", label: "Translation", match: (p: string) => p.startsWith("/tarjama") },
   { href: "/stats", label: "Progress", match: (p: string) => p.startsWith("/stats") || p.startsWith("/streak") },
 ];
 
