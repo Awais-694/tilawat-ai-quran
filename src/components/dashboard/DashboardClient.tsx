@@ -184,38 +184,78 @@ export function DashboardClient() {
     <div className="max-w-2xl mx-auto space-y-5 sm:space-y-6 px-2 sm:px-0 pb-16">
       
       {/* Centered Professional Header with Islamic Motif */}
-      <div className="text-center pt-2 sm:pt-4 pb-1 space-y-3">
-
-        {/* Assalam-o-Alaikum & Calligraphic Salam */}
+      <div className="text-center pt-2 sm:pt-4 pb-1 space-y-2">
         <div className="space-y-1">
-          <h1 className="font-display text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-emerald-100 via-amber-100 to-emerald-200 drop-shadow-[0_2px_10px_rgba(0,0,0,0.5)]">
+          <h1 className="font-display text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight text-[#112a1d]">
             Assalam-o-Alaikum
           </h1>
-          <p className="font-arabic text-emerald-200 text-lg sm:text-2xl font-normal leading-relaxed tracking-wide" dir="rtl">
+          <p className="font-arabic text-[#1b5037] text-lg sm:text-2xl font-normal leading-relaxed tracking-wide" dir="rtl">
             اَلسَّلَامُ عَلَيْكُمْ وَرَحْمَةُ اللهِ وَبَرَكَاتُهُ
           </p>
         </div>
       </div>
 
+      {/* Dual Main Mode Quick Access: Recitation AI vs Simple Reading */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        {/* Mode 1: Recite with Mic */}
+        <Link
+          href="/surahs"
+          className="group relative overflow-hidden rounded-2xl bg-white hover:bg-[#faf7ee] border border-[#e5ded0] hover:border-[#c5a059] p-3.5 sm:p-4 shadow-sm transition-all"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 100-6 3 3 0 000 6z" />
+              </svg>
+            </div>
+            <div className="min-w-0">
+              <div className="flex items-center gap-1.5">
+                <span className="font-bold text-sm sm:text-base text-[#112a1d]">Recite with Mic</span>
+                <span className="text-[10px] font-bold uppercase tracking-wider bg-emerald-100 text-emerald-800 px-1.5 py-0.2 rounded">AI Test</span>
+              </div>
+              <p className="text-xs text-[#527060] truncate">تلاوت و حفظ مع مائیک</p>
+            </div>
+          </div>
+        </Link>
+
+        {/* Mode 2: Simple Quran Reader */}
+        <Link
+          href="/read"
+          className="group relative overflow-hidden rounded-2xl bg-white hover:bg-[#faf7ee] border border-[#e5ded0] hover:border-[#c5a059] p-3.5 sm:p-4 shadow-sm transition-all"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-[#fff8eb] border border-[#f59e0b]/30 text-amber-700 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+              </svg>
+            </div>
+            <div className="min-w-0">
+              <div className="flex items-center gap-1.5">
+                <span className="font-bold text-sm sm:text-base text-[#112a1d]">Read Quran</span>
+                <span className="text-[10px] font-bold uppercase tracking-wider bg-amber-100 text-amber-900 px-1.5 py-0.2 rounded">16-Line</span>
+              </div>
+              <p className="text-xs text-[#527060] truncate">صرف تلاوت (بغیر مائیک)</p>
+            </div>
+          </div>
+        </Link>
+      </div>
+
       {/* Quick Resume Card (Ayah Progress & Resume Prompt) */}
       {stats?.lastActive && lastActiveMeta && (
-        <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-br from-[#0e2a1d] via-[#091b12] to-[#040e08] border border-emerald-600/50 p-4 sm:p-5 shadow-[0_8px_30px_rgba(0,0,0,0.45)]">
-          {/* Subtle Ambient Decorative Glow */}
-          <div className="absolute -top-10 -right-10 w-32 h-32 bg-emerald-500/10 rounded-full blur-2xl pointer-events-none" />
-
+        <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-white border border-[#ded5c0] p-4 sm:p-5 shadow-[0_4px_16px_rgba(20,50,30,0.06)]">
           <div className="space-y-3 relative z-10">
             {/* Header Badge & Question */}
-            <div className="flex items-center justify-between border-b border-emerald-800/40 pb-2.5">
+            <div className="flex items-center justify-between border-b border-[#ebd7b2]/70 pb-2.5">
               <div className="flex items-center gap-2">
                 <span className="flex h-2.5 w-2.5 relative">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-400"></span>
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-600"></span>
                 </span>
-                <span className="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-amber-300">
+                <span className="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-emerald-850">
                   {stats.lastActive.revealedWords > 0 ? "Resume Tilawat" : "Continue Tilawat"}
                 </span>
               </div>
-              <span className="text-[11px] sm:text-xs font-semibold text-emerald-300/80 bg-emerald-950/70 border border-emerald-800/60 px-2 py-0.5 rounded-md">
+              <span className="text-[11px] sm:text-xs font-semibold text-emerald-800 bg-[#edf5f0] border border-emerald-200 px-2 py-0.5 rounded-md">
                 {stats.lastActive.revealedWords > 0 ? `${lastActivePct}% Completed` : "Ready"}
               </span>
             </div>
@@ -224,20 +264,20 @@ export function DashboardClient() {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
                 <div className="flex items-baseline gap-2.5 flex-wrap">
-                  <span className="text-lg sm:text-xl font-bold text-white tracking-tight">
+                  <span className="text-lg sm:text-xl font-bold text-[#112a1d] tracking-tight">
                     {lastActiveMeta.number}. {lastActiveMeta.name}
                   </span>
-                  <span className="font-quran text-emerald-300 text-xl sm:text-2xl" dir="rtl">
+                  <span className="font-quran text-[#143323] text-xl sm:text-2xl" dir="rtl">
                     {lastActiveMeta.arabicName}
                   </span>
                 </div>
 
                 <div className="mt-1.5 space-y-0.5">
-                  <div className="flex items-center gap-2 flex-wrap text-xs sm:text-sm font-semibold text-emerald-100">
-                    <span className="px-2 py-0.5 rounded-md bg-emerald-800/60 border border-emerald-600/50 text-white text-xs">
+                  <div className="flex items-center gap-2 flex-wrap text-xs sm:text-sm font-semibold text-[#112a1d]">
+                    <span className="px-2 py-0.5 rounded-md bg-emerald-700 text-white text-xs">
                       {lastAyah ? `Ayah ${lastAyah}` : "Ayah 1"}
                     </span>
-                    <span className="text-emerald-300/70 font-normal text-xs">
+                    <span className="text-[#527060] font-normal text-xs">
                       {stats.lastActive.revealedWords > 0
                         ? `${stats.lastActive.revealedWords} / ${stats.lastActive.totalWords} words revealed`
                         : "Ready to recite from Ayah 1"}
@@ -245,7 +285,7 @@ export function DashboardClient() {
                   </div>
                   
                   {/* Prompt question */}
-                  <p className="text-xs text-amber-200/90 font-medium pt-1">
+                  <p className="text-xs text-[#6e5828] font-medium pt-1">
                     {stats.lastActive.revealedWords > 0
                       ? "Would you like to resume reciting from where you left off?"
                       : "Would you like to continue reciting this Surah?"}
@@ -264,7 +304,7 @@ export function DashboardClient() {
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 pt-1">
                 <Link
                   href={`/recite/${stats.lastActive.surahNumber}`}
-                  className="flex-1 py-3 sm:py-3.5 px-4 rounded-xl sm:rounded-2xl bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-white font-bold text-sm sm:text-base flex items-center justify-center gap-2 shadow-lg shadow-emerald-950/60 active:scale-[0.98] transition-all"
+                  className="flex-1 py-3 sm:py-3.5 px-4 rounded-xl sm:rounded-2xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-sm sm:text-base flex items-center justify-center gap-2 shadow-md active:scale-[0.98] transition-all"
                 >
                   <svg className="w-4 h-4 text-white fill-current" viewBox="0 0 24 24">
                     <path d="M8 5v14l11-7z" />
@@ -275,7 +315,7 @@ export function DashboardClient() {
                 <button
                   onClick={(e) => handleResetSurah(stats.lastActive!.surahNumber, e)}
                   title="سورت کی پیش رفت ریزیٹ کریں اور شروع سے پڑھیں"
-                  className="py-3 px-3.5 rounded-xl sm:rounded-2xl bg-emerald-950/80 hover:bg-rose-950/70 text-emerald-300 hover:text-rose-200 border border-emerald-800/70 hover:border-rose-700/70 text-xs sm:text-sm font-semibold flex items-center justify-center gap-1.5 transition-all active:scale-[0.98] cursor-pointer"
+                  className="py-3 px-3.5 rounded-xl sm:rounded-2xl bg-[#faf7ee] hover:bg-rose-50 text-[#527060] hover:text-rose-700 border border-[#ded5c0] hover:border-rose-300 text-xs sm:text-sm font-semibold flex items-center justify-center gap-1.5 transition-all active:scale-[0.98] cursor-pointer"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -286,7 +326,7 @@ export function DashboardClient() {
             ) : (
               <Link
                 href={`/recite/${stats.lastActive.surahNumber}`}
-                className="w-full py-3 sm:py-3.5 px-4 rounded-xl sm:rounded-2xl bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-white font-bold text-sm sm:text-base flex items-center justify-center gap-2 shadow-lg shadow-emerald-950/60 active:scale-[0.98] transition-all"
+                className="w-full py-3 sm:py-3.5 px-4 rounded-xl sm:rounded-2xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-sm sm:text-base flex items-center justify-center gap-2 shadow-md active:scale-[0.98] transition-all"
               >
                 <svg className="w-4 h-4 text-white fill-current" viewBox="0 0 24 24">
                   <path d="M8 5v14l11-7z" />
@@ -323,21 +363,21 @@ export function DashboardClient() {
 
       {/* Completed Surahs Section */}
       {stats && stats.completedList.length > 0 && (
-        <div className="bg-[#0a2217]/90 border border-emerald-600/50 rounded-2xl sm:rounded-3xl p-4 sm:p-5 shadow-[0_8px_30px_rgba(0,0,0,0.45)] backdrop-blur-md space-y-3.5">
+        <div className="bg-white border border-[#ded5c0] rounded-2xl sm:rounded-3xl p-4 sm:p-5 shadow-sm space-y-3.5">
           {/* Section Header */}
-          <div className="flex items-center justify-between border-b border-emerald-800/50 pb-2.5">
+          <div className="flex items-center justify-between border-b border-[#ede7d8] pb-2.5">
             <div className="flex items-center gap-2">
-              <span className="w-6 h-6 rounded-full bg-emerald-500/20 border border-emerald-400/60 flex items-center justify-center text-emerald-300 text-xs font-bold shadow-sm">
+              <span className="w-6 h-6 rounded-full bg-emerald-100 border border-emerald-300 flex items-center justify-center text-emerald-800 text-xs font-bold shadow-sm">
                 ✓
               </span>
-              <h2 className="text-sm sm:text-base font-bold text-white tracking-wide">
+              <h2 className="text-sm sm:text-base font-bold text-[#112a1d] tracking-wide">
                 Completed Surahs
               </h2>
-              <span className="text-[11px] font-quran text-emerald-300/80 mr-1" dir="rtl">
+              <span className="text-[11px] font-quran text-[#345c47] mr-1" dir="rtl">
                 (مکمل شدہ سورتیں)
               </span>
             </div>
-            <span className="text-[11px] sm:text-xs font-semibold text-emerald-300 bg-emerald-950/80 border border-emerald-700/60 px-2.5 py-0.5 rounded-full shadow-sm">
+            <span className="text-[11px] sm:text-xs font-semibold text-emerald-800 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full shadow-sm">
               {stats.completedList.length} {stats.completedList.length === 1 ? "Surah" : "Surahs"}
             </span>
           </div>
@@ -349,23 +389,23 @@ export function DashboardClient() {
               return (
                 <div
                   key={p.surahNumber}
-                  className="flex items-center justify-between gap-2.5 bg-[#07160f]/90 border border-emerald-800/60 rounded-xl p-3 sm:px-4 sm:py-3 hover:bg-[#0c2419] hover:border-emerald-600/70 transition-all shadow-sm"
+                  className="flex items-center justify-between gap-2.5 bg-[#fbf9f3] border border-[#e5ded0] rounded-xl p-3 sm:px-4 sm:py-3 hover:bg-[#f6f1e3] transition-all shadow-sm"
                 >
                   {/* Left: Surah number + English name + Completed tag */}
                   <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
-                    <span className="w-8 h-8 rounded-xl bg-gradient-to-b from-emerald-700/90 to-emerald-900 border border-emerald-500/60 flex items-center justify-center text-xs font-bold text-white shrink-0 shadow-sm">
+                    <span className="w-8 h-8 rounded-xl bg-emerald-700 text-white flex items-center justify-center text-xs font-bold shrink-0 shadow-sm">
                       {meta?.number}
                     </span>
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className="text-xs sm:text-sm font-bold text-white truncate">
+                        <span className="text-xs sm:text-sm font-bold text-[#112a1d] truncate">
                           {meta?.name}
                         </span>
-                        <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-300 bg-emerald-950 border border-emerald-600/50 px-2 py-0.5 rounded-full shrink-0">
+                        <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-800 bg-emerald-100 border border-emerald-200 px-2 py-0.5 rounded-full shrink-0">
                           <span>✓</span> Completed
                         </span>
                       </div>
-                      <div className="text-[11px] text-emerald-300/60 truncate mt-0.5">
+                      <div className="text-[11px] text-[#527060] truncate mt-0.5">
                         {meta?.numberOfAyahs} Ayahs • {p.totalWords || meta?.numberOfAyahs} words recited
                       </div>
                     </div>
@@ -373,17 +413,17 @@ export function DashboardClient() {
 
                   {/* Right: Arabic Name & Actions */}
                   <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-                    <span className="font-quran text-lg sm:text-2xl text-emerald-200 leading-none select-none hidden xs:inline" dir="rtl">
+                    <span className="font-quran text-lg sm:text-2xl text-[#143323] leading-none select-none hidden xs:inline" dir="rtl">
                       {meta?.arabicName}
                     </span>
 
                     {/* Recite Again Button */}
                     <Link
                       href={`/recite/${p.surahNumber}`}
-                      className="px-2.5 sm:px-3 py-1.5 rounded-lg bg-emerald-900/70 hover:bg-emerald-800 text-emerald-100 hover:text-white border border-emerald-700/60 text-xs font-semibold flex items-center gap-1 transition-all active:scale-95 shadow-sm cursor-pointer"
+                      className="px-2.5 sm:px-3 py-1.5 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white border border-emerald-600 text-xs font-semibold flex items-center gap-1 transition-all active:scale-95 shadow-sm cursor-pointer"
                       title="سورت کو دوبارہ پڑھیں"
                     >
-                      <svg className="w-3.5 h-3.5 text-emerald-300" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                      <svg className="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                       </svg>
                       <span className="hidden sm:inline">Recite Again</span>
@@ -392,7 +432,7 @@ export function DashboardClient() {
                     {/* Delete from Completed Button */}
                     <button
                       onClick={(e) => handleDeleteCompleted(p.surahNumber, e)}
-                      className="p-1.5 sm:p-2 rounded-lg text-emerald-400/60 hover:text-rose-300 hover:bg-rose-950/70 border border-transparent hover:border-rose-800/60 transition-all active:scale-90 cursor-pointer"
+                      className="p-1.5 sm:p-2 rounded-lg text-[#859f90] hover:text-rose-700 hover:bg-rose-50 border border-transparent hover:border-rose-200 transition-all active:scale-90 cursor-pointer"
                       title="مکمل شدہ فہرست سے ڈیلیٹ کریں"
                     >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
@@ -409,12 +449,12 @@ export function DashboardClient() {
 
       {/* In Progress Surahs */}
       {stats && stats.inProgress.length > 0 && (
-        <div className="bg-[#0c1c14]/90 border border-emerald-900/60 rounded-2xl p-3.5 sm:p-5 shadow-lg backdrop-blur-sm space-y-3">
+        <div className="bg-white border border-[#ded5c0] rounded-2xl p-3.5 sm:p-5 shadow-sm space-y-3">
           <div className="flex items-center justify-between">
-            <h2 className="text-sm sm:text-base font-semibold text-emerald-100">
+            <h2 className="text-sm sm:text-base font-semibold text-[#112a1d]">
               In-Progress Surahs
             </h2>
-            <span className="text-[11px] text-emerald-400/60 font-medium">
+            <span className="text-[11px] text-[#527060] font-medium">
               {stats.inProgress.length} active
             </span>
           </div>
@@ -427,23 +467,23 @@ export function DashboardClient() {
                 <Link
                   key={p.surahNumber}
                   href={`/recite/${p.surahNumber}`}
-                  className="flex items-center justify-between bg-[#08150f]/80 border border-emerald-900/50 rounded-xl px-3.5 py-2.5 sm:px-4 sm:py-3 hover:bg-[#0f241a] hover:border-emerald-700/60 active:scale-[0.99] transition-all shadow-sm"
+                  className="flex items-center justify-between bg-[#fbf9f3] border border-[#e5ded0] rounded-xl px-3.5 py-2.5 sm:px-4 sm:py-3 hover:bg-[#f6f1e3] active:scale-[0.99] transition-all shadow-sm"
                 >
                   <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
-                    <span className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-emerald-950 border border-emerald-800/80 flex items-center justify-center text-xs font-bold text-emerald-200 shrink-0">
+                    <span className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-emerald-100 border border-emerald-300 flex items-center justify-center text-xs font-bold text-emerald-900 shrink-0">
                       {meta?.number}
                     </span>
                     <div className="min-w-0">
-                      <div className="text-xs sm:text-sm font-semibold text-emerald-100 truncate">
+                      <div className="text-xs sm:text-sm font-semibold text-[#112a1d] truncate">
                         {meta?.name}
                       </div>
-                      <div className="text-[11px] text-emerald-300/60">
+                      <div className="text-[11px] text-[#527060]">
                         {p.lastAyahNumber ? `Ayah ${p.lastAyahNumber} • ` : ""}{pct}% revealed
                       </div>
                     </div>
                   </div>
 
-                  <span className="text-xs font-semibold text-emerald-300 px-3 py-1.5 rounded-lg bg-emerald-900/40 border border-emerald-700/40 shrink-0">
+                  <span className="text-xs font-semibold text-emerald-800 px-3 py-1.5 rounded-lg bg-emerald-50 border border-emerald-200 shrink-0">
                     Continue
                   </span>
                 </Link>
@@ -453,13 +493,22 @@ export function DashboardClient() {
         </div>
       )}
 
-      {/* Main Action Button - Mobile Focused */}
-      <Link
-        href="/surahs"
-        className="block w-full py-3.5 sm:py-4 rounded-xl sm:rounded-2xl text-center font-bold text-white bg-gradient-to-r from-emerald-700 via-emerald-600 to-emerald-700 hover:from-emerald-600 hover:to-emerald-500 shadow-xl shadow-emerald-950/60 border border-emerald-500/50 active:scale-[0.98] transition-all text-sm sm:text-base tracking-wide"
-      >
-        Browse All 114 Surahs
-      </Link>
+      {/* Main Action Buttons */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <Link
+          href="/surahs"
+          className="block w-full py-3.5 sm:py-4 rounded-xl sm:rounded-2xl text-center font-bold text-white bg-emerald-700 hover:bg-emerald-800 shadow-md active:scale-[0.98] transition-all text-sm sm:text-base tracking-wide"
+        >
+          Recitation Index (114)
+        </Link>
+        <Link
+          href="/read"
+          className="block w-full py-3.5 sm:py-4 rounded-xl sm:rounded-2xl text-center font-bold text-[#112a1d] bg-white hover:bg-[#faf7ee] border border-[#ded5c0] shadow-sm active:scale-[0.98] transition-all text-sm sm:text-base tracking-wide"
+        >
+          Read Quran (صرف تلاوت)
+        </Link>
+      </div>
     </div>
+
   );
 }

@@ -507,34 +507,31 @@ export function ReciteClient({
   return (
     <div className="space-y-4">
       {/* Top Header Card: Ultra-Professional Surah Metadata & Progress */}
-      <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-br from-[#0c1e15]/95 via-[#07160f]/95 to-[#040e09]/95 border border-[#1d442f]/80 p-3.5 sm:p-5 shadow-[0_12px_40px_rgba(0,0,0,0.5)] backdrop-blur-md">
-        {/* Subtle luminous top accent line */}
-        <div className="absolute inset-x-0 top-0 h-[1.5px] bg-gradient-to-r from-transparent via-emerald-400/50 to-transparent" />
-
+      <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-white border border-[#ded5c0] p-3.5 sm:p-5 shadow-sm">
         {/* Top Utility Bar: Back button & Ayah Jump Selector */}
         <div className="flex items-center justify-between gap-2 mb-2 flex-wrap">
           {/* Back Button */}
           <button
             onClick={handleBack}
             title="Go back to Surahs list"
-            className="inline-flex items-center justify-center px-4 py-1.5 rounded-xl text-xs sm:text-sm font-semibold tracking-wide text-white bg-white/10 hover:bg-white/15 active:bg-white/20 border border-white/20 hover:border-emerald-400/50 shadow-[0_2px_10px_rgba(0,0,0,0.3)] backdrop-blur-md active:scale-95 transition-all duration-200 cursor-pointer"
+            className="inline-flex items-center justify-center px-4 py-1.5 rounded-xl text-xs sm:text-sm font-semibold tracking-wide text-[#193d2b] bg-[#faf7ee] hover:bg-[#efe8d6] active:bg-[#e4dcce] border border-[#ded5c0] shadow-sm active:scale-95 transition-all duration-200 cursor-pointer"
           >
             Back
           </button>
 
           {/* Jump to specific Ayah */}
-          <div className="flex items-center gap-1.5 bg-[#06140d]/90 px-3 py-1 rounded-full border border-emerald-700/60 shadow-sm">
-            <span className="text-[11px] text-emerald-300/80 font-medium whitespace-nowrap">
+          <div className="flex items-center gap-1.5 bg-[#faf7ee] px-3 py-1 rounded-full border border-[#ded5c0] shadow-sm">
+            <span className="text-[11px] text-[#527060] font-medium whitespace-nowrap">
               آیت پر جائیں:
             </span>
             <select
               aria-label="Select Ayah to recite"
               value={currentAyahNumber}
               onChange={(e) => handleJumpToAyah(Number(e.target.value))}
-              className="bg-transparent text-emerald-200 font-bold text-xs focus:outline-none cursor-pointer pr-1"
+              className="bg-transparent text-emerald-900 font-bold text-xs focus:outline-none cursor-pointer pr-1"
             >
               {loaded.ayahs.map((a) => (
-                <option key={a.n} value={a.n} className="bg-[#06140d] text-white">
+                <option key={a.n} value={a.n} className="bg-white text-[#112a1d]">
                   آیت {toArabicDigits(a.n)} ({a.n})
                 </option>
               ))}
@@ -545,42 +542,43 @@ export function ReciteClient({
         {/* Centered Surah Identity & Information */}
         <div className="text-center my-2 sm:my-3">
           <div className="inline-flex items-center justify-center gap-2.5 sm:gap-3 flex-wrap">
-            <span className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-gradient-to-b from-emerald-800/80 to-emerald-950 border border-emerald-600/60 flex items-center justify-center font-bold text-emerald-200 text-xs sm:text-sm shadow-md ring-1 ring-[#c5a059]/20">
+            <span className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-emerald-700 text-white flex items-center justify-center font-bold text-xs sm:text-sm shadow-sm">
               {loaded.meta.number}
             </span>
-            <h1 className="text-xl sm:text-2xl font-bold text-white tracking-wide">
+            <h1 className="text-xl sm:text-2xl font-bold text-[#112a1d] tracking-wide">
               {loaded.meta.name}
             </h1>
-            <span className="text-emerald-300 font-quran text-2xl sm:text-3xl leading-none" dir="rtl">
+            <span className="text-[#143323] font-quran text-2xl sm:text-3xl leading-none" dir="rtl">
               {loaded.meta.arabicName}
             </span>
           </div>
 
           {/* Subtitle Metadata */}
-          <div className="flex items-center justify-center gap-2 text-xs text-emerald-300/75 mt-1.5 flex-wrap">
-            <span className="px-2.5 py-0.5 rounded-full bg-emerald-950/80 border border-emerald-900/60 text-[11px] font-medium text-emerald-200">
+          <div className="flex items-center justify-center gap-2 text-xs text-[#527060] mt-1.5 flex-wrap">
+            <span className="px-2.5 py-0.5 rounded-full bg-[#faf7ee] border border-[#ded5c0] text-[11px] font-medium text-emerald-900">
               {loaded.meta.revelationType === "Meccan" ? "Makki" : "Madani"}
             </span>
-            <span className="text-emerald-800 select-none">•</span>
+            <span className="text-[#c2baa8] select-none">•</span>
             <span>{loaded.meta.numberOfAyahs} Ayahs</span>
-            <span className="text-emerald-800 select-none">•</span>
+            <span className="text-[#c2baa8] select-none">•</span>
             <span>Juz {firstAyahOnPage?.juz ?? loaded.juz}</span>
-            <span className="text-emerald-800 select-none">•</span>
+            <span className="text-[#c2baa8] select-none">•</span>
             <span>Page {currentPage} of {mushafMeta.totalPages}</span>
           </div>
         </div>
 
-        {/* Luminous Glowing Progress Bar */}
+        {/* Progress Bar */}
         <ProgressBar pct={pct} />
 
         {/* Word Count Progress Footer */}
-        <div className="flex items-center justify-between text-xs text-emerald-300/80 mt-2 px-0.5">
-          <span className="text-[11px] text-emerald-400/70">Recitation Progress</span>
-          <span className="font-mono text-emerald-200 font-semibold text-xs">
+        <div className="flex items-center justify-between text-xs text-[#527060] mt-2 px-0.5">
+          <span className="text-[11px]">Recitation Progress</span>
+          <span className="font-mono text-emerald-900 font-semibold text-xs">
             {displayRevealed} / {total} words ({pct}%)
           </span>
         </div>
       </div>
+
 
 
       {/* Real Mushaf 16-Line Page Container */}
@@ -685,12 +683,12 @@ export function ReciteClient({
         })}
       </MushafPage>
 
-      {/* Simple Centered Ma Sha Allah Popup (Pure Arabic Calligraphy, exactly 3 seconds) */}
+      {/* Simple Centered Ma Sha Allah Popup (Pure Arabic Calligraphy, exactly 2 seconds) */}
       {showToast && (
         <div
           onClick={() => setShowToast(false)}
           title="Tap to dismiss"
-          className={`fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 px-8 sm:px-10 py-4 sm:py-5 rounded-2xl sm:rounded-3xl bg-[#081810]/95 border border-emerald-400/50 shadow-[0_20px_60px_rgba(0,0,0,0.85),0_0_35px_rgba(16,185,129,0.35)] backdrop-blur-xl flex items-center justify-center text-center select-none cursor-pointer transition-all duration-700 ${
+          className={`fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 px-8 sm:px-10 py-4 sm:py-5 rounded-2xl sm:rounded-3xl bg-white/95 border-2 border-[#c5a059] shadow-[0_20px_50px_rgba(20,50,30,0.25)] backdrop-blur-xl flex items-center justify-center text-center select-none cursor-pointer transition-all duration-700 ${
             toastFading
               ? "opacity-0 scale-95 pointer-events-none"
               : "opacity-100 scale-100 animate-in fade-in zoom-in-95 duration-500"
@@ -699,13 +697,14 @@ export function ReciteClient({
           aria-live="polite"
         >
           <span
-            className="text-3xl sm:text-4xl md:text-5xl font-quran text-amber-300 font-bold leading-none drop-shadow-[0_4px_16px_rgba(251,191,36,0.5)] select-none px-2"
+            className="text-3xl sm:text-4xl md:text-5xl font-quran text-[#996515] font-bold leading-none select-none px-2"
             dir="rtl"
           >
             مَا شَاءَ اللّٰهُ
           </span>
         </div>
       )}
+
 
       {/* Sleek, Modern Floating Control Island (Neutral Obsidian Luxury) */}
       <div className="sticky bottom-2 sm:bottom-3 z-30 flex flex-col items-center gap-1 px-2">

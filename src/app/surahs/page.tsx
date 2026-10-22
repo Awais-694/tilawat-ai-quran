@@ -73,23 +73,23 @@ export default function SurahsPage() {
         <Link
           href="/"
           title="Back to Home Dashboard"
-          className="inline-flex items-center justify-center px-4 py-1.5 rounded-xl text-xs sm:text-sm font-semibold tracking-wide text-white bg-white/10 hover:bg-white/15 active:bg-white/20 border border-white/20 hover:border-emerald-400/50 shadow-[0_2px_10px_rgba(0,0,0,0.3)] backdrop-blur-md active:scale-95 transition-all duration-200 cursor-pointer"
+          className="inline-flex items-center justify-center px-4 py-1.5 rounded-xl text-xs sm:text-sm font-semibold tracking-wide text-[#193d2b] bg-white/90 hover:bg-[#efe9d8] active:bg-[#e4dcce] border border-[#d6cbaf] shadow-sm active:scale-95 transition-all duration-200 cursor-pointer"
         >
           Back
         </Link>
 
-        <h1 className="text-lg sm:text-2xl font-bold text-white tracking-wide text-center">
+        <h1 className="text-lg sm:text-2xl font-bold text-[#112a1d] tracking-wide text-center">
           Select a Surah
         </h1>
 
-        <span className="text-[11px] sm:text-xs font-semibold text-emerald-300/80 bg-emerald-950/80 border border-emerald-800/60 px-2.5 py-1 rounded-full">
+        <span className="text-[11px] sm:text-xs font-semibold text-emerald-800 bg-[#edf5f0] border border-emerald-200 px-2.5 py-1 rounded-full">
           {filteredSurahs.length} / 114
         </span>
       </div>
 
       {/* Search Input Box */}
       <div className="relative">
-        <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-emerald-400/60">
+        <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-emerald-700/70">
           <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
           </svg>
@@ -103,13 +103,13 @@ export default function SurahsPage() {
           autoComplete="off"
           autoCorrect="off"
           spellCheck="false"
-          className="w-full pl-10 pr-10 py-3 sm:py-3.5 rounded-xl sm:rounded-2xl bg-[#06150e]/90 border border-emerald-700/60 focus:border-emerald-400 text-sm sm:text-base text-white placeholder-emerald-300/40 focus:outline-none focus:ring-1 focus:ring-emerald-400 shadow-[0_4px_20px_rgba(0,0,0,0.3)] transition-all"
+          className="w-full pl-10 pr-10 py-3 sm:py-3.5 rounded-xl sm:rounded-2xl bg-white border border-[#ded5c0] focus:border-emerald-600 text-sm sm:text-base text-[#112a1d] placeholder-[#6b8b7a] focus:outline-none focus:ring-1 focus:ring-emerald-600 shadow-[0_2px_10px_rgba(20,50,30,0.05)] transition-all"
         />
 
         {query && (
           <button
             onClick={() => setQuery("")}
-            className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-emerald-400/60 hover:text-white transition-colors"
+            className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-emerald-700/60 hover:text-emerald-950 transition-colors"
             title="Clear search"
             aria-label="Clear search"
           >
@@ -128,23 +128,23 @@ export default function SurahsPage() {
 
         {/* Empty State */}
         {filteredSurahs.length === 0 && (
-          <div className="text-center py-12 px-4 rounded-2xl bg-[#07170f]/60 border border-emerald-900/60 space-y-3">
-            <div className="w-12 h-12 mx-auto rounded-full bg-emerald-950/80 border border-emerald-800/60 flex items-center justify-center text-emerald-400">
+          <div className="text-center py-12 px-4 rounded-2xl bg-white border border-[#e5ded0] shadow-sm space-y-3">
+            <div className="w-12 h-12 mx-auto rounded-full bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-700">
               <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
               </svg>
             </div>
             <div className="space-y-1">
-              <h3 className="text-sm sm:text-base font-semibold text-emerald-100">
+              <h3 className="text-sm sm:text-base font-semibold text-[#112a1d]">
                 No Surah Found
               </h3>
-              <p className="text-xs text-emerald-300/60">
+              <p className="text-xs text-[#527060]">
                 No Surah matching "{query}" was found.
               </p>
             </div>
             <button
               onClick={() => setQuery("")}
-              className="px-4 py-1.5 rounded-lg bg-emerald-800/60 hover:bg-emerald-700/60 text-xs font-semibold text-white border border-emerald-600/50 transition-all active:scale-95"
+              className="px-4 py-1.5 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-xs font-semibold text-white transition-all active:scale-95"
             >
               Clear Search
             </button>
@@ -152,5 +152,6 @@ export default function SurahsPage() {
         )}
       </div>
     </div>
+
   );
 }

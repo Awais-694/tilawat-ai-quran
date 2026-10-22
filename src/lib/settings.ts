@@ -52,6 +52,6 @@ export function resetFontSize(): number {
 }
 
 export function getTheme(): ThemePref {
-  return "dark";
+  return "light";
 }
-export function setTheme(v: ThemePref) { write(K.theme, "dark"); }
+export function setTheme(v: ThemePref) { write(K.theme, "light"); }

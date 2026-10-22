@@ -13,14 +13,37 @@
 }
 
 body {
-  @apply bg-emeraldDeep text-emerald-50 min-h-screen;
+  background-color: #f8f6f0;
+  color: #132c20;
+  min-height: 100vh;
 }
 
-/* Light theme — mushaf cards cream hi rehte hain, background halka ho jata hai */
-:root[data-theme="light"] body {
-  background: #f0ebdb;
-  color: #17301f;
+/* Base theme - elegant warm paper / ivory Mushaf palette */
+:root {
+  --bg-main: #f8f6f0;
+  --text-main: #132c20;
+  --card-bg: #ffffff;
+  --border-color: #e5ded0;
 }
-:root[data-theme="light"] nav {
-  border-color: #d8d0b8;
+
+::selection {
+  background-color: #d1fae5;
+  color: #064e3b;
 }
+
+/* Subtle pleasant scrollbar */
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+::-webkit-scrollbar-track {
+  background: #f1ecdf;
+}
+::-webkit-scrollbar-thumb {
+  background: #d4caa7;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #b5a982;
+}
+

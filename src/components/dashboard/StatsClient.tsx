@@ -35,40 +35,43 @@ export function StatsClient() {
   return (
     <div className="max-w-2xl mx-auto space-y-6 pb-12">
       {/* Top Navigation Bar with Centered Title */}
-      <div className="relative flex items-center justify-center min-h-[40px]">
+      <div className="relative flex items-center justify-between min-h-[40px] px-1">
         <button
           onClick={handleBack}
-          className="absolute left-0 inline-flex items-center justify-center px-4 py-1.5 rounded-xl text-xs sm:text-sm font-semibold tracking-wide text-white bg-white/10 hover:bg-white/15 active:bg-white/20 border border-white/20 hover:border-emerald-400/50 shadow-[0_2px_10px_rgba(0,0,0,0.3)] backdrop-blur-md active:scale-95 transition-all duration-200 cursor-pointer"
+          className="inline-flex items-center justify-center px-4 py-1.5 rounded-xl text-xs sm:text-sm font-semibold tracking-wide text-[#193d2b] bg-white hover:bg-[#efe9d8] active:bg-[#e4dcce] border border-[#d6cbaf] shadow-sm active:scale-95 transition-all duration-200 cursor-pointer"
         >
           Back
         </button>
 
-        <h1 className="text-xl sm:text-2xl font-bold text-emerald-50 tracking-wide text-center">Progress</h1>
+        <h1 className="text-xl sm:text-2xl font-bold text-[#112a1d] tracking-wide text-center">
+          Progress & Stats
+        </h1>
+        <div className="w-14" />
       </div>
 
-      <div className="bg-[#0c1c14]/90 border border-emerald-900/60 rounded-2xl p-4 sm:p-5 shadow-lg backdrop-blur-sm">
-        <h2 className="text-base font-semibold text-emerald-100 mb-3">Last 7 days</h2>
+      <div className="bg-white border border-[#ded5c0] rounded-2xl p-4 sm:p-5 shadow-sm">
+        <h2 className="text-base font-semibold text-[#112a1d] mb-3">Last 7 Days Activity</h2>
         {loaded && activity.length === 0 && (
-          <p className="text-emerald-300/70 text-xs sm:text-sm">No activity recorded yet — recitation sessions will be tracked here.</p>
+          <p className="text-[#527060] text-xs sm:text-sm">No activity recorded yet — recitation sessions will be tracked here.</p>
         )}
         <div className="flex flex-col gap-2">
           {activity.map((a) => (
             <div
               key={a.date}
-              className="flex flex-wrap items-center justify-between text-xs sm:text-sm bg-[#08150f]/80 border border-emerald-900/50 rounded-xl px-3.5 py-2.5"
+              className="flex flex-wrap items-center justify-between text-xs sm:text-sm bg-[#fbf9f3] border border-[#e5ded0] rounded-xl px-3.5 py-2.5"
             >
-              <span className="font-mono text-emerald-300 font-medium">{a.date}</span>
+              <span className="font-mono text-emerald-850 font-medium">{a.date}</span>
               <div className="flex items-center gap-2.5 text-xs sm:text-sm">
-                <span className="text-emerald-200">
-                  <span className="font-semibold text-emerald-100">{a.wordsRevealed}</span> words
+                <span className="text-[#112a1d]">
+                  <span className="font-semibold text-emerald-800">{a.wordsRevealed}</span> words
                 </span>
-                <span className="text-emerald-800 select-none">•</span>
-                <span className="text-rose-300">
-                  <span className="font-semibold text-rose-200">{a.mistakes}</span> mistakes
+                <span className="text-[#cfc4ad] select-none">•</span>
+                <span className="text-rose-700">
+                  <span className="font-semibold">{a.mistakes}</span> mistakes
                 </span>
-                <span className="text-emerald-800 select-none">•</span>
-                <span className="text-emerald-400/80">
-                  <span className="font-semibold text-emerald-200">{a.sessions}</span> {a.sessions === 1 ? "session" : "sessions"}
+                <span className="text-[#cfc4ad] select-none">•</span>
+                <span className="text-[#527060]">
+                  <span className="font-semibold text-[#112a1d]">{a.sessions}</span> {a.sessions === 1 ? "session" : "sessions"}
                 </span>
               </div>
             </div>
@@ -76,10 +79,10 @@ export function StatsClient() {
         </div>
       </div>
 
-      <div className="bg-[#0c1c14]/90 border border-emerald-900/60 rounded-2xl p-4 sm:p-5 shadow-lg backdrop-blur-sm">
-        <h2 className="text-base font-semibold text-emerald-100 mb-3">Surah Progress</h2>
+      <div className="bg-white border border-[#ded5c0] rounded-2xl p-4 sm:p-5 shadow-sm">
+        <h2 className="text-base font-semibold text-[#112a1d] mb-3">Surah Progress</h2>
         {loaded && progress.length === 0 && (
-          <p className="text-emerald-300/70 text-xs sm:text-sm">No surah progress saved yet.</p>
+          <p className="text-[#527060] text-xs sm:text-sm">No surah progress saved yet.</p>
         )}
         <div className="flex flex-col gap-2.5">
           {progress.map((p) => {
@@ -89,20 +92,20 @@ export function StatsClient() {
               <Link
                 key={p.surahNumber}
                 href={`/recite/${p.surahNumber}`}
-                className="block bg-[#08150f]/80 border border-emerald-900/50 rounded-xl px-4 py-3 hover:bg-[#0f241a] hover:border-emerald-700/60 transition-all shadow-sm"
+                className="block bg-[#fbf9f3] border border-[#e5ded0] rounded-xl px-4 py-3 hover:bg-[#f6f1e3] transition-all shadow-sm"
               >
                 <div className="flex justify-between items-center text-sm mb-2">
                   <div className="flex items-center gap-2">
-                    <span className="font-semibold text-emerald-100">
+                    <span className="font-semibold text-[#112a1d]">
                       {meta?.number}. {meta?.name}
                     </span>
                     {p.completed && (
-                      <span className="text-[10px] font-semibold text-emerald-300 bg-emerald-950 border border-emerald-600/50 px-2 py-0.5 rounded-full uppercase tracking-wider">
+                      <span className="text-[10px] font-semibold text-emerald-800 bg-emerald-100 border border-emerald-300 px-2 py-0.5 rounded-full uppercase tracking-wider">
                         Completed
                       </span>
                     )}
                   </div>
-                  <span className="font-mono font-semibold text-emerald-300 text-xs sm:text-sm">{pct}%</span>
+                  <span className="font-mono font-semibold text-emerald-800 text-xs sm:text-sm">{pct}%</span>
                 </div>
                 <ProgressBar pct={pct} />
               </Link>
@@ -111,22 +114,23 @@ export function StatsClient() {
         </div>
       </div>
 
-      <div className="bg-[#0c1c14]/90 border border-emerald-900/60 rounded-2xl p-4 sm:p-5 shadow-lg backdrop-blur-sm">
-        <h2 className="text-base font-semibold text-emerald-100 mb-3">Weak Words</h2>
+      <div className="bg-white border border-[#ded5c0] rounded-2xl p-4 sm:p-5 shadow-sm">
+        <h2 className="text-base font-semibold text-[#112a1d] mb-3">Weak Words (Previous Mistakes)</h2>
         {loaded && wrong.length === 0 && (
-          <p className="text-emerald-300/70 text-xs sm:text-sm">No mistakes recorded yet.</p>
+          <p className="text-[#527060] text-xs sm:text-sm">No mistakes recorded yet.</p>
         )}
         <div className="flex flex-wrap gap-2" dir="rtl">
           {wrong.map((w) => (
             <span
               key={w.word}
-              className="bg-[#241013]/80 border border-rose-900/60 rounded-xl px-3 py-1.5 font-quran text-lg text-rose-100 shadow-sm"
+              className="bg-rose-50 border border-rose-200 rounded-xl px-3 py-1.5 font-quran text-lg text-rose-900 shadow-sm"
             >
-              {w.word} <span className="text-xs font-mono text-rose-300 mr-1">×{w.count}</span>
+              {w.word} <span className="text-xs font-mono text-rose-700 mr-1">×{w.count}</span>
             </span>
           ))}
         </div>
       </div>
     </div>
   );
+
 }

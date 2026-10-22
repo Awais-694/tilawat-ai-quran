@@ -111,27 +111,27 @@ export function StreakClient() {
 
   return (
     <div className="max-w-xl mx-auto space-y-4 pb-16 px-2 sm:px-0">
-      {/* Top Header Navigation */}
-      <div className="flex items-center justify-between min-h-[46px] border-b border-emerald-900/40 pb-3">
-        {/* Back Button (No Arrow) */}
+      {/* Top Header Bar */}
+      <div className="flex items-center justify-between min-h-[46px] border-b border-[#ede7d8] pb-3">
+        {/* Back Button */}
         <button
           onClick={handleBack}
-          className="inline-flex items-center justify-center px-4 py-1.5 rounded-xl text-xs sm:text-sm font-semibold tracking-wide text-white bg-white/10 hover:bg-white/15 active:bg-white/20 border border-white/20 hover:border-emerald-400/50 shadow-[0_2px_10px_rgba(0,0,0,0.3)] backdrop-blur-md active:scale-95 transition-all duration-200 cursor-pointer"
+          className="inline-flex items-center justify-center px-4 py-1.5 rounded-xl text-xs sm:text-sm font-semibold tracking-wide text-[#193d2b] bg-white hover:bg-[#efe9d8] active:bg-[#e4dcce] border border-[#d6cbaf] shadow-sm active:scale-95 transition-all duration-200 cursor-pointer"
         >
           Back
         </button>
 
         {/* Centered Page Title */}
-        <h1 className="font-display text-base sm:text-lg font-bold text-white tracking-tight">
+        <h1 className="font-display text-base sm:text-lg font-bold text-[#112a1d] tracking-tight">
           Streak & Activity
         </h1>
 
         {/* Improved Dashboard Button */}
         <Link
           href="/"
-          className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold text-emerald-200 bg-[#0d2217] hover:bg-[#133022] border border-emerald-600/50 hover:border-emerald-400 active:scale-95 transition-all shadow-sm"
+          className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold text-[#1e402e] bg-[#f0ebd9] hover:bg-[#e4dcce] border border-[#ded5c0] active:scale-95 transition-all shadow-sm"
         >
-          <svg className="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+          <svg className="w-3.5 h-3.5 text-emerald-800" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
           </svg>
           <span>Dashboard</span>
@@ -139,13 +139,13 @@ export function StreakClient() {
       </div>
 
       {/* Main Hero Streak Banner Card */}
-      <div className="relative overflow-hidden rounded-2xl bg-[#0a2016] border border-emerald-700/60 p-4 sm:p-5 shadow-lg">
+      <div className="relative overflow-hidden rounded-2xl bg-white border border-[#ded5c0] p-4 sm:p-5 shadow-sm">
         <div className="flex items-center justify-between gap-3">
           {/* Flame Icon & Display Numbers */}
           <div className="flex items-center gap-3.5">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-500/20 via-amber-500/10 to-transparent border border-amber-500/30 flex items-center justify-center shrink-0 shadow-[0_0_15px_rgba(245,158,11,0.15)]">
+            <div className="w-12 h-12 rounded-2xl bg-[#fff8eb] border border-[#f59e0b]/30 flex items-center justify-center shrink-0 shadow-sm">
               <svg
-                className="w-7 h-7 text-amber-400 drop-shadow-[0_0_8px_rgba(245,158,11,0.6)]"
+                className="w-7 h-7 text-amber-500 drop-shadow-sm"
                 viewBox="0 0 24 24"
                 fill="currentColor"
               >
@@ -155,15 +155,15 @@ export function StreakClient() {
 
             <div className="space-y-0.5">
               <div className="flex items-baseline gap-2">
-                <span className="font-display text-3xl sm:text-4xl font-bold text-white tracking-tight leading-none">
+                <span className="font-display text-3xl sm:text-4xl font-bold text-[#112a1d] tracking-tight leading-none">
                   {currentStreak}
                 </span>
-                <span className="font-display text-base font-semibold text-emerald-100 tracking-tight leading-none">
+                <span className="font-display text-base font-semibold text-[#25523b] tracking-tight leading-none">
                   {currentStreak === 1 ? "Day Streak" : "Days Streak"}
                 </span>
               </div>
-              <div className="text-xs text-emerald-400/80 font-medium">
-                Personal Best: <span className="font-semibold text-white">{longestStreak} {longestStreak === 1 ? "day" : "days"}</span>
+              <div className="text-xs text-[#527060] font-medium">
+                Personal Best: <span className="font-semibold text-[#112a1d]">{longestStreak} {longestStreak === 1 ? "day" : "days"}</span>
               </div>
             </div>
           </div>
@@ -171,7 +171,7 @@ export function StreakClient() {
           {/* Quick CTA to start reciting */}
           <Link
             href="/surahs"
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-md active:scale-95 transition-all shrink-0"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs shadow-sm active:scale-95 transition-all shrink-0"
           >
             <span>📖</span>
             <span>Recite</span>
@@ -179,30 +179,30 @@ export function StreakClient() {
         </div>
 
         {/* 3 Summary KPIs this week */}
-        <div className="grid grid-cols-3 gap-2 mt-3.5 pt-3 border-t border-emerald-900/60">
-          <div className="bg-[#05140b]/90 border border-emerald-900/60 rounded-xl p-2.5 text-center">
-            <span className="text-[10px] text-emerald-400/80 font-medium block">
+        <div className="grid grid-cols-3 gap-2 mt-3.5 pt-3 border-t border-[#ede7d8]">
+          <div className="bg-[#fbf9f3] border border-[#e5ded0] rounded-xl p-2.5 text-center">
+            <span className="text-[10px] text-[#527060] font-medium block">
               Time
             </span>
-            <span className="font-display text-sm sm:text-base font-bold text-white mt-0.5 block">
+            <span className="font-display text-sm sm:text-base font-bold text-[#112a1d] mt-0.5 block">
               {formatTimeSpent(weekStats.totalSeconds)}
             </span>
           </div>
 
-          <div className="bg-[#05140b]/90 border border-emerald-900/60 rounded-xl p-2.5 text-center">
-            <span className="text-[10px] text-emerald-400/80 font-medium block">
+          <div className="bg-[#fbf9f3] border border-[#e5ded0] rounded-xl p-2.5 text-center">
+            <span className="text-[10px] text-[#527060] font-medium block">
               Active Days
             </span>
-            <span className="font-display text-sm sm:text-base font-bold text-emerald-200 mt-0.5 block">
+            <span className="font-display text-sm sm:text-base font-bold text-emerald-900 mt-0.5 block">
               {weekStats.daysActive} / 7
             </span>
           </div>
 
-          <div className="bg-[#05140b]/90 border border-emerald-900/60 rounded-xl p-2.5 text-center">
-            <span className="text-[10px] text-emerald-400/80 font-medium block">
+          <div className="bg-[#fbf9f3] border border-[#e5ded0] rounded-xl p-2.5 text-center">
+            <span className="text-[10px] text-[#527060] font-medium block">
               Words
             </span>
-            <span className="font-display text-sm sm:text-base font-bold text-white mt-0.5 block">
+            <span className="font-display text-sm sm:text-base font-bold text-[#112a1d] mt-0.5 block">
               {weekStats.totalWords}
             </span>
           </div>
@@ -210,10 +210,10 @@ export function StreakClient() {
       </div>
 
       {/* Week Navigation Selector */}
-      <div className="flex items-center justify-between bg-[#0a2016] border border-emerald-800/50 rounded-2xl px-3 py-2 shadow-sm">
+      <div className="flex items-center justify-between bg-white border border-[#ded5c0] rounded-2xl px-3 py-2 shadow-sm">
         <button
           onClick={() => setWeekOffset((prev) => prev - 1)}
-          className="w-8 h-8 rounded-lg flex items-center justify-center text-emerald-200 hover:text-white bg-emerald-950/90 border border-emerald-700/60 hover:border-emerald-400 active:scale-95 transition-all cursor-pointer"
+          className="w-8 h-8 rounded-lg flex items-center justify-center text-[#112a1d] hover:bg-[#efe8d6] bg-[#faf7ee] border border-[#ded5c0] active:scale-95 transition-all cursor-pointer"
           aria-label="Previous Week"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
@@ -222,10 +222,10 @@ export function StreakClient() {
         </button>
 
         <div className="text-center">
-          <div className="font-display text-xs sm:text-sm font-bold text-white leading-tight">
+          <div className="font-display text-xs sm:text-sm font-bold text-[#112a1d] leading-tight">
             {weekOffset === 0 ? "This Week" : weekOffset === -1 ? "Last Week" : `${Math.abs(weekOffset)} Weeks Ago`}
           </div>
-          <div className="text-[11px] text-emerald-400/80 mt-0.5 font-medium">
+          <div className="text-[11px] text-[#527060] mt-0.5 font-medium">
             {weekRangeText}
           </div>
         </div>
@@ -235,8 +235,8 @@ export function StreakClient() {
           disabled={weekOffset >= 0}
           className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all ${
             weekOffset >= 0
-              ? "text-emerald-900 border border-emerald-950 bg-transparent cursor-not-allowed"
-              : "text-emerald-200 hover:text-white bg-emerald-950/90 border border-emerald-700/60 hover:border-emerald-400 active:scale-95 cursor-pointer"
+              ? "text-[#c2baa8] border border-[#e5ded0] bg-transparent cursor-not-allowed"
+              : "text-[#112a1d] hover:bg-[#efe8d6] bg-[#faf7ee] border border-[#ded5c0] active:scale-95 cursor-pointer"
           }`}
           aria-label="Next Week"
         >
@@ -247,21 +247,21 @@ export function StreakClient() {
       </div>
 
       {/* 7-Day Visual Timeline Bar */}
-      <div className="bg-[#0a2016] border border-emerald-700/50 rounded-2xl p-3 sm:p-4 shadow-sm">
-        <div className="text-xs font-semibold text-emerald-200 mb-2.5 flex items-center justify-between">
+      <div className="bg-white border border-[#ded5c0] rounded-2xl p-3 sm:p-4 shadow-sm">
+        <div className="text-xs font-semibold text-[#112a1d] mb-2.5 flex items-center justify-between">
           <span>Weekly Overview</span>
-          <span className="text-[11px] text-emerald-400 font-normal">
+          <span className="text-[11px] text-[#527060] font-normal">
             {weekStats.daysActive} of 7 days
           </span>
         </div>
 
-        <div className="grid grid-cols-7 gap-1 sm:gap-2 text-center bg-[#05130b]/80 border border-emerald-900/60 rounded-xl p-2 sm:p-2.5">
+        <div className="grid grid-cols-7 gap-1 sm:gap-2 text-center bg-[#faf7ee] border border-[#ded5c0] rounded-xl p-2 sm:p-2.5">
           {weekDays.map((item) => (
             <div key={item.date} className="flex flex-col items-center justify-center">
               {/* Day Label */}
               <span
                 className={`text-[10px] sm:text-[11px] font-medium mb-1 select-none ${
-                  item.isToday ? "text-amber-300 font-bold" : "text-emerald-300/70"
+                  item.isToday ? "text-amber-700 font-bold" : "text-[#527060]"
                 }`}
               >
                 {item.dayLabel}
@@ -270,26 +270,26 @@ export function StreakClient() {
               {/* Clean Status Circle */}
               <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center my-0.5">
                 {item.hasRecited ? (
-                  <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-emerald-500 text-white flex items-center justify-center shadow-sm shadow-emerald-500/40">
+                  <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-emerald-600 text-white flex items-center justify-center shadow-sm">
                     <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                     </svg>
                   </div>
                 ) : item.isToday ? (
-                  <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border-2 border-amber-400 bg-amber-500/10 flex items-center justify-center">
-                    <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
+                  <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border-2 border-amber-500 bg-amber-50 flex items-center justify-center">
+                    <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
                   </div>
                 ) : item.isPast ? (
-                  <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-emerald-950/40 border border-emerald-900/40 flex items-center justify-center">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-800/60" />
+                  <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[#f1ecdf] border border-[#ded5c0] flex items-center justify-center">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#b8ad91]" />
                   </div>
                 ) : (
-                  <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-emerald-900/30 bg-transparent" />
+                  <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-[#ded5c0] bg-transparent" />
                 )}
               </div>
 
               {/* Day Number */}
-              <span className="font-display text-[11px] text-emerald-400/90 font-semibold mt-0.5">
+              <span className="font-display text-[11px] text-[#527060] font-semibold mt-0.5">
                 {item.dayNumber}
               </span>
 
@@ -297,8 +297,8 @@ export function StreakClient() {
               <span
                 className={`text-[9px] mt-0.5 ${
                   item.hasRecited
-                    ? "text-emerald-300 font-semibold"
-                    : "text-emerald-800"
+                    ? "text-emerald-800 font-semibold"
+                    : "text-[#9e9482]"
                 }`}
               >
                 {item.hasRecited ? formatTimeSpent(item.timeSpentSeconds) : "—"}
@@ -310,7 +310,7 @@ export function StreakClient() {
 
       {/* Day-by-Day Detailed Recitation Cards */}
       <div className="space-y-2">
-        <h2 className="text-xs sm:text-sm font-bold text-white px-1">
+        <h2 className="text-xs sm:text-sm font-bold text-[#112a1d] px-1">
           Daily Breakdown
         </h2>
 
@@ -321,10 +321,10 @@ export function StreakClient() {
                 key={d.date}
                 className={`rounded-xl p-2.5 sm:p-3 border transition-all ${
                   d.isToday
-                    ? "bg-[#0c2419] border-amber-500/50 shadow-sm"
+                    ? "bg-[#fffdf8] border-amber-400 shadow-sm"
                     : d.hasRecited
-                    ? "bg-[#091a13] border-emerald-800/60"
-                    : "bg-[#05110a]/60 border-emerald-950/60 opacity-75"
+                    ? "bg-white border-[#ded5c0]"
+                    : "bg-[#fbf9f4]/60 border-[#ded5c0]/60 opacity-75"
                 }`}
               >
                 <div className="flex items-center justify-between gap-2">
@@ -333,18 +333,18 @@ export function StreakClient() {
                     <div
                       className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${
                         d.hasRecited
-                          ? "bg-emerald-500/20 border border-emerald-500/50 text-emerald-300"
+                          ? "bg-emerald-100 border border-emerald-300 text-emerald-800"
                           : d.isToday
-                          ? "bg-amber-500/15 border border-amber-500/40 text-amber-300"
-                          : "bg-emerald-950/40 border border-emerald-900/40 text-emerald-700"
+                          ? "bg-amber-100 border border-amber-300 text-amber-800"
+                          : "bg-[#f0ebd9] border border-[#ded5c0] text-[#8e8574]"
                       }`}
                     >
                       {d.hasRecited ? (
-                        <svg className="w-3.5 h-3.5 text-emerald-300" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                        <svg className="w-3.5 h-3.5 text-emerald-800" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                         </svg>
                       ) : d.isToday ? (
-                        <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
+                        <span className="w-2 h-2 rounded-full bg-amber-600 animate-pulse" />
                       ) : (
                         <span className="text-[10px] select-none">—</span>
                       )}
@@ -352,16 +352,16 @@ export function StreakClient() {
 
                     <div>
                       <div className="flex items-center gap-1.5">
-                        <span className="text-xs sm:text-sm font-bold text-white">
+                        <span className="text-xs sm:text-sm font-bold text-[#112a1d]">
                           {d.fullDayName}
                         </span>
                         {d.isToday && (
-                          <span className="bg-amber-400 text-amber-950 text-[9px] font-black px-1.5 py-0.5 rounded uppercase">
+                          <span className="bg-amber-100 text-amber-900 border border-amber-300 text-[9px] font-black px-1.5 py-0.5 rounded uppercase">
                             Today
                           </span>
                         )}
                       </div>
-                      <span className="text-[10px] text-emerald-400/70">
+                      <span className="text-[10px] text-[#527060]">
                         {formatReadableDate(d.date)}
                       </span>
                     </div>
@@ -370,10 +370,10 @@ export function StreakClient() {
                   {/* Recitation Metrics / Status */}
                   <div className="flex items-center gap-2 text-xs">
                     <div className="text-right">
-                      <div className="font-semibold text-white text-xs">
+                      <div className="font-semibold text-[#112a1d] text-xs">
                         {d.hasRecited ? formatTimeSpent(d.timeSpentSeconds) : "0m"}
                       </div>
-                      <div className="text-[10px] text-emerald-400/70">
+                      <div className="text-[10px] text-[#527060]">
                         {d.wordsRevealed} words
                       </div>
                     </div>
@@ -381,22 +381,22 @@ export function StreakClient() {
                     {/* Status Pill */}
                     <div className="min-w-[76px] text-right">
                       {d.hasRecited ? (
-                        <span className="inline-block bg-emerald-950 border border-emerald-600/60 text-emerald-300 text-[10px] font-semibold px-2 py-0.5 rounded-full">
+                        <span className="inline-block bg-emerald-100 border border-emerald-300 text-emerald-800 text-[10px] font-semibold px-2 py-0.5 rounded-full">
                           Done ✓
                         </span>
                       ) : d.isToday ? (
                         <Link
                           href="/surahs"
-                          className="inline-block bg-amber-500 hover:bg-amber-400 text-amber-950 text-[10px] font-bold px-2 py-0.5 rounded-full active:scale-95 transition-all shadow-sm"
+                          className="inline-block bg-amber-500 hover:bg-amber-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full active:scale-95 transition-all shadow-sm"
                         >
                           Recite
                         </Link>
                       ) : d.isPast ? (
-                        <span className="text-[10px] text-emerald-700 px-1">
+                        <span className="text-[10px] text-[#8e8574] px-1">
                           Missed
                         </span>
                       ) : (
-                        <span className="text-[10px] text-emerald-800 px-1">
+                        <span className="text-[10px] text-[#8e8574] px-1">
                           Upcoming
                         </span>
                       )}
@@ -406,15 +406,15 @@ export function StreakClient() {
 
                 {/* Surahs Recited on that day */}
                 {d.hasRecited && d.surahs.length > 0 && (
-                  <div className="mt-2 pt-1.5 border-t border-emerald-900/50 flex flex-wrap items-center gap-1.5">
+                  <div className="mt-2 pt-1.5 border-t border-[#ede7d8] flex flex-wrap items-center gap-1.5">
                     {d.surahs.map((s) => (
                       <Link
                         key={s.number}
                         href={`/recite/${s.number}`}
-                        className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-[#06150e] hover:bg-[#0c2418] border border-emerald-700/60 hover:border-emerald-400 text-emerald-200 text-[11px] font-medium transition-all"
+                        className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-[#faf7ee] hover:bg-[#efe8d6] border border-[#ded5c0] text-[#112a1d] text-[11px] font-medium transition-all"
                       >
                         <span>{s.number}. {s.name}</span>
-                        <span className="font-quran text-emerald-400/80 text-[10px]" dir="rtl">({s.arabicName})</span>
+                        <span className="font-quran text-[#143323] text-[10px]" dir="rtl">({s.arabicName})</span>
                       </Link>
                     ))}
                   </div>
@@ -426,17 +426,18 @@ export function StreakClient() {
       </div>
 
       {/* Hadith & Motivational Reflection */}
-      <div className="rounded-xl bg-[#0a2016] border border-emerald-800/40 p-3 text-center space-y-1 shadow-sm">
-        <p className="font-quran text-emerald-100 text-xs sm:text-sm leading-relaxed" dir="rtl">
+      <div className="rounded-xl bg-white border border-[#ded5c0] p-3 text-center space-y-1 shadow-sm">
+        <p className="font-quran text-[#112a1d] text-xs sm:text-sm leading-relaxed" dir="rtl">
           &quot;أَحَبُّ الْأَعْمَالِ إِلَى اللَّهِ أَدْوَمُهَا وَإِنْ قَلَّ&quot;
         </p>
-        <p className="text-[11px] text-emerald-300/80">
+        <p className="text-[11px] text-[#527060]">
           “The most beloved deeds to Allah are those that are most consistent, even if small.”
         </p>
-        <p className="text-[9px] text-emerald-500/70">
+        <p className="text-[9px] text-[#8e8574]">
           — Sahih al-Bukhari
         </p>
       </div>
     </div>
   );
 }
+
