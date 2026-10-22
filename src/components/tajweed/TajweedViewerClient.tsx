@@ -1,13 +1,48 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+import { SURAHS_META, getSurahMeta } from "@/lib/quran/data";
 
 export function TajweedViewerClient() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  // Read initial surah from query param ?surah=... or localStorage or default to 1 (Al-Fatihah)
+  const [selectedSurah, setSelectedSurah] = useState<number>(1);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const pdfUrl = "/tajveed-e-al-quran-ul-kareem.pdf";
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+
+  useEffect(() => {
+    const sParam = searchParams.get("surah");
+    if (sParam) {
+      const n = parseInt(sParam, 10);
+      if (n >= 1 && n <= 114) {
+        setSelectedSurah(n);
+        return;
+      }
+    }
+    try {
+      const saved = localStorage.getItem("tilawat_last_tajweed_surah");
+      if (saved) {
+        const n = parseInt(saved, 10);
+        if (n >= 1 && n <= 114) {
+          setSelectedSurah(n);
+        }
+      }
+    } catch {}
+  }, [searchParams]);
+
+  const handleSelectSurah = (surahNum: number) => {
+    setSelectedSurah(surahNum);
+    setIsDropdownOpen(false);
+    try {
+      localStorage.setItem("tilawat_last_tajweed_surah", String(surahNum));
+      window.history.replaceState(null, "", `/tajweed?surah=${surahNum}`);
+    } catch {}
+  };
 
   const handleBack = () => {
     if (typeof window !== "undefined" && window.history.length > 1) {
@@ -17,6 +52,21 @@ export function TajweedViewerClient() {
     }
   };
 
+  const currentMeta = getSurahMeta(selectedSurah) || SURAHS_META[0];
+  const pdfUrl = `/tajweed/surahs/${selectedSurah}.pdf`;
+  const fullMushafUrl = "/tajveed-e-al-quran-ul-kareem.pdf";
+
+  const filteredSurahs = useMemo(() => {
+    if (!searchQuery.trim()) return SURAHS_META;
+    const q = searchQuery.toLowerCase().trim();
+    return SURAHS_META.filter(
+      (s) =>
+        s.number.toString().includes(q) ||
+        s.name.toLowerCase().includes(q) ||
+        s.arabicName.includes(q)
+    );
+  }, [searchQuery]);
+
   return (
     <div
       className={`mx-auto transition-all duration-300 ${
@@ -25,125 +75,199 @@ export function TajweedViewerClient() {
           : "max-w-5xl space-y-4 pb-16 px-2 sm:px-0"
       }`}
     >
-      {/* Top Navigation & Toolbar Bar */}
-      <div className="flex items-center justify-between gap-2 border-b border-[#ede7d8] pb-3 shrink-0">
-        {/* Back Button */}
-        <div className="flex items-center gap-2">
-          <button
-            onClick={handleBack}
-            className="inline-flex items-center justify-center px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-semibold tracking-wide text-[#193d2b] bg-white hover:bg-[#efe9d8] active:bg-[#e4dcce] border border-[#d6cbaf] shadow-sm active:scale-95 transition-all cursor-pointer"
-          >
-            Back
-          </button>
+      {/* Top Navigation & Controls Bar */}
+      <div className="flex flex-col gap-2.5 border-b border-[#ede7d8] pb-3 shrink-0">
+        <div className="flex items-center justify-between gap-2">
+          {/* Back & Dashboard */}
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              onClick={handleBack}
+              className="inline-flex items-center justify-center px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-semibold tracking-wide text-[#193d2b] bg-white hover:bg-[#efe9d8] active:bg-[#e4dcce] border border-[#d6cbaf] shadow-sm active:scale-95 transition-all cursor-pointer"
+            >
+              Back
+            </button>
+            <Link
+              href="/"
+              className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-[#1e402e] bg-white hover:bg-[#efe9d8] border border-[#ded5c0] shadow-sm transition-all"
+            >
+              Dashboard
+            </Link>
+          </div>
 
-          <Link
-            href="/"
-            className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-[#1e402e] bg-white hover:bg-[#efe9d8] border border-[#ded5c0] shadow-sm transition-all"
-          >
-            Dashboard
-          </Link>
+          {/* Surah Title Badge in center */}
+          <div className="text-center min-w-0 flex-1 px-1">
+            <div className="flex items-center justify-center gap-2 flex-wrap">
+              <span className="font-bold text-sm sm:text-base text-[#112a1d] truncate">
+                {currentMeta.number}. {currentMeta.name}
+              </span>
+              <span className="font-quran text-base sm:text-lg text-emerald-900" dir="rtl">
+                {currentMeta.arabicName}
+              </span>
+              <span className="text-[10px] sm:text-xs font-semibold text-emerald-800 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full shrink-0">
+                Tajweed 16-Line
+              </span>
+            </div>
+          </div>
+
+          {/* Action buttons (Fullscreen, Open Tab, Download) */}
+          <div className="flex items-center gap-1.5 shrink-0">
+            {/* Fullscreen Toggle */}
+            <button
+              onClick={() => setIsFullscreen((prev) => !prev)}
+              className="p-2 sm:px-3 sm:py-1.5 rounded-xl bg-white hover:bg-[#efe9d8] border border-[#ded5c0] text-[#112a1d] text-xs font-semibold shadow-sm transition-all flex items-center gap-1 active:scale-95 cursor-pointer"
+              title={isFullscreen ? "Exit Fullscreen" : "Fullscreen"}
+            >
+              <svg
+                className="w-4 h-4 text-emerald-800"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                viewBox="0 0 24 24"
+              >
+                {isFullscreen ? (
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M9 9L4 4m0 0h5m-5 0v5m11 11l5 5m0 0h-5m5 0v-5m-5-11l5-5m0 0h-5m5 0v5M9 15l-5 5m0 0h5m-5 0v-5"
+                  />
+                ) : (
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M4 8V4m0 0h4M4 4l5 5m11-5h-4m4 0v4m0-4l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5h-4m4 0v-4m0 4l-5-5"
+                  />
+                )}
+              </svg>
+              <span className="hidden md:inline">{isFullscreen ? "Exit" : "Expand"}</span>
+            </button>
+
+            {/* Open in New Tab Button */}
+            <a
+              href={pdfUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="p-2 sm:px-3 sm:py-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white border border-emerald-600 text-xs font-semibold shadow-sm transition-all flex items-center gap-1 active:scale-95 cursor-pointer"
+              title="Open current Surah PDF in new tab"
+            >
+              <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+              </svg>
+              <span className="hidden sm:inline">Open Tab</span>
+            </a>
+
+            {/* Download Surah Button */}
+            <a
+              href={pdfUrl}
+              download={`Surah_${currentMeta.number}_${currentMeta.name}_Tajweed.pdf`}
+              className="p-2 sm:px-3 sm:py-1.5 rounded-xl bg-white hover:bg-[#efe9d8] border border-[#ded5c0] text-[#112a1d] text-xs font-semibold shadow-sm transition-all flex items-center gap-1 active:scale-95 cursor-pointer"
+              title="Download Surah PDF"
+            >
+              <svg className="w-4 h-4 text-[#527060]" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+              </svg>
+              <span className="hidden sm:inline">Download</span>
+            </a>
+          </div>
         </div>
 
-        {/* Center Title */}
-        <div className="text-center min-w-0">
-          <h1 className="font-bold text-sm sm:text-base text-[#112a1d] truncate">
-            Tajweed-e-Al-Quran-ul-Kareem
-          </h1>
-          <p className="text-[11px] text-[#527060] font-quran" dir="rtl">
-            تجويد القرآن الكريم (Color Coded PDF)
-          </p>
-        </div>
-
-        {/* Action Controls: Fullscreen, Open in Tab, Download */}
-        <div className="flex items-center gap-1.5 shrink-0">
-          {/* Fullscreen Toggle */}
+        {/* Second Row: Surah Selector & Prev/Next Navigation */}
+        <div className="flex items-center justify-between gap-2 bg-white border border-[#ded5c0] rounded-xl p-1.5 sm:p-2 shadow-sm">
+          {/* Previous Surah Button */}
           <button
-            onClick={() => setIsFullscreen((prev) => !prev)}
-            className="p-2 sm:px-3 sm:py-1.5 rounded-xl bg-white hover:bg-[#efe9d8] border border-[#ded5c0] text-[#112a1d] text-xs font-semibold shadow-sm transition-all flex items-center gap-1 active:scale-95 cursor-pointer"
-            title={isFullscreen ? "Exit Fullscreen" : "Fullscreen"}
+            onClick={() => handleSelectSurah(Math.max(1, selectedSurah - 1))}
+            disabled={selectedSurah <= 1}
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1 transition-all ${
+              selectedSurah <= 1
+                ? "text-neutral-300 cursor-not-allowed"
+                : "text-[#112a1d] hover:bg-[#faf7ee] border border-transparent hover:border-[#ded5c0] active:scale-95 cursor-pointer"
+            }`}
+            title="Previous Surah"
           >
-            <svg
-              className="w-4 h-4 text-emerald-800"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              viewBox="0 0 24 24"
-            >
-              {isFullscreen ? (
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M9 9L4 4m0 0h5m-5 0v5m11 11l5 5m0 0h-5m5 0v-5m-5-11l5-5m0 0h-5m5 0v5M9 15l-5 5m0 0h5m-5 0v-5"
-                />
-              ) : (
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M4 8V4m0 0h4M4 4l5 5m11-5h-4m4 0v4m0-4l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5h-4m4 0v-4m0 4l-5-5"
-                />
-              )}
-            </svg>
-            <span className="hidden md:inline">
-              {isFullscreen ? "Exit" : "Expand"}
-            </span>
+            <span>←</span>
+            <span className="hidden sm:inline">Previous</span>
           </button>
 
-          {/* Open in New Tab Button */}
-          <a
-            href={pdfUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="p-2 sm:px-3 sm:py-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white border border-emerald-600 text-xs font-semibold shadow-sm transition-all flex items-center gap-1 active:scale-95 cursor-pointer"
-            title="Open PDF directly in new tab"
-          >
-            <svg
-              className="w-4 h-4 text-white"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              viewBox="0 0 24 24"
+          {/* Surah Dropdown Selector */}
+          <div className="relative flex-1 max-w-sm">
+            <button
+              onClick={() => setIsDropdownOpen((v) => !v)}
+              className="w-full flex items-center justify-between px-3 py-1.5 rounded-lg bg-[#fbf9f4] hover:bg-[#f6f1e3] border border-[#ded5c0] text-xs sm:text-sm font-semibold text-[#112a1d] transition-all cursor-pointer"
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
-              />
-            </svg>
-            <span className="hidden sm:inline">Open Tab</span>
-          </a>
+              <span className="truncate">
+                {currentMeta.number}. {currentMeta.name} ({currentMeta.arabicName})
+              </span>
+              <svg className="w-4 h-4 text-[#527060] shrink-0 ml-1" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
 
-          {/* Download Button */}
-          <a
-            href={pdfUrl}
-            download="tajveed-e-al-quran-ul-kareem.pdf"
-            className="p-2 sm:px-3 sm:py-1.5 rounded-xl bg-white hover:bg-[#efe9d8] border border-[#ded5c0] text-[#112a1d] text-xs font-semibold shadow-sm transition-all flex items-center gap-1 active:scale-95 cursor-pointer"
-            title="Download PDF"
+            {/* Dropdown Menu */}
+            {isDropdownOpen && (
+              <div className="absolute top-full left-0 right-0 mt-1 z-50 bg-white border border-[#ded5c0] rounded-xl shadow-xl max-h-72 overflow-hidden flex flex-col">
+                <div className="p-2 border-b border-[#ede7d8] bg-[#faf7ee]">
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Search Surah by name or number..."
+                    className="w-full px-2.5 py-1.5 rounded-lg bg-white border border-[#ded5c0] text-xs text-[#112a1d] placeholder-[#859f90] focus:outline-none focus:border-emerald-600"
+                    autoFocus
+                  />
+                </div>
+                <div className="overflow-y-auto p-1 divide-y divide-[#f6f1e3]">
+                  {filteredSurahs.map((s) => (
+                    <button
+                      key={s.number}
+                      onClick={() => handleSelectSurah(s.number)}
+                      className={`w-full text-left px-3 py-2 rounded-lg text-xs flex items-center justify-between hover:bg-[#f6f1e3] transition-colors cursor-pointer ${
+                        s.number === selectedSurah
+                          ? "bg-emerald-50 text-emerald-900 font-bold border border-emerald-200"
+                          : "text-[#112a1d]"
+                      }`}
+                    >
+                      <span>
+                        {s.number}. {s.name}
+                      </span>
+                      <span className="font-quran text-sm text-emerald-800" dir="rtl">
+                        {s.arabicName}
+                      </span>
+                    </button>
+                  ))}
+                  {filteredSurahs.length === 0 && (
+                    <div className="p-4 text-center text-xs text-[#859f90]">
+                      No Surah found matching &quot;{searchQuery}&quot;
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Next Surah Button */}
+          <button
+            onClick={() => handleSelectSurah(Math.min(114, selectedSurah + 1))}
+            disabled={selectedSurah >= 114}
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1 transition-all ${
+              selectedSurah >= 114
+                ? "text-neutral-300 cursor-not-allowed"
+                : "text-[#112a1d] hover:bg-[#faf7ee] border border-transparent hover:border-[#ded5c0] active:scale-95 cursor-pointer"
+            }`}
+            title="Next Surah"
           >
-            <svg
-              className="w-4 h-4 text-[#527060]"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
-              />
-            </svg>
-            <span className="hidden sm:inline">Download</span>
-          </a>
+            <span className="hidden sm:inline">Next</span>
+            <span>→</span>
+          </button>
         </div>
       </div>
 
-      {/* Embedded High-Performance PDF Frame */}
+      {/* Embedded High-Performance Surah PDF Frame */}
       <div
         className={`w-full rounded-2xl overflow-hidden border border-[#ded5c0] bg-white shadow-sm relative ${
-          isFullscreen ? "flex-1" : "h-[78vh] sm:h-[84vh]"
+          isFullscreen ? "flex-1" : "h-[74vh] sm:h-[80vh]"
         }`}
       >
         <object
+          key={pdfUrl}
           data={pdfUrl}
           type="application/pdf"
           className="w-full h-full border-0"
@@ -154,10 +278,10 @@ export function TajweedViewerClient() {
               📖
             </div>
             <h2 className="text-lg sm:text-xl font-bold mb-1">
-              Tajweed-e-Al-Quran-ul-Kareem
+              Surah {currentMeta.number}. {currentMeta.name} ({currentMeta.arabicName})
             </h2>
             <p className="text-xs sm:text-sm text-[#527060] mb-4 max-w-md">
-              Your browser may not support embedding high-resolution PDF files directly inside this view. You can open or download the complete Tajweed Mushaf below:
+              Tap below to view or download this Surah in high-definition Color-Coded Tajweed format:
             </p>
 
             <div className="flex flex-col sm:flex-row gap-2.5 w-full max-w-sm">
@@ -167,19 +291,33 @@ export function TajweedViewerClient() {
                 rel="noopener noreferrer"
                 className="w-full py-2.5 px-4 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-semibold text-xs sm:text-sm shadow-sm flex items-center justify-center gap-2 active:scale-95 transition-all cursor-pointer"
               >
-                <span>Open Tajweed Quran PDF</span>
+                <span>Open Surah PDF</span>
               </a>
 
               <a
                 href={pdfUrl}
-                download="tajveed-e-al-quran-ul-kareem.pdf"
+                download={`Surah_${currentMeta.number}_${currentMeta.name}_Tajweed.pdf`}
                 className="w-full py-2.5 px-4 rounded-xl bg-white hover:bg-[#efe9d8] border border-[#ded5c0] text-[#112a1d] font-semibold text-xs sm:text-sm shadow-sm flex items-center justify-center gap-2 active:scale-95 transition-all cursor-pointer"
               >
-                <span>Download PDF</span>
+                <span>Download Surah PDF</span>
               </a>
             </div>
           </div>
         </object>
+      </div>
+
+      {/* Bottom Footer Note with optional link to full 597MB Mushaf */}
+      <div className="flex items-center justify-between text-[11px] text-[#527060] px-1 pt-1">
+        <span>Authentic Color-Coded Tajweed Quran (16-Line)</span>
+        <a
+          href={fullMushafUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="hover:text-emerald-800 underline decoration-dotted"
+          title="Download the full 597 MB master Tajweed Quran PDF"
+        >
+          Complete Quran PDF (597 MB)
+        </a>
       </div>
     </div>
   );
