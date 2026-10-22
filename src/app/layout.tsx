@@ -84,6 +84,18 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 </Link>
 
                 <Link
+                  href="/tajweed"
+                  className="px-2.5 py-1.5 sm:px-3 sm:py-1.5 rounded-xl text-xs sm:text-sm font-semibold text-[#1e402e] hover:text-[#0b2416] hover:bg-[#e4dcce] active:scale-95 transition-all flex items-center justify-center gap-1.5"
+                  title="Tajweed-e-Al-Quran-ul-Kareem (Color Coded PDF)"
+                >
+                  <svg className="w-4 h-4 text-emerald-700 shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 10h6m-6 3h4" />
+                  </svg>
+                  <span className="hidden sm:inline">Tajweed</span>
+                </Link>
+
+                <Link
                   href="/tarjama"
                   className="px-2.5 py-1.5 sm:px-3 sm:py-1.5 rounded-xl text-xs sm:text-sm font-semibold text-[#1e402e] hover:text-[#0b2416] hover:bg-[#e4dcce] active:scale-95 transition-all flex items-center justify-center gap-1.5"
                   title="Tafseer & Translation (Kanz-ul-Irfan)"

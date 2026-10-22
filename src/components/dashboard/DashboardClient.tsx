@@ -195,8 +195,8 @@ export function DashboardClient() {
         </div>
       </div>
 
-      {/* Dual Main Mode Quick Access: Recitation AI vs Simple Reading */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      {/* Three Main Modes Quick Access: Recitation AI vs 16-Line Reading vs Tajweed Mushaf */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-3">
         {/* Mode 1: Recite with Mic */}
         <Link
           href="/surahs"
@@ -213,7 +213,7 @@ export function DashboardClient() {
                 <span className="font-bold text-sm sm:text-base text-[#112a1d]">Recite with Mic</span>
                 <span className="text-[10px] font-bold uppercase tracking-wider bg-emerald-100 text-emerald-800 px-1.5 py-0.2 rounded">AI Test</span>
               </div>
-              <p className="text-xs text-[#527060] truncate">Speech recognition & evaluation</p>
+              <p className="text-xs text-[#527060] truncate">Speech recognition & test</p>
             </div>
           </div>
         </Link>
@@ -234,11 +234,32 @@ export function DashboardClient() {
                 <span className="font-bold text-sm sm:text-base text-[#112a1d]">Read Quran</span>
                 <span className="text-[10px] font-bold uppercase tracking-wider bg-amber-100 text-amber-900 px-1.5 py-0.2 rounded">16-Line</span>
               </div>
-              <p className="text-xs text-[#527060] truncate">Full Mushaf with audio (No mic)</p>
+              <p className="text-xs text-[#527060] truncate">Full Mushaf with audio</p>
             </div>
           </div>
         </Link>
 
+        {/* Mode 3: Tajweed Quran PDF */}
+        <Link
+          href="/tajweed"
+          className="group relative overflow-hidden rounded-2xl bg-white hover:bg-[#faf7ee] border border-[#e5ded0] hover:border-[#c5a059] p-3.5 sm:p-4 shadow-sm transition-all"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-[#ecfdf5] border border-emerald-300 text-emerald-800 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+              <svg className="w-5 h-5 text-emerald-800" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 10h6m-6 3h4" />
+              </svg>
+            </div>
+            <div className="min-w-0">
+              <div className="flex items-center gap-1.5">
+                <span className="font-bold text-sm sm:text-base text-[#112a1d]">Tajweed Quran</span>
+                <span className="text-[10px] font-bold uppercase tracking-wider bg-teal-100 text-teal-800 px-1.5 py-0.2 rounded">PDF</span>
+              </div>
+              <p className="text-xs text-[#527060] truncate">Tajweed-e-Al-Quran</p>
+            </div>
+          </div>
+        </Link>
       </div>
 
       {/* Quick Resume Card (Ayah Progress & Resume Prompt) */}
