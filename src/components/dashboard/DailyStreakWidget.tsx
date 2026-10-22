@@ -24,14 +24,44 @@ export function DailyStreakWidget({
       <div className="flex items-center justify-between gap-3">
         {/* Left: Flame Icon + Beautiful Display Typography */}
         <div className="flex items-center gap-3.5">
-          <div className="w-12 h-12 rounded-2xl bg-[#fff8eb] border border-[#f59e0b]/30 flex items-center justify-center shrink-0 shadow-sm group-hover:scale-105 transition-transform">
-            <svg
-              className="w-6 h-6 text-amber-500 drop-shadow-sm"
-              viewBox="0 0 24 24"
-              fill="currentColor"
-            >
-              <path d="M12 2c.5 2.5 2 4.5 4 6 2.5 1.9 3.5 4.3 3.5 7 0 4.14-3.36 7.5-7.5 7.5S4.5 19.14 4.5 15c0-3.3 2-6.2 4-8.5.3 1.2 1 2.2 2 2.8 0-3.5 1-6.5 1.5-7.3z" />
-            </svg>
+          {/* Circular Glowing Flame Badge */}
+          <div className="relative flex items-center justify-center shrink-0">
+            {/* Ambient warm glow */}
+            <div className="absolute -inset-1 rounded-full bg-gradient-to-tr from-amber-400/25 via-amber-300/15 to-orange-400/20 blur-[5px] group-hover:blur-[8px] transition-all opacity-80" />
+            
+            {/* Outer Ring & Circular Core */}
+            <div className="relative w-12 h-12 rounded-full p-0.5 bg-gradient-to-b from-[#fcd34d] via-[#f59e0b] to-[#d97706] shadow-[0_2px_8px_rgba(245,158,11,0.22)] group-hover:scale-105 transition-all duration-300">
+              <div className="w-full h-full rounded-full bg-gradient-to-b from-[#fffef7] via-[#fffbeb] to-[#fef3c7] flex items-center justify-center shadow-[inset_0_1.5px_2px_rgba(255,255,255,0.95)]">
+                <svg
+                  className="w-6 h-6 drop-shadow-[0_2px_4px_rgba(217,119,6,0.3)] transition-transform duration-300 group-hover:scale-110"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                >
+                  <defs>
+                    <linearGradient id="widgetFlameGrad" x1="12" y1="2" x2="12" y2="22" gradientUnits="userSpaceOnUse">
+                      <stop offset="0%" stopColor="#f59e0b" />
+                      <stop offset="60%" stopColor="#d97706" />
+                      <stop offset="100%" stopColor="#b45309" />
+                    </linearGradient>
+                    <linearGradient id="widgetFlameInner" x1="12" y1="10" x2="12" y2="21" gradientUnits="userSpaceOnUse">
+                      <stop offset="0%" stopColor="#fef08a" />
+                      <stop offset="100%" stopColor="#f59e0b" />
+                    </linearGradient>
+                  </defs>
+                  {/* Outer vibrant flame */}
+                  <path
+                    d="M12 2c.5 2.5 2 4.5 4 6 2.5 1.9 3.5 4.3 3.5 7 0 4.14-3.36 7.5-7.5 7.5S4.5 19.14 4.5 15c0-3.3 2-6.2 4-8.5.3 1.2 1 2.2 2 2.8 0-3.5 1-6.5 1.5-7.3z"
+                    fill="url(#widgetFlameGrad)"
+                  />
+                  {/* Inner golden core */}
+                  <path
+                    d="M12 10.5c.3 1.1 1.1 2 2 2.7 1.1.9 1.6 2 1.6 3.2 0 2-1.6 3.6-3.6 3.6s-3.6-1.6-3.6-3.6c0-1.5.9-2.9 1.8-3.9.2.5.5 1 .9 1.2 0-1.5.4-2.7.9-3.2z"
+                    fill="url(#widgetFlameInner)"
+                    opacity="0.95"
+                  />
+                </svg>
+              </div>
+            </div>
           </div>
 
           <div className="space-y-0.5">
