@@ -13,32 +13,45 @@ export function Navbar() {
 
   return (
     <nav className="max-w-4xl mx-auto flex items-center justify-between px-2.5 sm:px-6 py-2 sm:py-2.5 gap-2 w-full">
-      {/* Brand Logo & Name */}
+      {/* Brand Logo & Name: Tilawat.Ai */}
       <Link
         href="/"
-        className="group flex items-center gap-1.5 sm:gap-2 transition-all shrink-0 active:scale-95"
+        className="group flex items-center gap-2 sm:gap-2.5 transition-all shrink-0 active:scale-95"
+        title="Tilawat.Ai Home"
       >
-        <div className="relative flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-gradient-to-br from-emerald-100 via-emerald-50 to-[#edf7f2] border border-emerald-600/40 shadow-xs group-hover:border-emerald-500 transition-all">
-          <svg
-            className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-800 group-hover:text-emerald-950 transition-colors"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2.3"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
-            />
-          </svg>
+        {/* Modern Layered Icon with Emerald Glow */}
+        <div className="relative flex items-center justify-center shrink-0">
+          <div className="absolute -inset-0.5 rounded-xl bg-gradient-to-tr from-emerald-500/20 via-teal-400/20 to-emerald-600/20 blur-[3px] group-hover:blur-[5px] transition-all" />
+          <div className="relative w-8 h-8 sm:w-9 sm:h-9 rounded-xl p-0.5 bg-gradient-to-br from-emerald-400 via-teal-500 to-emerald-700 shadow-[0_2px_8px_rgba(16,185,129,0.22)] group-hover:scale-105 transition-transform duration-200">
+            <div className="w-full h-full rounded-[10px] bg-gradient-to-b from-[#ffffff] to-[#ecfdf5] flex items-center justify-center shadow-[inset_0_1px_1.5px_rgba(255,255,255,0.9)]">
+              <svg
+                className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-emerald-800 drop-shadow-xs transition-colors group-hover:text-emerald-950"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.2"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"
+                />
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 10h6m-6 3h4" />
+              </svg>
+            </div>
+          </div>
         </div>
-        <div className="flex items-center gap-1">
-          <span className="text-sm sm:text-base font-extrabold tracking-tight text-[#0f291e] group-hover:text-emerald-900 transition-colors">
+
+        {/* Brand Typography: Tilawat.Ai */}
+        <div className="flex items-center tracking-tight">
+          <span className="font-display text-base sm:text-lg font-black text-[#0c2419] group-hover:text-[#061710] transition-colors">
             Tilawat
           </span>
-          <span className="px-1 py-0.5 rounded text-[9px] sm:text-[10px] font-black tracking-wider bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-xs uppercase">
-            AI
+          <span className="font-display text-base sm:text-lg font-black text-emerald-600">
+            .
+          </span>
+          <span className="font-display text-base sm:text-lg font-black bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 bg-clip-text text-transparent group-hover:from-emerald-500 group-hover:to-teal-500 transition-all">
+            Ai
           </span>
         </div>
       </Link>
