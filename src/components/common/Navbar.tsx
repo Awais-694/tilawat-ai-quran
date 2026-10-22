@@ -19,24 +19,35 @@ export function Navbar() {
         className="group flex items-center gap-2 sm:gap-2.5 transition-all shrink-0 active:scale-95"
         title="Tilawat.Ai Home"
       >
-        {/* Modern Layered Icon with Emerald Glow */}
+        {/* Modern Layered Icon with Holy Quran on Rihal Stand */}
         <div className="relative flex items-center justify-center shrink-0">
-          <div className="absolute -inset-0.5 rounded-xl bg-gradient-to-tr from-emerald-500/20 via-teal-400/20 to-emerald-600/20 blur-[3px] group-hover:blur-[5px] transition-all" />
-          <div className="relative w-8 h-8 sm:w-9 sm:h-9 rounded-xl p-0.5 bg-gradient-to-br from-emerald-400 via-teal-500 to-emerald-700 shadow-[0_2px_8px_rgba(16,185,129,0.22)] group-hover:scale-105 transition-transform duration-200">
-            <div className="w-full h-full rounded-[10px] bg-gradient-to-b from-[#ffffff] to-[#ecfdf5] flex items-center justify-center shadow-[inset_0_1px_1.5px_rgba(255,255,255,0.9)]">
+          <div className="absolute -inset-0.5 rounded-xl bg-gradient-to-tr from-emerald-500/25 via-teal-400/20 to-emerald-600/25 blur-[3px] group-hover:blur-[6px] transition-all" />
+          <div className="relative w-8 h-8 sm:w-9 sm:h-9 rounded-xl p-0.5 bg-gradient-to-br from-[#059669] via-[#047857] to-[#064e3b] shadow-[0_2px_8px_rgba(4,120,87,0.3)] group-hover:scale-105 transition-transform duration-200">
+            <div className="w-full h-full rounded-[10px] bg-gradient-to-b from-[#064e3b] to-[#022c22] border border-emerald-400/40 flex items-center justify-center shadow-[inset_0_1px_2px_rgba(255,255,255,0.25)]">
+              {/* Authentic Holy Quran on Rihal (Quran Stand) */}
               <svg
-                className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-emerald-800 drop-shadow-xs transition-colors group-hover:text-emerald-950"
+                className="w-5 h-5 drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)] transition-transform duration-200 group-hover:scale-105"
                 viewBox="0 0 24 24"
                 fill="none"
-                stroke="currentColor"
-                strokeWidth="2.2"
+                xmlns="http://www.w3.org/2000/svg"
               >
+                {/* Pure White Open Quran Pages */}
                 <path
-                  strokeLinecap="round"
+                  d="M3.5 5.5C6.5 4.2 9.5 4.5 12 6C14.5 4.5 17.5 4.2 20.5 5.5V15.5C17.5 14.2 14.5 14.5 12 16C9.5 14.5 6.5 14.2 3.5 15.5V5.5Z"
+                  fill="#f8fafc"
+                  stroke="#a7f3d0"
+                  strokeWidth="1.2"
                   strokeLinejoin="round"
-                  d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"
                 />
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9 10h6m-6 3h4" />
+                {/* Center Quran Spine */}
+                <path d="M12 6V16" stroke="#047857" strokeWidth="1.6" strokeLinecap="round" />
+                {/* Golden Bookmark Ribbon */}
+                <path d="M12 6V11.5L13.2 10.3L14.4 11.5V6" fill="#f59e0b" />
+                {/* Traditional Golden Rihal (Crossed Wooden Stand Legs) */}
+                <path d="M6 16.5L3 20" stroke="#fcd34d" strokeWidth="1.8" strokeLinecap="round" />
+                <path d="M18 16.5L21 20" stroke="#fcd34d" strokeWidth="1.8" strokeLinecap="round" />
+                <path d="M7.5 17.5L16.5 20.5" stroke="#fcd34d" strokeWidth="1.6" strokeLinecap="round" />
+                <path d="M16.5 17.5L7.5 20.5" stroke="#fcd34d" strokeWidth="1.6" strokeLinecap="round" />
               </svg>
             </div>
           </div>
