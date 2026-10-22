@@ -11,7 +11,7 @@ export function MicButton({
     <button
       onClick={onClick}
       disabled={disabled}
-      title={listening ? "تلاوت ختم کریں (Tap to Stop)" : "بولیں / تلاوت شروع کریں (Tap to speak)"}
+      title={listening ? "Stop Reciting (Tap to Stop)" : "Start Reciting (Tap to Speak)"}
       aria-label={listening ? "Stop Reciting" : "Start Reciting"}
       className={`group relative flex items-center justify-center w-14 h-14 sm:w-16 sm:h-16 rounded-full transition-all duration-300 active:scale-95 hover:scale-105 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer shrink-0 -my-2.5 z-10 ${
         listening

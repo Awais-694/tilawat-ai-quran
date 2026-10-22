@@ -522,7 +522,7 @@ export function ReciteClient({
           {/* Jump to specific Ayah */}
           <div className="flex items-center gap-1.5 bg-[#faf7ee] px-3 py-1 rounded-full border border-[#ded5c0] shadow-sm">
             <span className="text-[11px] text-[#527060] font-medium whitespace-nowrap">
-              آیت پر جائیں:
+              Jump to Ayah:
             </span>
             <select
               aria-label="Select Ayah to recite"
@@ -532,7 +532,7 @@ export function ReciteClient({
             >
               {loaded.ayahs.map((a) => (
                 <option key={a.n} value={a.n} className="bg-white text-[#112a1d]">
-                  آیت {toArabicDigits(a.n)} ({a.n})
+                  Ayah {a.n} ({toArabicDigits(a.n)})
                 </option>
               ))}
             </select>

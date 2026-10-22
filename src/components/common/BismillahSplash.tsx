@@ -155,15 +155,9 @@ export function BismillahSplash() {
           </h1>
         </div>
 
-        {/* Translation in Urdu and English */}
-        <div className="mt-3 space-y-2 max-w-md mx-auto w-full">
-          <p
-            dir="rtl"
-            className="font-urdu text-sm sm:text-base text-emerald-100/90 leading-[2.2] tracking-normal px-2"
-          >
-            شروع اللہ کے نام سے جو بڑا مہربان نہایت رحم والا ہے
-          </p>
-          <p className="text-emerald-300/70 text-xs sm:text-xs tracking-wider font-medium">
+        {/* English Translation */}
+        <div className="mt-3 max-w-md mx-auto w-full">
+          <p className="text-emerald-300/80 text-xs sm:text-sm tracking-wider font-medium">
             In the name of Allah, the Most Gracious, the Most Merciful
           </p>
         </div>

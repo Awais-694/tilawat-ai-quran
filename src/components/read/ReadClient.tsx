@@ -385,7 +385,7 @@ export function ReadClient({
           <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
           </svg>
-          <span>اگلا صفحہ (Next)</span>
+          <span>Next Page</span>
         </button>
 
         {/* Page selector dropdown */}
@@ -412,7 +412,7 @@ export function ReadClient({
           disabled={pageIdx <= 0}
           className="flex-1 py-2.5 px-3 rounded-xl bg-[#faf7ee] hover:bg-[#efe8d6] disabled:opacity-40 border border-[#ded5c0] text-[#112a1d] font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 active:scale-95 transition-all cursor-pointer"
         >
-          <span>پچھلا صفحہ (Prev)</span>
+          <span>Previous Page</span>
           <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
           </svg>
@@ -421,9 +421,10 @@ export function ReadClient({
 
       {/* Helpful Hint */}
       <div className="text-center text-[11px] text-[#527060] space-y-0.5">
-        <p>💡 کسی بھی آیت پر کلک کر کے اس کی قراءت سن سکتے ہیں، یا Listen بٹن دبائیں۔</p>
-        <p>کی بورڈ کے بائیں اور دائیں تیر کے نشانات (Arrow Keys) سے بھی صفحات پلٹ سکتے ہیں۔</p>
+        <p>💡 Click any Ayah to listen to Sheikh Alafasy recitation, or use the Listen button.</p>
+        <p>You can also use Left/Right Arrow keys to turn pages.</p>
       </div>
     </div>
+
   );
 }

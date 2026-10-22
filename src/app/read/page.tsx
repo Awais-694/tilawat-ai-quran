@@ -86,10 +86,11 @@ export default function ReadIndexPage() {
 
         <div className="text-center">
           <h1 className="text-lg sm:text-2xl font-bold text-[#112a1d] tracking-wide">
-            Read Quran (قراءتِ قرآن)
+            Read Quran
           </h1>
           <p className="text-[11px] text-[#527060]">16-Line Taj Company Mushaf</p>
         </div>
+
 
         <span className="text-[11px] sm:text-xs font-semibold text-emerald-800 bg-[#edf5f0] border border-emerald-200 px-2.5 py-1 rounded-full">
           {filteredSurahs.length} / 114

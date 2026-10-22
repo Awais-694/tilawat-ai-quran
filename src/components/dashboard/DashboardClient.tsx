@@ -213,7 +213,7 @@ export function DashboardClient() {
                 <span className="font-bold text-sm sm:text-base text-[#112a1d]">Recite with Mic</span>
                 <span className="text-[10px] font-bold uppercase tracking-wider bg-emerald-100 text-emerald-800 px-1.5 py-0.2 rounded">AI Test</span>
               </div>
-              <p className="text-xs text-[#527060] truncate">تلاوت و حفظ مع مائیک</p>
+              <p className="text-xs text-[#527060] truncate">Speech recognition & evaluation</p>
             </div>
           </div>
         </Link>
@@ -234,10 +234,11 @@ export function DashboardClient() {
                 <span className="font-bold text-sm sm:text-base text-[#112a1d]">Read Quran</span>
                 <span className="text-[10px] font-bold uppercase tracking-wider bg-amber-100 text-amber-900 px-1.5 py-0.2 rounded">16-Line</span>
               </div>
-              <p className="text-xs text-[#527060] truncate">صرف تلاوت (بغیر مائیک)</p>
+              <p className="text-xs text-[#527060] truncate">Full Mushaf with audio (No mic)</p>
             </div>
           </div>
         </Link>
+
       </div>
 
       {/* Quick Resume Card (Ayah Progress & Resume Prompt) */}
@@ -309,12 +310,12 @@ export function DashboardClient() {
                   <svg className="w-4 h-4 text-white fill-current" viewBox="0 0 24 24">
                     <path d="M8 5v14l11-7z" />
                   </svg>
-                  <span>Resume Recitation ({lastAyah ? `آیت ${lastAyah} سے` : "Continue"})</span>
+                  <span>Resume Recitation ({lastAyah ? `Ayah ${lastAyah}` : "Continue"})</span>
                 </Link>
 
                 <button
                   onClick={(e) => handleResetSurah(stats.lastActive!.surahNumber, e)}
-                  title="سورت کی پیش رفت ریزیٹ کریں اور شروع سے پڑھیں"
+                  title="Reset Surah progress and start over"
                   className="py-3 px-3.5 rounded-xl sm:rounded-2xl bg-[#faf7ee] hover:bg-rose-50 text-[#527060] hover:text-rose-700 border border-[#ded5c0] hover:border-rose-300 text-xs sm:text-sm font-semibold flex items-center justify-center gap-1.5 transition-all active:scale-[0.98] cursor-pointer"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
@@ -322,6 +323,7 @@ export function DashboardClient() {
                   </svg>
                   <span>Reset Progress</span>
                 </button>
+
               </div>
             ) : (
               <Link
@@ -373,9 +375,6 @@ export function DashboardClient() {
               <h2 className="text-sm sm:text-base font-bold text-[#112a1d] tracking-wide">
                 Completed Surahs
               </h2>
-              <span className="text-[11px] font-quran text-[#345c47] mr-1" dir="rtl">
-                (مکمل شدہ سورتیں)
-              </span>
             </div>
             <span className="text-[11px] sm:text-xs font-semibold text-emerald-800 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full shadow-sm">
               {stats.completedList.length} {stats.completedList.length === 1 ? "Surah" : "Surahs"}
@@ -421,7 +420,7 @@ export function DashboardClient() {
                     <Link
                       href={`/recite/${p.surahNumber}`}
                       className="px-2.5 sm:px-3 py-1.5 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white border border-emerald-600 text-xs font-semibold flex items-center gap-1 transition-all active:scale-95 shadow-sm cursor-pointer"
-                      title="سورت کو دوبارہ پڑھیں"
+                      title="Recite this Surah again"
                     >
                       <svg className="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -433,12 +432,13 @@ export function DashboardClient() {
                     <button
                       onClick={(e) => handleDeleteCompleted(p.surahNumber, e)}
                       className="p-1.5 sm:p-2 rounded-lg text-[#859f90] hover:text-rose-700 hover:bg-rose-50 border border-transparent hover:border-rose-200 transition-all active:scale-90 cursor-pointer"
-                      title="مکمل شدہ فہرست سے ڈیلیٹ کریں"
+                      title="Delete from completed list"
                     >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                       </svg>
                     </button>
+
                   </div>
                 </div>
               );
@@ -505,10 +505,10 @@ export function DashboardClient() {
           href="/read"
           className="block w-full py-3.5 sm:py-4 rounded-xl sm:rounded-2xl text-center font-bold text-[#112a1d] bg-white hover:bg-[#faf7ee] border border-[#ded5c0] shadow-sm active:scale-[0.98] transition-all text-sm sm:text-base tracking-wide"
         >
-          Read Quran (صرف تلاوت)
+          Read Quran (16-Line Mushaf)
         </Link>
       </div>
     </div>
-
   );
 }
+
