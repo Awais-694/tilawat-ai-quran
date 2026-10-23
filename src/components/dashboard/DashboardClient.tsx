@@ -368,21 +368,6 @@ export function DashboardClient() {
       </div>
 
 
-      {/* Main Action Buttons */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <Link
-          href="/surahs"
-          className="block w-full py-3.5 sm:py-4 rounded-xl sm:rounded-2xl text-center font-bold text-white bg-emerald-700 hover:bg-emerald-800 shadow-md active:scale-[0.98] transition-all text-sm sm:text-base tracking-wide"
-        >
-          Recitation Index (114)
-        </Link>
-        <Link
-          href="/read"
-          className="block w-full py-3.5 sm:py-4 rounded-xl sm:rounded-2xl text-center font-bold text-[#112a1d] bg-white hover:bg-[#faf7ee] border border-[#ded5c0] shadow-sm active:scale-[0.98] transition-all text-sm sm:text-base tracking-wide"
-        >
-          Read Quran (16-Line Mushaf)
-        </Link>
-      </div>
     </div>
   );
 }
