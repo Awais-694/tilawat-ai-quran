@@ -15,9 +15,23 @@ export async function GET(
       return new NextResponse("Invalid Surah Number", { status: 400 });
     }
 
-    const filePath = path.join(process.cwd(), "public", "tajweed", "surahs", `${sNum}.pdf`);
+    const candidatePaths = [
+      path.join(process.cwd(), "public", "tajweed", "surahs", `${sNum}.pdf`),
+      path.resolve(process.cwd(), "public", "tajweed", "surahs", `${sNum}.pdf`),
+      path.join(__dirname, "..", "..", "..", "..", "..", "..", "public", "tajweed", "surahs", `${sNum}.pdf`),
+      "d:/Next.Js projects/Quran Recitation project/quran-mushaf-app/public/tajweed/surahs/" + sNum + ".pdf",
+      "d:/Next.Js projects/Quran Recitation project/quran-mushaf-app - Copy/public/tajweed/surahs/" + sNum + ".pdf",
+    ];
 
-    if (!fs.existsSync(filePath)) {
+    let filePath: string | null = null;
+    for (const p of candidatePaths) {
+      if (fs.existsSync(p)) {
+        filePath = p;
+        break;
+      }
+    }
+
+    if (!filePath) {
       return new NextResponse(`Tajweed PDF for Surah ${sNum} not found`, { status: 404 });
     }
 

@@ -21,9 +21,8 @@ next-env.d.ts
 # Ignore large full-book PDFs in public root
 /public/*.pdf
 
-# Allow Surah PDFs for reading and tajweed
+# Allow Surah PDFs for 16-line reading and tarjama
 !/public/mushaf16/surahs/*.pdf
-!/public/tajweed/surahs/*.pdf
 !/public/tarjama/surahs/*.pdf
 
 # debug
