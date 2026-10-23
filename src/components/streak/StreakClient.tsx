@@ -143,46 +143,47 @@ export function StreakClient() {
         <div className="flex items-center justify-between gap-3">
           {/* Flame Icon & Display Numbers */}
           <div className="flex items-center gap-3.5">
-            {/* Circular Glowing Islamic Noor Emblem */}
+            {/* Circular Glowing Royal Islamic Noor Emblem */}
             <div className="relative flex items-center justify-center shrink-0">
-              <div className="absolute -inset-1.5 rounded-full bg-gradient-to-tr from-amber-400/30 via-yellow-300/20 to-emerald-500/20 blur-[7px] opacity-85" />
-              <div className="relative w-12 h-12 sm:w-14 sm:h-14 rounded-full p-[2px] bg-gradient-to-b from-[#fde68a] via-[#d97706] to-[#78350f] shadow-[0_3px_12px_rgba(217,119,6,0.25)]">
-                <div className="w-full h-full rounded-full bg-gradient-to-b from-[#ffffff] via-[#fefbf2] to-[#fef3c7] flex items-center justify-center shadow-[inset_0_1.5px_2px_rgba(255,255,255,0.95)]">
+              <div className="absolute -inset-1.5 rounded-full bg-gradient-to-tr from-blue-600/35 via-indigo-500/25 to-amber-400/25 blur-[8px] opacity-90" />
+              <div className="relative w-12 h-12 sm:w-14 sm:h-14 rounded-full p-[2px] bg-gradient-to-b from-[#fde68a] via-[#f59e0b] to-[#78350f] shadow-[0_4px_16px_rgba(15,23,42,0.35)]">
+                <div className="w-full h-full rounded-full bg-gradient-to-br from-[#0c2440] via-[#10355a] to-[#071728] flex items-center justify-center shadow-[inset_0_2px_4px_rgba(255,255,255,0.18),inset_0_-2px_4px_rgba(0,0,0,0.5)] overflow-hidden">
                   <svg
-                    className="w-6 h-6 sm:w-8 sm:h-8 drop-shadow-[0_2px_6px_rgba(217,119,6,0.35)]"
+                    className="w-6 h-6 sm:w-8 sm:h-8 drop-shadow-[0_2px_8px_rgba(251,191,36,0.6)]"
                     viewBox="0 0 24 24"
                     fill="none"
                   >
                     <defs>
-                      <linearGradient id="streakGoldCrescent" x1="2" y1="2" x2="20" y2="22" gradientUnits="userSpaceOnUse">
-                        <stop offset="0%" stopColor="#fef08a" />
-                        <stop offset="30%" stopColor="#fbbf24" />
-                        <stop offset="70%" stopColor="#d97706" />
-                        <stop offset="100%" stopColor="#92400e" />
-                      </linearGradient>
-                      <linearGradient id="streakNoorStar" x1="12" y1="5" x2="20" y2="15" gradientUnits="userSpaceOnUse">
+                      <linearGradient id="streakGoldCrescent" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
                         <stop offset="0%" stopColor="#ffffff" />
-                        <stop offset="45%" stopColor="#fde047" />
-                        <stop offset="100%" stopColor="#f59e0b" />
+                        <stop offset="25%" stopColor="#fef08a" />
+                        <stop offset="60%" stopColor="#f59e0b" />
+                        <stop offset="100%" stopColor="#d97706" />
+                      </linearGradient>
+                      <linearGradient id="streakNoorStar" x1="12" y1="4" x2="20" y2="15" gradientUnits="userSpaceOnUse">
+                        <stop offset="0%" stopColor="#ffffff" />
+                        <stop offset="50%" stopColor="#fef08a" />
+                        <stop offset="100%" stopColor="#fbbf24" />
                       </linearGradient>
                     </defs>
 
-                    {/* Majestic Islamic Crescent Moon */}
+                    {/* Majestic Glowing Islamic Crescent */}
                     <path
                       d="M13 2.5C7.2 2.5 2.5 7.2 2.5 13S7.2 23.5 13 23.5c4.1 0 7.7-2.4 9.4-5.9-1.3.6-2.8.9-4.4.9-5.5 0-10-4.5-10-10 0-2.3.8-4.4 2.1-6.1-.4-.1-.7-.1-1.1-.1z"
                       fill="url(#streakGoldCrescent)"
                     />
 
-                    {/* 8-Pointed Star of Noor (Islamic Rub el Hizb star) */}
+                    {/* 8-Pointed Star of Noor */}
                     <path
                       d="M17.5 4.5l.8 2.2 2.2.8-2.2.8-.8 2.2-.8-2.2-2.2-.8 2.2-.8.8-2.2z"
                       fill="url(#streakNoorStar)"
                     />
 
-                    {/* Celestial Noor sparkles */}
-                    <circle cx="11.5" cy="7.5" r="0.8" fill="#fef08a" opacity="0.9" />
-                    <circle cx="19.5" cy="13.5" r="0.9" fill="#fde047" opacity="0.85" />
-                    <circle cx="7.5" cy="16.5" r="0.65" fill="#fef08a" opacity="0.75" />
+                    {/* Celestial Noor sparkles in the night sky */}
+                    <circle cx="11.5" cy="7.5" r="0.8" fill="#ffffff" opacity="0.95" />
+                    <circle cx="19.5" cy="13.5" r="0.9" fill="#fef08a" opacity="0.9" />
+                    <circle cx="7.5" cy="16.5" r="0.65" fill="#fde047" opacity="0.85" />
+                    <circle cx="15.5" cy="18" r="0.6" fill="#ffffff" opacity="0.75" />
                   </svg>
                 </div>
               </div>
