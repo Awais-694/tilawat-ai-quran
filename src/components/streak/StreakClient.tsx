@@ -146,12 +146,12 @@ export function StreakClient() {
             {/* Circular Glowing Blue Flame Badge */}
             <div className="relative flex items-center justify-center shrink-0">
               <div className="absolute -inset-1.5 rounded-full bg-gradient-to-tr from-blue-500/35 via-sky-400/25 to-blue-600/30 blur-[8px] opacity-90" />
-              <div className="relative w-12 h-12 sm:w-14 sm:h-14 rounded-full p-[2px] bg-gradient-to-b from-sky-300 via-blue-500 to-blue-700 shadow-[0_4px_16px_rgba(2,132,199,0.3)]">
-                <div className="w-full h-full rounded-full bg-gradient-to-b from-[#ffffff] via-[#f0f9ff] to-[#e0f2fe] flex items-center justify-center shadow-[inset_0_1.5px_2px_rgba(255,255,255,0.95)] overflow-hidden p-1.5">
+              <div className="relative w-12 h-12 sm:w-14 sm:h-14 rounded-full p-[2px] bg-gradient-to-b from-sky-400 via-blue-500 to-indigo-600 shadow-[0_3px_14px_rgba(2,132,199,0.25)]">
+                <div className="w-full h-full rounded-full bg-white flex items-center justify-center overflow-hidden p-1.5 sm:p-2 shadow-[inset_0_1.5px_2px_rgba(255,255,255,0.9)]">
                   <img
-                    src="/icons/streak-flame.png"
+                    src="/icons/streak-flame.png?v=2"
                     alt="Streak Flame"
-                    className="w-full h-full object-contain drop-shadow-[0_2px_8px_rgba(2,132,199,0.4)]"
+                    className="w-full h-full object-contain drop-shadow-[0_2px_8px_rgba(2,132,199,0.35)]"
                   />
                 </div>
               </div>

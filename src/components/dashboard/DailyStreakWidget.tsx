@@ -30,13 +30,13 @@ export function DailyStreakWidget({
             <div className="absolute -inset-1.5 rounded-full bg-gradient-to-tr from-blue-500/35 via-sky-400/25 to-blue-600/30 blur-[7px] group-hover:blur-[10px] transition-all opacity-90" />
             
             {/* Outer Luxury Ocean/Sapphire Ring */}
-            <div className="relative w-12 h-12 rounded-full p-[2px] bg-gradient-to-b from-sky-300 via-blue-500 to-blue-700 shadow-[0_4px_14px_rgba(2,132,199,0.3)] group-hover:scale-105 transition-all duration-300">
-              {/* Inner Pure Crisp Light Disc */}
-              <div className="w-full h-full rounded-full bg-gradient-to-b from-[#ffffff] via-[#f0f9ff] to-[#e0f2fe] flex items-center justify-center shadow-[inset_0_1.5px_2px_rgba(255,255,255,0.95)] overflow-hidden p-1.5">
+            <div className="relative w-12 h-12 rounded-full p-[2px] bg-gradient-to-b from-sky-400 via-blue-500 to-indigo-600 shadow-[0_3px_12px_rgba(2,132,199,0.25)] group-hover:scale-105 transition-all duration-300">
+              {/* Inner Clean Disc */}
+              <div className="w-full h-full rounded-full bg-white flex items-center justify-center overflow-hidden p-1.5 shadow-[inset_0_1.5px_2px_rgba(255,255,255,0.9)]">
                 <img
-                  src="/icons/streak-flame.png"
+                  src="/icons/streak-flame.png?v=2"
                   alt="Daily Streak Flame"
-                  className="w-full h-full object-contain drop-shadow-[0_2px_6px_rgba(2,132,199,0.4)] transition-transform duration-300 group-hover:scale-110"
+                  className="w-full h-full object-contain drop-shadow-[0_2px_6px_rgba(2,132,199,0.3)] transition-transform duration-300 group-hover:scale-110"
                 />
               </div>
             </div>
