@@ -3,10 +3,12 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { loadSurah, getSurahMeta, SURAHS_META, type LoadedSurah, type Token } from "@/lib/quran/data";
-import { MushafPage } from "@/components/mushaf/MushafPage";
-import { toArabicDigits } from "@/components/mushaf/AyahMarker";
-import { playAyah, stopAyah } from "@/lib/audio/player";
+import { SURAHS_META, type LoadedSurah } from "@/lib/quran/data";
+import {
+  getMushaf16Pdf,
+  saveMushaf16Pdf,
+  isMushaf16PdfSaved,
+} from "@/lib/storage/mushaf16Storage";
 
 export function ReadClient({
   surahNumber,
@@ -16,325 +18,265 @@ export function ReadClient({
   initialSurah?: LoadedSurah | null;
 }) {
   const router = useRouter();
-  const [loaded, setLoaded] = useState<LoadedSurah | null>(initialSurah ?? null);
-  const [loadErr, setLoadErr] = useState(false);
-  const [pageIdx, setPageIdx] = useState(0);
-  // Default to interactive 16-line Mushaf for instant zero-download reading on all devices
-  const [viewMode, setViewMode] = useState<"text" | "pdf">("text");
+  const meta = useMemo(() => {
+    return SURAHS_META.find((s) => s.number === surahNumber) || SURAHS_META[0];
+  }, [surahNumber]);
+
   const [isFullscreenPdf, setIsFullscreenPdf] = useState(false);
-  const [playingAyah, setPlayingAyah] = useState<number | null>(null);
-  const [isPlayingAudio, setIsPlayingAudio] = useState(false);
-  const currentAudioRef = useRef<HTMLAudioElement | null>(null);
+  const [isSavedOffline, setIsSavedOffline] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
+  const [offlineBlobUrl, setOfflineBlobUrl] = useState<string | null>(null);
+  const [statusMessage, setStatusMessage] = useState<string | null>(null);
+  const activeBlobUrlRef = useRef<string | null>(null);
 
-  // Reliable API routes for inline PDF view and direct file download
-  const surahPdfUrl = `/api/pdf/mushaf16/${surahNumber}`;
-  const surahDownloadUrl = `/api/pdf/mushaf16/${surahNumber}?download=1`;
+  // Reliable API route for fallback / direct download
+  const serverPdfUrl = `/api/pdf/mushaf16/${surahNumber}`;
+  const directDownloadUrl = `/api/pdf/mushaf16/${surahNumber}?download=1`;
 
-  // Load surah data
-  useEffect(() => {
-    if (initialSurah && initialSurah.meta.number === surahNumber) {
-      setLoaded(initialSurah);
-      return;
+  // The active PDF URL passed to the iframe
+  const activePdfUrl = useMemo(() => {
+    if (offlineBlobUrl) {
+      return `${offlineBlobUrl}#view=FitH&toolbar=1&navpanes=1`;
     }
-    let on = true;
-    loadSurah(surahNumber)
-      .then((s) => {
-        if (!on) return;
-        if (s) setLoaded(s);
-        else setLoadErr(true);
-      })
-      .catch((err) => {
-        console.error("Failed to load surah for reading:", err);
-        if (on) setLoadErr(true);
-      });
-    return () => {
-      on = false;
-    };
-  }, [surahNumber, initialSurah]);
+    return `${serverPdfUrl}#view=FitH&toolbar=1&navpanes=1`;
+  }, [offlineBlobUrl, serverPdfUrl]);
 
-  // Restore saved page position
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem(`tilawat_read_page_${surahNumber}`);
-      if (raw && loaded) {
-        const savedPage = Number(raw);
-        const idx = loaded.pages.indexOf(savedPage);
-        if (idx >= 0) setPageIdx(idx);
-      }
-    } catch {}
-  }, [surahNumber, loaded]);
-
-  // Save bookmark whenever page changes
-  useEffect(() => {
-    if (!loaded || loaded.pages.length === 0) return;
-    const curPage = loaded.pages[pageIdx];
-    try {
-      localStorage.setItem(`tilawat_read_page_${surahNumber}`, String(curPage));
-      localStorage.setItem(
-        "tilawat_last_read",
-        JSON.stringify({
-          surahNumber,
-          surahName: loaded.meta.name,
-          arabicName: loaded.meta.arabicName,
-          pageNumber: curPage,
-          timestamp: Date.now(),
-        })
-      );
-    } catch {}
-  }, [surahNumber, loaded, pageIdx]);
-
-  // Stop audio when component unmounts
-  useEffect(() => {
-    return () => {
-      stopAyah();
-    };
+  // Clean up blob URLs when surah changes or component unmounts
+  const cleanupBlobUrl = useCallback(() => {
+    if (activeBlobUrlRef.current) {
+      URL.revokeObjectURL(activeBlobUrlRef.current);
+      activeBlobUrlRef.current = null;
+    }
   }, []);
 
-  const totalPages = loaded ? loaded.pages.length : 1;
-  const currentPage = loaded ? loaded.pages[pageIdx] : 1;
+  // Check IndexedDB on mount / surah change, and auto-cache in background if not saved
+  useEffect(() => {
+    let isCancelled = false;
 
-  // Turn page
-  const nextPage = useCallback(() => {
-    if (pageIdx < totalPages - 1) {
-      stopAyah();
-      setIsPlayingAudio(false);
-      setPlayingAyah(null);
-      setPageIdx((p) => p + 1);
-      window.scrollTo({ top: 0, behavior: "smooth" });
+    async function loadOrCachePdf() {
+      cleanupBlobUrl();
+      setOfflineBlobUrl(null);
+      setIsSavedOffline(false);
+
+      try {
+        // 1. Check if already saved in local IndexedDB
+        const localBlob = await getMushaf16Pdf(surahNumber);
+        if (isCancelled) return;
+
+        if (localBlob) {
+          const blobUrl = URL.createObjectURL(localBlob);
+          activeBlobUrlRef.current = blobUrl;
+          setOfflineBlobUrl(blobUrl);
+          setIsSavedOffline(true);
+          return;
+        }
+
+        // 2. If not saved in IndexedDB, fetch and automatically save permanently into IndexedDB!
+        const res = await fetch(serverPdfUrl);
+        if (res.ok && !isCancelled) {
+          const blob = await res.blob();
+          if (isCancelled) return;
+          await saveMushaf16Pdf(surahNumber, blob, meta.name);
+          if (isCancelled) return;
+
+          const blobUrl = URL.createObjectURL(blob);
+          activeBlobUrlRef.current = blobUrl;
+          setOfflineBlobUrl(blobUrl);
+          setIsSavedOffline(true);
+        }
+      } catch (err) {
+        console.error("Auto-caching PDF error (will stream via server route):", err);
+      }
     }
-  }, [pageIdx, totalPages]);
 
-  const prevPage = useCallback(() => {
-    if (pageIdx > 0) {
-      stopAyah();
-      setIsPlayingAudio(false);
-      setPlayingAyah(null);
-      setPageIdx((p) => p - 1);
-      window.scrollTo({ top: 0, behavior: "smooth" });
+    void loadOrCachePdf();
+
+    return () => {
+      isCancelled = true;
+      cleanupBlobUrl();
+    };
+  }, [surahNumber, meta.name, serverPdfUrl, cleanupBlobUrl]);
+
+  // Download PDF to device (and save locally into IndexedDB)
+  const handleDownloadAndSave = async () => {
+    if (isDownloading) return;
+    setIsDownloading(true);
+    setStatusMessage("ڈاؤنلوڈ جاری ہے... محفوظ کیا جا رہا ہے");
+
+    try {
+      let blobToUse: Blob | null = null;
+      const existingBlob = await getMushaf16Pdf(surahNumber);
+
+      if (existingBlob) {
+        blobToUse = existingBlob;
+      } else {
+        const res = await fetch(serverPdfUrl);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        blobToUse = await res.blob();
+        await saveMushaf16Pdf(surahNumber, blobToUse, meta.name);
+      }
+
+      if (blobToUse) {
+        if (!offlineBlobUrl) {
+          const newUrl = URL.createObjectURL(blobToUse);
+          activeBlobUrlRef.current = newUrl;
+          setOfflineBlobUrl(newUrl);
+        }
+        setIsSavedOffline(true);
+
+        // Trigger native browser download to save file to phone/PC
+        const a = document.createElement("a");
+        const downloadBlobUrl = URL.createObjectURL(blobToUse);
+        a.href = downloadBlobUrl;
+        a.download = `Surah-${surahNumber}-${meta.name}-16Line.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(() => URL.revokeObjectURL(downloadBlobUrl), 10000);
+
+        setStatusMessage("سورت پی ڈی ایف کامیابی سے محفوظ اور ڈاؤنلوڈ ہو چکی ہے!");
+        setTimeout(() => setStatusMessage(null), 3500);
+      }
+    } catch (err) {
+      console.error("Download failed:", err);
+      setStatusMessage("ڈاؤنلوڈ میں خرابی آئی۔ براہ کرم انٹرنیٹ چیک کریں۔");
+      setTimeout(() => setStatusMessage(null), 4000);
+    } finally {
+      setIsDownloading(false);
     }
-  }, [pageIdx]);
+  };
 
-  // Keyboard navigation
+  // Keyboard navigation for Surahs
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "ArrowLeft") nextPage();
-      if (e.key === "ArrowRight") prevPage();
+      if (e.key === "ArrowLeft" && surahNumber < 114) {
+        router.push(`/read/${surahNumber + 1}`);
+      }
+      if (e.key === "ArrowRight" && surahNumber > 1) {
+        router.push(`/read/${surahNumber - 1}`);
+      }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [nextPage, prevPage]);
-
-  // Play audio for a specific ayah
-  const handlePlayAyah = (ayahNum: number, globalAyahId: number) => {
-    if (playingAyah === ayahNum && isPlayingAudio) {
-      stopAyah();
-      setIsPlayingAudio(false);
-      setPlayingAyah(null);
-      return;
-    }
-
-    stopAyah();
-    if (!globalAyahId) return;
-
-    try {
-      const audio = playAyah(globalAyahId);
-      currentAudioRef.current = audio;
-      setPlayingAyah(ayahNum);
-      setIsPlayingAudio(true);
-
-      audio.onended = () => {
-        setIsPlayingAudio(false);
-        setPlayingAyah(null);
-      };
-      audio.onerror = () => {
-        setIsPlayingAudio(false);
-        setPlayingAyah(null);
-      };
-    } catch (e) {
-      console.error("Audio play error:", e);
-      setIsPlayingAudio(false);
-      setPlayingAyah(null);
-    }
-  };
-
-  // Play audio for the current page sequentially
-  const handlePlayPage = () => {
-    if (isPlayingAudio) {
-      stopAyah();
-      setIsPlayingAudio(false);
-      setPlayingAyah(null);
-      return;
-    }
-
-    if (!loaded) return;
-    const pageAyahs = loaded.ayahs.filter((a) => a.page === currentPage);
-    if (pageAyahs.length === 0) return;
-
-    let index = 0;
-    const playNext = () => {
-      if (index >= pageAyahs.length) {
-        setIsPlayingAudio(false);
-        setPlayingAyah(null);
-        return;
-      }
-      const cur = pageAyahs[index];
-      setPlayingAyah(cur.n);
-      setIsPlayingAudio(true);
-      const audio = playAyah(cur.id);
-      currentAudioRef.current = audio;
-      audio.onended = () => {
-        index++;
-        playNext();
-      };
-      audio.onerror = () => {
-        index++;
-        playNext();
-      };
-    };
-    playNext();
-  };
-
-  // Group tokens of current page into 16 lines
-  const linesMap = useMemo(() => {
-    const map = new Map<number, Token[]>();
-    for (let l = 1; l <= 16; l++) {
-      map.set(l, []);
-    }
-    if (!loaded) return map;
-    loaded.tokens.forEach((t) => {
-      if (t.page === currentPage) {
-        const arr = map.get(t.line) || [];
-        arr.push(t);
-        map.set(t.line, arr);
-      }
-    });
-    return map;
-  }, [loaded, currentPage]);
-
-  if (loadErr) {
-    return (
-      <div className="max-w-xl mx-auto py-12 px-4 text-center space-y-4">
-        <p className="text-sm font-semibold text-rose-700">Unable to load Surah data.</p>
-        <Link
-          href="/read"
-          className="inline-block px-4 py-2 rounded-xl bg-emerald-700 text-white text-xs font-bold"
-        >
-          Return to Surah List
-        </Link>
-      </div>
-    );
-  }
-
-  if (!loaded) {
-    return (
-      <div className="max-w-xl mx-auto py-24 text-center space-y-3">
-        <div className="w-9 h-9 border-3 border-emerald-600 border-t-transparent rounded-full animate-spin mx-auto" />
-        <p className="text-xs font-semibold text-[#527060]">Opening Surah...</p>
-      </div>
-    );
-  }
+  }, [surahNumber, router]);
 
   return (
     <div
-      className={`mx-auto transition-all w-full max-w-full overflow-x-hidden ${
-        isFullscreenPdf
-          ? "fixed inset-0 z-50 bg-[#f8f6f0] p-2 sm:p-4 flex flex-col"
-          : "max-w-3xl space-y-3 sm:space-y-4 px-2 sm:px-0 pb-16"
+      className={`max-w-4xl mx-auto space-y-3 pb-8 w-full max-w-full overflow-x-hidden ${
+        isFullscreenPdf ? "fixed inset-0 z-50 bg-[#f8f6f0] p-2 space-y-2 max-w-none pb-2 flex flex-col" : "px-2 sm:px-0"
       }`}
     >
-      {/* Top Header & Toolbar (No-Overflow Wrapped Design) */}
-      <div className="flex flex-col gap-2 border-b border-[#ded5c0] pb-2.5 shrink-0">
-        {/* Row 1: Back, View Mode Toggle, Audio & Recite Switch */}
-        <div className="flex items-center justify-between gap-2 flex-wrap">
-          <Link
-            href="/read"
-            className="px-3 py-1.5 rounded-xl bg-white hover:bg-[#efe8d6] active:bg-[#e4dcce] border border-[#ded5c0] text-xs font-semibold text-[#112a1d] shadow-xs active:scale-95 transition-all shrink-0"
-          >
-            ← Surahs
-          </Link>
+      {/* Status Alert Notification */}
+      {statusMessage && (
+        <div className="bg-emerald-800 text-white text-xs sm:text-sm font-semibold px-4 py-2.5 rounded-xl shadow-md text-center transition-all animate-fade-in flex items-center justify-center gap-2">
+          <span>✓</span>
+          <span>{statusMessage}</span>
+        </div>
+      )}
 
-          {/* Mode Switcher: Interactive 16-Line Mushaf vs Scanned PDF */}
-          <div className="flex items-center bg-[#faf7ee] border border-[#ded5c0] rounded-xl p-0.5 shadow-xs shrink-0">
-            <button
-              onClick={() => {
-                stopAyah();
-                setIsPlayingAudio(false);
-                setViewMode("text");
-              }}
-              className={`px-2.5 sm:px-3 py-1 text-xs font-semibold rounded-lg transition-all active:scale-95 flex items-center gap-1 cursor-pointer ${
-                viewMode === "text"
-                  ? "bg-white text-emerald-950 font-bold shadow-xs border border-[#ded5c0]"
-                  : "text-[#527060] hover:text-[#112a1d]"
-              }`}
-              title="16-Line Authentic Mushaf Text (Fast & Zero Download)"
+      {/* Top Header Controls Toolbar */}
+      <div className="space-y-2 shrink-0">
+        {/* Row 1: Back to Surahs, Surah Title, Offline Badge & Action Buttons */}
+        <div className="flex items-center justify-between gap-2 bg-white border border-[#ded5c0] rounded-2xl p-2 sm:p-2.5 shadow-xs flex-wrap">
+          <div className="flex items-center gap-2">
+            <Link
+              href="/read"
+              className="px-3 py-1.5 rounded-xl bg-[#faf7ee] hover:bg-[#efe8d6] active:bg-[#e4dcce] border border-[#ded5c0] text-xs font-semibold text-[#112a1d] shadow-xs active:scale-95 transition-all shrink-0"
             >
-              <span>📖 16-Line Mushaf</span>
-            </button>
+              ← Surahs
+            </Link>
 
-            <button
-              onClick={() => {
-                stopAyah();
-                setIsPlayingAudio(false);
-                setViewMode("pdf");
-              }}
-              className={`px-2.5 sm:px-3 py-1 text-xs font-semibold rounded-lg transition-all active:scale-95 flex items-center gap-1 cursor-pointer ${
-                viewMode === "pdf"
-                  ? "bg-white text-emerald-950 font-bold shadow-xs border border-[#ded5c0]"
-                  : "text-[#527060] hover:text-[#112a1d]"
-              }`}
-              title="View 16-Line Scanned PDF"
-            >
-              <span>📄 Scanned PDF</span>
-            </button>
+            <div className="flex items-baseline gap-1.5 min-w-0">
+              <span className="font-bold text-sm sm:text-base text-[#112a1d] truncate">
+                {meta.number}. {meta.name}
+              </span>
+              <span className="font-quran text-emerald-900 text-sm hidden sm:inline" dir="rtl">
+                ({meta.arabicName})
+              </span>
+            </div>
           </div>
 
           {/* Right Action Buttons */}
-          <div className="flex items-center gap-1.5 shrink-0">
-            {/* Audio Play Page button (shown in interactive text mode) */}
-            {viewMode === "text" && (
-              <button
-                onClick={handlePlayPage}
-                className={`px-2.5 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all active:scale-95 border cursor-pointer ${
-                  isPlayingAudio
-                    ? "bg-amber-100 border-amber-300 text-amber-900"
-                    : "bg-emerald-50 hover:bg-emerald-100 border-emerald-200 text-emerald-800"
-                }`}
-                title={isPlayingAudio ? "Stop Audio" : "Listen to this page (Sheikh Alafasy)"}
-              >
-                {isPlayingAudio ? (
-                  <svg className="w-3.5 h-3.5 fill-current animate-pulse" viewBox="0 0 24 24">
-                    <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 flex-wrap">
+            {/* Offline Saved Badge / Download Button */}
+            <button
+              onClick={handleDownloadAndSave}
+              disabled={isDownloading}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all active:scale-95 shadow-xs cursor-pointer ${
+                isSavedOffline
+                  ? "bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 text-emerald-900"
+                  : "bg-gradient-to-r from-emerald-700 to-teal-800 hover:from-emerald-800 text-white"
+              }`}
+              title={
+                isSavedOffline
+                  ? "Already saved in offline storage. Click to download PDF file to device."
+                  : "Save PDF locally in offline storage and download to device."
+              }
+            >
+              {isDownloading ? (
+                <>
+                  <span className="animate-spin text-xs">⏳</span>
+                  <span>Saving…</span>
+                </>
+              ) : isSavedOffline ? (
+                <>
+                  <svg className="w-3.5 h-3.5 text-emerald-700" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                   </svg>
-                ) : (
-                  <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
-                    <path d="M8 5v14l11-7z" />
+                  <span>Saved Offline</span>
+                  <span className="text-[10px] opacity-75 font-normal hidden sm:inline">(Download)</span>
+                </>
+              ) : (
+                <>
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
                   </svg>
-                )}
-                <span>{isPlayingAudio ? "Stop" : "Listen"}</span>
-              </button>
-            )}
+                  <span>Download & Save</span>
+                </>
+              )}
+            </button>
 
-            {/* Recite Mode Button */}
+            {/* Open in New Tab Button */}
+            <a
+              href={offlineBlobUrl || serverPdfUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="px-2.5 py-1.5 rounded-xl bg-white hover:bg-[#faf7ee] border border-[#ded5c0] text-xs font-semibold text-[#112a1d] flex items-center gap-1 active:scale-95 transition-all shadow-xs"
+              title="Open full PDF in a dedicated browser tab"
+            >
+              <svg className="w-3.5 h-3.5 text-[#527060]" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+              </svg>
+              <span className="hidden sm:inline">Open Tab</span>
+            </a>
+
+            {/* Recite Mode with Mic */}
             <Link
               href={`/recite/${surahNumber}`}
-              className="px-2.5 py-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs flex items-center gap-1 shadow-xs active:scale-95 transition-all"
-              title="Switch to Recitation Evaluation with Microphone"
+              className="px-2.5 py-1.5 rounded-xl bg-[#faf7ee] hover:bg-[#efe8d6] border border-[#ded5c0] text-emerald-900 font-bold text-xs flex items-center gap-1 shadow-xs active:scale-95 transition-all"
+              title="Test recitation with microphone"
             >
-              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
+              <svg className="w-3.5 h-3.5 text-emerald-800" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 100-6 3 3 0 000 6z" />
               </svg>
               <span>Recite</span>
             </Link>
+
+            {/* Fullscreen Expand/Collapse */}
+            <button
+              onClick={() => setIsFullscreenPdf((f) => !f)}
+              className="px-2.5 py-1.5 rounded-xl bg-white hover:bg-[#faf7ee] border border-[#ded5c0] text-[#112a1d] text-xs font-semibold active:scale-95 transition-all shadow-xs cursor-pointer"
+              title={isFullscreenPdf ? "Exit Fullscreen" : "Fullscreen View"}
+            >
+              {isFullscreenPdf ? "Exit ✕" : "⛶ Expand"}
+            </button>
           </div>
         </div>
 
-        {/* Row 2: Surah Navigation & Jump Dropdown (Prev, Select, Next) */}
+        {/* Row 2: Surah Navigation & Jump Dropdown (Prev, Select 1-114, Next) */}
         <div className="flex items-center justify-between gap-2 bg-[#fbf9f4] border border-[#ded5c0] rounded-xl p-1.5 shadow-xs">
           <button
-            onClick={() => {
-              stopAyah();
-              router.push(`/read/${Math.max(1, surahNumber - 1)}`);
-            }}
+            onClick={() => router.push(`/read/${Math.max(1, surahNumber - 1)}`)}
             disabled={surahNumber <= 1}
             className={`px-2.5 py-1 rounded-lg text-xs font-semibold flex items-center gap-1 transition-all ${
               surahNumber <= 1
@@ -349,10 +291,7 @@ export function ReadClient({
 
           <select
             value={surahNumber}
-            onChange={(e) => {
-              stopAyah();
-              router.push(`/read/${e.target.value}`);
-            }}
+            onChange={(e) => router.push(`/read/${e.target.value}`)}
             className="flex-1 max-w-sm text-xs sm:text-sm font-bold text-[#112a1d] bg-white border border-[#ded5c0] rounded-lg px-2.5 py-1.5 focus:outline-none cursor-pointer truncate shadow-2xs text-center"
           >
             {SURAHS_META.map((s) => (
@@ -363,10 +302,7 @@ export function ReadClient({
           </select>
 
           <button
-            onClick={() => {
-              stopAyah();
-              router.push(`/read/${Math.min(114, surahNumber + 1)}`);
-            }}
+            onClick={() => router.push(`/read/${Math.min(114, surahNumber + 1)}`)}
             disabled={surahNumber >= 114}
             className={`px-2.5 py-1 rounded-lg text-xs font-semibold flex items-center gap-1 transition-all ${
               surahNumber >= 114
@@ -381,170 +317,19 @@ export function ReadClient({
         </div>
       </div>
 
-      {/* Mode 1: Interactive 16-Line Authentic Mushaf Page (Instant, Zero Download) */}
-      {viewMode === "text" ? (
-        <div className="space-y-3 sm:space-y-4">
-          {/* Surah Title Banner (if on first page) */}
-          {pageIdx === 0 && (
-            <div className="text-center py-2 bg-gradient-to-r from-[#fbf8ee] via-white to-[#fbf8ee] border border-[#ded5c0] rounded-2xl shadow-xs space-y-1">
-              <h1 className="font-surahTitle text-2xl sm:text-3xl font-bold text-[#112a1d]" dir="rtl">
-                {loaded.meta.arabicName}
-              </h1>
-              <p className="text-xs text-[#527060]">
-                {loaded.meta.name} • {loaded.meta.translation} • {loaded.meta.numberOfAyahs} Ayahs • {loaded.meta.revelationType}
-              </p>
-            </div>
-          )}
-
-          {/* The 16-Line Mushaf Page Frame */}
-          <MushafPage surahName={loaded.meta.arabicName} pageNumber={currentPage}>
-            <div className="flex flex-col justify-between h-full font-quran select-none">
-              {Array.from({ length: 16 }, (_, i) => i + 1).map((lineNum) => {
-                const toks = linesMap.get(lineNum) || [];
-                const isLineEmpty = toks.length === 0;
-
-                return (
-                  <div
-                    key={lineNum}
-                    className={`flex items-center justify-between text-justify tracking-wide min-h-[30px] sm:min-h-[34px] border-b border-[#e5dcbe]/60 last:border-b-0 px-1 ${
-                      isLineEmpty ? "opacity-20" : ""
-                    }`}
-                  >
-                    {toks.map((t, idx) => {
-                      const isPlayingThisAyah = playingAyah === t.ayahNumber && isPlayingAudio;
-                      return (
-                        <span
-                          key={`${t.page}-${t.line}-${idx}`}
-                          onClick={() => {
-                            if (t.ayahNumber > 0) {
-                              handlePlayAyah(t.ayahNumber, t.globalAyahId);
-                            }
-                          }}
-                          className={`inline transition-colors cursor-pointer rounded px-0.5 ${
-                            isPlayingThisAyah
-                              ? "bg-amber-200/80 text-amber-950 font-bold"
-                              : "text-[#102419] hover:text-emerald-800 hover:bg-emerald-50"
-                          }`}
-                          title={t.ayahNumber > 0 ? `Click to listen Ayah ${t.ayahNumber}` : undefined}
-                        >
-                          {t.display}{" "}
-                        </span>
-                      );
-                    })}
-                  </div>
-                );
-              })}
-            </div>
-          </MushafPage>
-
-          {/* Bottom Page Navigation Controls */}
-          <div className="bg-white border border-[#ded5c0] rounded-2xl p-2.5 sm:p-3 shadow-xs flex items-center justify-between gap-2 sm:gap-3">
-            {/* Next Page Button (In Arabic Mushaf: left is next page) */}
-            <button
-              onClick={nextPage}
-              disabled={pageIdx >= totalPages - 1}
-              className="flex-1 py-2 sm:py-2.5 px-3 rounded-xl bg-[#faf7ee] hover:bg-[#efe8d6] disabled:opacity-40 border border-[#ded5c0] text-[#112a1d] font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 active:scale-95 transition-all cursor-pointer"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-              </svg>
-              <span>Next Page</span>
-            </button>
-
-            {/* Page selector dropdown */}
-            <div className="text-center shrink-0">
-              <select
-                value={pageIdx}
-                onChange={(e) => {
-                  setPageIdx(Number(e.target.value));
-                  window.scrollTo({ top: 0, behavior: "smooth" });
-                }}
-                className="text-xs sm:text-sm font-bold text-emerald-900 bg-[#edf5f0] border border-emerald-300 rounded-xl px-2.5 py-1.5 focus:outline-none cursor-pointer"
-              >
-                {loaded.pages.map((p, idx) => (
-                  <option key={p} value={idx}>
-                    Page {toArabicDigits(p)} ({idx + 1} / {totalPages})
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Previous Page Button (In Arabic Mushaf: right is previous page) */}
-            <button
-              onClick={prevPage}
-              disabled={pageIdx <= 0}
-              className="flex-1 py-2 sm:py-2.5 px-3 rounded-xl bg-[#faf7ee] hover:bg-[#efe8d6] disabled:opacity-40 border border-[#ded5c0] text-[#112a1d] font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 active:scale-95 transition-all cursor-pointer"
-            >
-              <span>Previous Page</span>
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-              </svg>
-            </button>
-          </div>
-
-          {/* Helpful Hint */}
-          <div className="text-center text-[11px] text-[#527060] space-y-0.5">
-            <p>💡 Click any Ayah to listen to Sheikh Alafasy recitation, or use the Listen button.</p>
-            <p>You can also use Left/Right Arrow keys to turn pages.</p>
-          </div>
-        </div>
-      ) : (
-        /* Mode 2: 16-Line Authentic Taj Company PDF Viewer with Guaranteed Inline Embed */
-        <div
-          className={`w-full rounded-2xl overflow-hidden border border-[#ded5c0] bg-white shadow-sm relative flex flex-col ${
-            isFullscreenPdf ? "flex-1" : "h-[78vh] sm:h-[84vh]"
-          }`}
-        >
-          {/* Top PDF Toolbar with direct action buttons */}
-          <div className="flex items-center justify-between p-2.5 bg-[#fbf9f4] border-b border-[#ded5c0] text-xs gap-2">
-            <div className="flex items-center gap-2 min-w-0 flex-1">
-              <span className="font-bold text-[#112a1d] truncate">
-                {loaded.meta.number}. Surah {loaded.meta.name}
-              </span>
-              <span className="font-quran text-emerald-900 text-sm hidden xs:inline" dir="rtl">
-                ({loaded.meta.arabicName})
-              </span>
-            </div>
-
-            <div className="flex items-center gap-1.5 shrink-0">
-              <a
-                href={surahPdfUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="px-2.5 py-1 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white font-semibold flex items-center gap-1 active:scale-95 transition-all shadow-xs cursor-pointer"
-                title="Open PDF in new tab"
-              >
-                <span>Open Tab</span>
-              </a>
-
-              <a
-                href={surahDownloadUrl}
-                download={`Surah-${surahNumber}-${loaded.meta.name}-16Line.pdf`}
-                className="px-2.5 py-1 rounded-lg bg-white hover:bg-[#efe9d8] border border-[#ded5c0] text-[#112a1d] font-semibold flex items-center gap-1 active:scale-95 transition-all shadow-xs cursor-pointer"
-                title="Download Surah PDF"
-              >
-                <span>Download</span>
-              </a>
-
-              <button
-                onClick={() => setIsFullscreenPdf((f) => !f)}
-                className="px-2.5 py-1 rounded-lg bg-white hover:bg-[#efe9d8] border border-[#ded5c0] text-[#112a1d] font-semibold active:scale-95 transition-all cursor-pointer"
-                title={isFullscreenPdf ? "Exit Fullscreen" : "Fullscreen"}
-              >
-                {isFullscreenPdf ? "Exit" : "Expand"}
-              </button>
-            </div>
-          </div>
-
-          {/* High-Performance Iframe Viewer (Universally supported across browsers) */}
-          <iframe
-            key={surahPdfUrl}
-            src={surahPdfUrl}
-            className="w-full flex-1 border-0"
-            title={`Surah ${loaded.meta.name} 16-Line PDF`}
-          />
-        </div>
-      )}
+      {/* Scanned 16-Line Authentic Taj Company PDF Viewer (Exclusively & Directly) */}
+      <div
+        className={`w-full rounded-2xl overflow-hidden border border-[#ded5c0] bg-white shadow-sm relative flex flex-col ${
+          isFullscreenPdf ? "flex-1" : "h-[82vh] sm:h-[88vh]"
+        }`}
+      >
+        <iframe
+          key={activePdfUrl}
+          src={activePdfUrl}
+          className="w-full flex-1 border-0"
+          title={`Surah ${meta.name} 16-Line Scanned PDF`}
+        />
+      </div>
     </div>
   );
 }

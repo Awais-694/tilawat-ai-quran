@@ -32,12 +32,21 @@ export interface SavedTarjamaPdfRecord {
   name: string;
 }
 
+export interface SavedMushaf16PdfRecord {
+  surahNumber: number;
+  blob: Blob;
+  size: number;
+  savedAt: number;
+  name: string;
+}
+
 class TilawatDB extends Dexie {
   progress!: Table<SurahProgress, number>;
   sessions!: Table<RecitationSession & { id?: number }, number>;
   activity!: Table<DailyActivity, string>;
   wrongWords!: Table<{ word: string; count: number }, string>;
   tarjamaPdfs!: Table<SavedTarjamaPdfRecord, number>;
+  mushaf16Pdfs!: Table<SavedMushaf16PdfRecord, number>;
 
   constructor() {
     super("tilawat-db");
@@ -53,6 +62,14 @@ class TilawatDB extends Dexie {
       activity: "date",
       wrongWords: "word",
       tarjamaPdfs: "surahNumber, savedAt",
+    });
+    this.version(3).stores({
+      progress: "surahNumber",
+      sessions: "++id, surahNumber, startedAt",
+      activity: "date",
+      wrongWords: "word",
+      tarjamaPdfs: "surahNumber, savedAt",
+      mushaf16Pdfs: "surahNumber, savedAt",
     });
   }
 }
