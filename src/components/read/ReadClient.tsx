@@ -1,146 +1,92 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, useCallback } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { SURAHS_META, type LoadedSurah } from "@/lib/quran/data";
+import { SURAHS_META } from "@/lib/quran/data";
 import {
   getMushaf16Pdf,
   saveMushaf16Pdf,
-  isMushaf16PdfSaved,
 } from "@/lib/storage/mushaf16Storage";
+import { PdfCanvasViewer } from "@/components/common/PdfCanvasViewer";
 
 export function ReadClient({
   surahNumber,
-  initialSurah,
 }: {
   surahNumber: number;
-  initialSurah?: LoadedSurah | null;
+  initialSurah?: any;
 }) {
   const router = useRouter();
   const meta = useMemo(() => {
     return SURAHS_META.find((s) => s.number === surahNumber) || SURAHS_META[0];
   }, [surahNumber]);
 
-  const [isFullscreenPdf, setIsFullscreenPdf] = useState(false);
   const [isSavedOffline, setIsSavedOffline] = useState(false);
+  const [cachedBlob, setCachedBlob] = useState<Blob | null>(null);
   const [isDownloading, setIsDownloading] = useState(false);
-  const [offlineBlobUrl, setOfflineBlobUrl] = useState<string | null>(null);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
-  const activeBlobUrlRef = useRef<string | null>(null);
 
-  // Reliable API route for fallback / direct download
+  // Reliable API routes
   const serverPdfUrl = `/api/pdf/mushaf16/${surahNumber}`;
   const directDownloadUrl = `/api/pdf/mushaf16/${surahNumber}?download=1`;
 
-  // The active PDF URL passed to the iframe
-  const activePdfUrl = useMemo(() => {
-    if (offlineBlobUrl) {
-      return `${offlineBlobUrl}#view=FitH&toolbar=1&navpanes=1`;
-    }
-    return `${serverPdfUrl}#view=FitH&toolbar=1&navpanes=1`;
-  }, [offlineBlobUrl, serverPdfUrl]);
-
-  // Clean up blob URLs when surah changes or component unmounts
-  const cleanupBlobUrl = useCallback(() => {
-    if (activeBlobUrlRef.current) {
-      URL.revokeObjectURL(activeBlobUrlRef.current);
-      activeBlobUrlRef.current = null;
-    }
-  }, []);
-
-  // Check IndexedDB on mount / surah change, and auto-cache in background if not saved
+  // Check if saved offline in IndexedDB
   useEffect(() => {
-    let isCancelled = false;
+    let active = true;
+    setCachedBlob(null);
+    setIsSavedOffline(false);
 
-    async function loadOrCachePdf() {
-      cleanupBlobUrl();
-      setOfflineBlobUrl(null);
-      setIsSavedOffline(false);
-
-      try {
-        // 1. Check if already saved in local IndexedDB
-        const localBlob = await getMushaf16Pdf(surahNumber);
-        if (isCancelled) return;
-
-        if (localBlob) {
-          const blobUrl = URL.createObjectURL(localBlob);
-          activeBlobUrlRef.current = blobUrl;
-          setOfflineBlobUrl(blobUrl);
-          setIsSavedOffline(true);
-          return;
-        }
-
-        // 2. If not saved in IndexedDB, fetch and automatically save permanently into IndexedDB!
-        const res = await fetch(serverPdfUrl);
-        if (res.ok && !isCancelled) {
-          const blob = await res.blob();
-          if (isCancelled) return;
-          await saveMushaf16Pdf(surahNumber, blob, meta.name);
-          if (isCancelled) return;
-
-          const blobUrl = URL.createObjectURL(blob);
-          activeBlobUrlRef.current = blobUrl;
-          setOfflineBlobUrl(blobUrl);
+    getMushaf16Pdf(surahNumber)
+      .then((blob) => {
+        if (!active) return;
+        if (blob) {
+          setCachedBlob(blob);
           setIsSavedOffline(true);
         }
-      } catch (err) {
-        console.error("Auto-caching PDF error (will stream via server route):", err);
-      }
-    }
-
-    void loadOrCachePdf();
+      })
+      .catch((err) => {
+        console.error("IndexedDB read error:", err);
+      });
 
     return () => {
-      isCancelled = true;
-      cleanupBlobUrl();
+      active = false;
     };
-  }, [surahNumber, meta.name, serverPdfUrl, cleanupBlobUrl]);
+  }, [surahNumber]);
 
-  // Download PDF to device (and save locally into IndexedDB)
-  const handleDownloadAndSave = async () => {
+  // Download PDF file directly to device storage
+  const handleDownloadFile = async () => {
     if (isDownloading) return;
     setIsDownloading(true);
-    setStatusMessage("ڈاؤنلوڈ جاری ہے... محفوظ کیا جا رہا ہے");
+    setStatusMessage("ڈاؤنلوڈ جاری ہے...");
 
     try {
-      let blobToUse: Blob | null = null;
-      const existingBlob = await getMushaf16Pdf(surahNumber);
-
-      if (existingBlob) {
-        blobToUse = existingBlob;
-      } else {
+      let blobToUse = cachedBlob;
+      if (!blobToUse) {
         const res = await fetch(serverPdfUrl);
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         blobToUse = await res.blob();
         await saveMushaf16Pdf(surahNumber, blobToUse, meta.name);
-      }
-
-      if (blobToUse) {
-        if (!offlineBlobUrl) {
-          const newUrl = URL.createObjectURL(blobToUse);
-          activeBlobUrlRef.current = newUrl;
-          setOfflineBlobUrl(newUrl);
-        }
+        setCachedBlob(blobToUse);
         setIsSavedOffline(true);
-
-        // Trigger native browser download to save file to phone/PC
-        const a = document.createElement("a");
-        const downloadBlobUrl = URL.createObjectURL(blobToUse);
-        a.href = downloadBlobUrl;
-        a.download = `Surah-${surahNumber}-${meta.name}-16Line.pdf`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        setTimeout(() => URL.revokeObjectURL(downloadBlobUrl), 10000);
-
-        setStatusMessage("سورت پی ڈی ایف کامیابی سے محفوظ اور ڈاؤنلوڈ ہو چکی ہے!");
-        setTimeout(() => setStatusMessage(null), 3500);
       }
+
+      // Trigger native download
+      const downloadUrl = URL.createObjectURL(blobToUse);
+      const a = document.createElement("a");
+      a.href = downloadUrl;
+      a.download = `Surah_${surahNumber}_${meta.name}_16Line.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(downloadUrl), 10000);
+
+      setStatusMessage("پی ڈی ایف کامیابی سے ڈاؤنلوڈ ہو گئی ہے!");
+      setTimeout(() => setStatusMessage(null), 3500);
     } catch (err) {
-      console.error("Download failed:", err);
-      setStatusMessage("ڈاؤنلوڈ میں خرابی آئی۔ براہ کرم انٹرنیٹ چیک کریں۔");
-      setTimeout(() => setStatusMessage(null), 4000);
+      console.error("Download error:", err);
+      // Fallback to direct download URL
+      window.open(directDownloadUrl, "_blank");
+      setStatusMessage(null);
     } finally {
       setIsDownloading(false);
     }
@@ -161,14 +107,10 @@ export function ReadClient({
   }, [surahNumber, router]);
 
   return (
-    <div
-      className={`max-w-4xl mx-auto space-y-3 pb-8 w-full max-w-full overflow-x-hidden ${
-        isFullscreenPdf ? "fixed inset-0 z-50 bg-[#f8f6f0] p-2 space-y-2 max-w-none pb-2 flex flex-col" : "px-2 sm:px-0"
-      }`}
-    >
-      {/* Status Alert Notification */}
+    <div className="max-w-3xl mx-auto space-y-3 pb-12 w-full px-2 sm:px-0">
+      {/* Status Toast */}
       {statusMessage && (
-        <div className="bg-emerald-800 text-white text-xs sm:text-sm font-semibold px-4 py-2.5 rounded-xl shadow-md text-center transition-all animate-fade-in flex items-center justify-center gap-2">
+        <div className="bg-emerald-800 text-white text-xs sm:text-sm font-semibold px-4 py-2.5 rounded-xl shadow-md text-center transition-all flex items-center justify-center gap-2">
           <span>✓</span>
           <span>{statusMessage}</span>
         </div>
@@ -176,7 +118,7 @@ export function ReadClient({
 
       {/* Top Header Controls Toolbar */}
       <div className="space-y-2 shrink-0">
-        {/* Row 1: Back to Surahs, Surah Title, Offline Badge & Action Buttons */}
+        {/* Row 1: Back to Surahs, Surah Title, Action Buttons */}
         <div className="flex items-center justify-between gap-2 bg-white border border-[#ded5c0] rounded-2xl p-2 sm:p-2.5 shadow-xs flex-wrap">
           <div className="flex items-center gap-2">
             <Link
@@ -198,20 +140,16 @@ export function ReadClient({
 
           {/* Right Action Buttons */}
           <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 flex-wrap">
-            {/* Offline Saved Badge / Download Button */}
+            {/* Download PDF button */}
             <button
-              onClick={handleDownloadAndSave}
+              onClick={handleDownloadFile}
               disabled={isDownloading}
               className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all active:scale-95 shadow-xs cursor-pointer ${
                 isSavedOffline
                   ? "bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 text-emerald-900"
                   : "bg-gradient-to-r from-emerald-700 to-teal-800 hover:from-emerald-800 text-white"
               }`}
-              title={
-                isSavedOffline
-                  ? "Already saved in offline storage. Click to download PDF file to device."
-                  : "Save PDF locally in offline storage and download to device."
-              }
+              title="Download 16-Line Surah PDF to device"
             >
               {isDownloading ? (
                 <>
@@ -224,21 +162,20 @@ export function ReadClient({
                     <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                   </svg>
                   <span>Saved Offline</span>
-                  <span className="text-[10px] opacity-75 font-normal hidden sm:inline">(Download)</span>
                 </>
               ) : (
                 <>
                   <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
                   </svg>
-                  <span>Download & Save</span>
+                  <span>Download PDF</span>
                 </>
               )}
             </button>
 
-            {/* Open in New Tab Button */}
+            {/* Open in Tab Button */}
             <a
-              href={offlineBlobUrl || serverPdfUrl}
+              href={serverPdfUrl}
               target="_blank"
               rel="noopener noreferrer"
               className="px-2.5 py-1.5 rounded-xl bg-white hover:bg-[#faf7ee] border border-[#ded5c0] text-xs font-semibold text-[#112a1d] flex items-center gap-1 active:scale-95 transition-all shadow-xs"
@@ -261,15 +198,6 @@ export function ReadClient({
               </svg>
               <span>Recite</span>
             </Link>
-
-            {/* Fullscreen Expand/Collapse */}
-            <button
-              onClick={() => setIsFullscreenPdf((f) => !f)}
-              className="px-2.5 py-1.5 rounded-xl bg-white hover:bg-[#faf7ee] border border-[#ded5c0] text-[#112a1d] text-xs font-semibold active:scale-95 transition-all shadow-xs cursor-pointer"
-              title={isFullscreenPdf ? "Exit Fullscreen" : "Fullscreen View"}
-            >
-              {isFullscreenPdf ? "Exit ✕" : "⛶ Expand"}
-            </button>
           </div>
         </div>
 
@@ -317,19 +245,17 @@ export function ReadClient({
         </div>
       </div>
 
-      {/* Scanned 16-Line Authentic Taj Company PDF Viewer (Exclusively & Directly) */}
-      <div
-        className={`w-full rounded-2xl overflow-hidden border border-[#ded5c0] bg-white shadow-sm relative flex flex-col ${
-          isFullscreenPdf ? "flex-1" : "h-[82vh] sm:h-[88vh]"
-        }`}
-      >
-        <iframe
-          key={activePdfUrl}
-          src={activePdfUrl}
-          className="w-full flex-1 border-0"
-          title={`Surah ${meta.name} 16-Line Scanned PDF`}
-        />
-      </div>
+      {/* Scanned 16-Line Authentic Taj Company PDF Viewer via Native HTML5 Canvas (100% Mobile & Offline Compatible!) */}
+      <PdfCanvasViewer
+        key={`surah-canvas-${surahNumber}`}
+        pdfUrl={serverPdfUrl}
+        pdfBlob={cachedBlob}
+        onSaveOffline={async (blob) => {
+          setCachedBlob(blob);
+          setIsSavedOffline(true);
+        }}
+        title={`Surah ${meta.number}. ${meta.name} (${meta.arabicName})`}
+      />
     </div>
   );
 }
