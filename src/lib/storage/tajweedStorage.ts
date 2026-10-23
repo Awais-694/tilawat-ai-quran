@@ -6,7 +6,7 @@ export async function saveTajweedPdf(
   blob: Blob,
   name: string
 ): Promise<void> {
-  if (typeof window === "undefined") return;
+  if (typeof window === "undefined" || !blob || blob.size < 100) return;
   try {
     await db.tajweedPdfs.put({
       surahNumber,
@@ -27,7 +27,11 @@ export async function getTajweedPdf(
   if (typeof window === "undefined") return null;
   try {
     const record = await db.tajweedPdfs.get(surahNumber);
-    return record?.blob ?? null;
+    if (!record?.blob || record.blob.size < 100) {
+      if (record) void db.tajweedPdfs.delete(surahNumber);
+      return null;
+    }
+    return record.blob;
   } catch (error) {
     console.error("Failed to get Tajweed PDF from IndexedDB:", error);
     return null;

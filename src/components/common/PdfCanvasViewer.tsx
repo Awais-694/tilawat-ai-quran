@@ -98,17 +98,34 @@ export function PdfCanvasViewer({
         const lib = await ensurePdfJs();
         if (cancelled || !lib) return;
 
-        let arrayBuffer: ArrayBuffer;
+        let arrayBuffer: ArrayBuffer | null = null;
 
-        if (pdfBlob) {
-          arrayBuffer = await pdfBlob.arrayBuffer();
-        } else {
+        // Use cached blob only if valid and not empty (> 100 bytes)
+        if (pdfBlob && pdfBlob.size > 100) {
+          try {
+            const buf = await pdfBlob.arrayBuffer();
+            if (buf && buf.byteLength > 100) {
+              arrayBuffer = buf;
+            }
+          } catch {
+            arrayBuffer = null;
+          }
+        }
+
+        // Fetch fresh from server if no cached blob or if cached blob was empty/corrupt
+        if (!arrayBuffer) {
           const res = await fetch(pdfUrl);
           if (!res.ok) {
             throw new Error(`PDF ڈاؤنلوڈ نہیں ہو سکی (HTTP ${res.status})`);
           }
-          arrayBuffer = await res.arrayBuffer();
+          const buf = await res.arrayBuffer();
           if (cancelled) return;
+
+          if (!buf || buf.byteLength < 100) {
+            throw new Error("پی ڈی ایف فائل خالی یا نامکمل ہے (Zero bytes)");
+          }
+
+          arrayBuffer = buf;
 
           if (onSaveOffline) {
             try {
@@ -117,7 +134,7 @@ export function PdfCanvasViewer({
           }
         }
 
-        if (cancelled) return;
+        if (cancelled || !arrayBuffer) return;
 
         const loadingTask = lib.getDocument({
           data: new Uint8Array(arrayBuffer),

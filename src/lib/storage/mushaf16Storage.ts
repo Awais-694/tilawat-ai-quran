@@ -10,6 +10,7 @@ export async function saveMushaf16Pdf(
   blob: Blob,
   name: string
 ): Promise<void> {
+  if (!blob || blob.size < 100) return;
   await db.mushaf16Pdfs.put({
     surahNumber,
     blob,
@@ -25,7 +26,11 @@ export async function saveMushaf16Pdf(
 export async function getMushaf16Pdf(surahNumber: number): Promise<Blob | null> {
   try {
     const item = await db.mushaf16Pdfs.get(surahNumber);
-    return item?.blob ?? null;
+    if (!item?.blob || item.blob.size < 100) {
+      if (item) void db.mushaf16Pdfs.delete(surahNumber);
+      return null;
+    }
+    return item.blob;
   } catch (err) {
     console.error("Failed to get 16-line pdf from db:", err);
     return null;
