@@ -53,7 +53,8 @@ export function TajweedViewerClient() {
   };
 
   const currentMeta = getSurahMeta(selectedSurah) || SURAHS_META[0];
-  const pdfUrl = `/tajweed/surahs/${selectedSurah}.pdf`;
+  const pdfUrl = `/api/pdf/tajweed/${selectedSurah}`;
+  const downloadUrl = `/api/pdf/tajweed/${selectedSurah}?download=1`;
   const fullMushafUrl = "/tajveed-e-al-quran-ul-kareem.pdf";
 
   const filteredSurahs = useMemo(() => {
@@ -157,7 +158,7 @@ export function TajweedViewerClient() {
 
             {/* Download Surah Button */}
             <a
-              href={pdfUrl}
+              href={downloadUrl}
               download={`Surah_${currentMeta.number}_${currentMeta.name}_Tajweed.pdf`}
               className="p-2 sm:px-3 sm:py-1.5 rounded-xl bg-white hover:bg-[#efe9d8] border border-[#ded5c0] text-[#112a1d] text-xs font-semibold shadow-sm transition-all flex items-center gap-1 active:scale-95 cursor-pointer"
               title="Download Surah PDF"
@@ -266,44 +267,12 @@ export function TajweedViewerClient() {
           isFullscreen ? "flex-1" : "h-[74vh] sm:h-[80vh]"
         }`}
       >
-        <object
+        <iframe
           key={pdfUrl}
-          data={pdfUrl}
-          type="application/pdf"
+          src={pdfUrl}
           className="w-full h-full border-0"
-        >
-          {/* Fallback for browsers / devices that do not support inline PDF object */}
-          <div className="flex flex-col items-center justify-center p-6 sm:p-10 text-center h-full bg-[#fbf9f4] text-[#112a1d]">
-            <div className="w-16 h-16 rounded-full bg-emerald-100 border border-emerald-300 flex items-center justify-center text-3xl mb-3 shadow-sm text-emerald-800">
-              📖
-            </div>
-            <h2 className="text-lg sm:text-xl font-bold mb-1">
-              Surah {currentMeta.number}. {currentMeta.name} ({currentMeta.arabicName})
-            </h2>
-            <p className="text-xs sm:text-sm text-[#527060] mb-4 max-w-md">
-              Tap below to view or download this Surah in high-definition Color-Coded Tajweed format:
-            </p>
-
-            <div className="flex flex-col sm:flex-row gap-2.5 w-full max-w-sm">
-              <a
-                href={pdfUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-full py-2.5 px-4 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-semibold text-xs sm:text-sm shadow-sm flex items-center justify-center gap-2 active:scale-95 transition-all cursor-pointer"
-              >
-                <span>Open Surah PDF</span>
-              </a>
-
-              <a
-                href={pdfUrl}
-                download={`Surah_${currentMeta.number}_${currentMeta.name}_Tajweed.pdf`}
-                className="w-full py-2.5 px-4 rounded-xl bg-white hover:bg-[#efe9d8] border border-[#ded5c0] text-[#112a1d] font-semibold text-xs sm:text-sm shadow-sm flex items-center justify-center gap-2 active:scale-95 transition-all cursor-pointer"
-              >
-                <span>Download Surah PDF</span>
-              </a>
-            </div>
-          </div>
-        </object>
+          title={`Surah ${currentMeta.name} Tajweed PDF`}
+        />
       </div>
 
       {/* Bottom Footer Note with optional link to full 597MB Mushaf */}

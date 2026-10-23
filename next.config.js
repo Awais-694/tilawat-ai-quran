@@ -65,7 +65,33 @@ const nextConfig = {
         ],
       },
       {
-        source: "/:path*.pdf",
+        source: "/api/pdf/:path*",
+        headers: [
+          {
+            key: "Cross-Origin-Resource-Policy",
+            value: "cross-origin",
+          },
+          {
+            key: "Accept-Ranges",
+            value: "bytes",
+          },
+        ],
+      },
+      {
+        source: "/mushaf16/:path*",
+        headers: [
+          {
+            key: "Cross-Origin-Resource-Policy",
+            value: "cross-origin",
+          },
+          {
+            key: "Accept-Ranges",
+            value: "bytes",
+          },
+        ],
+      },
+      {
+        source: "/tajweed/:path*",
         headers: [
           {
             key: "Cross-Origin-Resource-Policy",
