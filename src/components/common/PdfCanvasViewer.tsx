@@ -30,22 +30,45 @@ export function PdfCanvasViewer({
   // Load PDF.js library dynamically
   const ensurePdfJs = useCallback(async (): Promise<any> => {
     if (typeof window === "undefined") return null;
-    if ((window as any).pdfjsLib) {
-      return (window as any).pdfjsLib;
-    }
+
+    const checkLib = () => {
+      const lib = (window as any).pdfjsLib;
+      if (lib) {
+        lib.GlobalWorkerOptions.workerSrc = "/vendor/pdf/pdf.worker.min.js";
+        return lib;
+      }
+      return null;
+    };
+
+    const existingLib = checkLib();
+    if (existingLib) return existingLib;
 
     return new Promise((resolve, reject) => {
-      // Check if already injected
+      // Check if script tag already in DOM
       const existing = document.querySelector('script[src*="pdf.min.js"]');
       if (existing) {
-        existing.addEventListener("load", () => {
-          const lib = (window as any).pdfjsLib;
+        let attempts = 0;
+        const interval = setInterval(() => {
+          attempts++;
+          const lib = checkLib();
           if (lib) {
-            lib.GlobalWorkerOptions.workerSrc = "/vendor/pdf/pdf.worker.min.js";
+            clearInterval(interval);
             resolve(lib);
-          } else {
-            reject(new Error("pdfjsLib not defined"));
+          } else if (attempts > 50) {
+            clearInterval(interval);
+            reject(new Error("PDF engine timed out"));
           }
+        }, 100);
+
+        existing.addEventListener("load", () => {
+          clearInterval(interval);
+          const lib = checkLib();
+          if (lib) resolve(lib);
+          else reject(new Error("pdfjsLib not defined after load"));
+        });
+        existing.addEventListener("error", () => {
+          clearInterval(interval);
+          reject(new Error("Failed to load PDF viewer engine"));
         });
         return;
       }
@@ -54,13 +77,9 @@ export function PdfCanvasViewer({
       script.src = "/vendor/pdf/pdf.min.js";
       script.async = true;
       script.onload = () => {
-        const lib = (window as any).pdfjsLib;
-        if (lib) {
-          lib.GlobalWorkerOptions.workerSrc = "/vendor/pdf/pdf.worker.min.js";
-          resolve(lib);
-        } else {
-          reject(new Error("pdfjsLib not defined"));
-        }
+        const lib = checkLib();
+        if (lib) resolve(lib);
+        else reject(new Error("pdfjsLib not initialized"));
       };
       script.onerror = () => reject(new Error("Failed to load PDF viewer engine"));
       document.head.appendChild(script);
@@ -79,25 +98,32 @@ export function PdfCanvasViewer({
         const lib = await ensurePdfJs();
         if (cancelled || !lib) return;
 
-        let loadingTask: any;
+        let arrayBuffer: ArrayBuffer;
 
         if (pdfBlob) {
-          const arrayBuffer = await pdfBlob.arrayBuffer();
-          if (cancelled) return;
-          loadingTask = lib.getDocument({ data: new Uint8Array(arrayBuffer) });
+          arrayBuffer = await pdfBlob.arrayBuffer();
         } else {
-          loadingTask = lib.getDocument({ url: pdfUrl });
+          const res = await fetch(pdfUrl);
+          if (!res.ok) {
+            throw new Error(`PDF ڈاؤنلوڈ نہیں ہو سکی (HTTP ${res.status})`);
+          }
+          arrayBuffer = await res.arrayBuffer();
+          if (cancelled) return;
 
-          // Background cache
           if (onSaveOffline) {
-            fetch(pdfUrl)
-              .then((res) => (res.ok ? res.blob() : null))
-              .then((blob) => {
-                if (blob && !cancelled) onSaveOffline(blob);
-              })
-              .catch(() => {});
+            try {
+              onSaveOffline(new Blob([arrayBuffer], { type: "application/pdf" }));
+            } catch {}
           }
         }
+
+        if (cancelled) return;
+
+        const loadingTask = lib.getDocument({
+          data: new Uint8Array(arrayBuffer),
+          cMapUrl: "/vendor/pdf/cmaps/",
+          cMapPacked: true,
+        });
 
         const doc = await loadingTask.promise;
         if (cancelled) return;

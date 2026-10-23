@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { SURAHS_META, getSurahMeta } from "@/lib/quran/data";
+import { PdfCanvasViewer } from "@/components/common/PdfCanvasViewer";
 
 export function TajweedViewerClient() {
   const router = useRouter();
@@ -261,19 +262,12 @@ export function TajweedViewerClient() {
         </div>
       </div>
 
-      {/* Embedded High-Performance Surah PDF Frame */}
-      <div
-        className={`w-full rounded-2xl overflow-hidden border border-[#ded5c0] bg-white shadow-sm relative ${
-          isFullscreen ? "flex-1" : "h-[74vh] sm:h-[80vh]"
-        }`}
-      >
-        <iframe
-          key={pdfUrl}
-          src={pdfUrl}
-          className="w-full h-full border-0"
-          title={`Surah ${currentMeta.name} Tajweed PDF`}
-        />
-      </div>
+      {/* Native HTML5 Canvas PDF Viewer (Mobile & Offline 100% Compatible) */}
+      <PdfCanvasViewer
+        key={`tajweed-canvas-${selectedSurah}`}
+        pdfUrl={pdfUrl}
+        title={`Surah ${currentMeta.name} Tajweed`}
+      />
 
       {/* Bottom Footer Note with optional link to full 597MB Mushaf */}
       <div className="flex items-center justify-between text-[11px] text-[#527060] px-1 pt-1">

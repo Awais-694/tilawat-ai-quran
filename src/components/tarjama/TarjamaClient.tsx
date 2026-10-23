@@ -8,6 +8,7 @@ import {
   getTarjamaPdf,
   deleteTarjamaPdf,
 } from "@/lib/storage/tarjamaStorage";
+import { PdfCanvasViewer } from "@/components/common/PdfCanvasViewer";
 
 function TarjamaContent() {
   const router = useRouter();
@@ -19,6 +20,7 @@ function TarjamaContent() {
 
   // Offline PDF storage states
   const [isOfflineSaved, setIsOfflineSaved] = useState(false);
+  const [cachedBlob, setCachedBlob] = useState<Blob | null>(null);
   const [offlineBlobUrl, setOfflineBlobUrl] = useState<string | null>(null);
   const [pdfSize, setPdfSize] = useState<number | null>(null);
   const [isDownloading, setIsDownloading] = useState(false);
@@ -43,6 +45,7 @@ function TarjamaContent() {
       .then((blob) => {
         if (!active) return;
         if (blob) {
+          setCachedBlob(blob);
           const url = URL.createObjectURL(blob);
           setOfflineBlobUrl((prev) => {
             if (prev) URL.revokeObjectURL(prev);
@@ -51,6 +54,7 @@ function TarjamaContent() {
           setIsOfflineSaved(true);
           setPdfSize(blob.size);
         } else {
+          setCachedBlob(null);
           setOfflineBlobUrl((prev) => {
             if (prev) URL.revokeObjectURL(prev);
             return null;
@@ -455,19 +459,21 @@ function TarjamaContent() {
         </div>
       </div>
 
-      {/* Embedded High-Performance PDF Frame */}
-      <div
-        className={`w-full rounded-2xl overflow-hidden border border-[#ded5c0] bg-white shadow-sm relative flex flex-col ${
-          isFullscreen ? "flex-1" : "h-[76vh] sm:h-[84vh]"
-        }`}
-      >
-        <iframe
-          key={`surah-pdf-${selectedSurahNumber}-${offlineBlobUrl ? "offline" : "online"}`}
-          src={currentPdfUrl}
-          className="w-full flex-1 border-0"
-          title={`Surah ${currentSurah.name} Tarjama & Tafseer`}
-        />
-      </div>
+      {/* Native HTML5 Canvas PDF Viewer (Mobile & Offline 100% Compatible) */}
+      <PdfCanvasViewer
+        key={`tarjama-canvas-${selectedSurahNumber}`}
+        pdfUrl={`/api/pdf/tarjama/${selectedSurahNumber}`}
+        pdfBlob={cachedBlob}
+        onSaveOffline={async (blob) => {
+          try {
+            await saveTarjamaPdf(selectedSurahNumber, blob, currentSurah.name);
+            setCachedBlob(blob);
+            setIsOfflineSaved(true);
+            setPdfSize(blob.size);
+          } catch {}
+        }}
+        title={`Surah ${currentSurah.name} Tarjama`}
+      />
     </div>
   );
 }
