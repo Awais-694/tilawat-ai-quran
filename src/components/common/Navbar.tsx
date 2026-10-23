@@ -13,58 +13,21 @@ export function Navbar() {
 
   return (
     <nav className="max-w-4xl mx-auto flex items-center justify-between px-2.5 sm:px-6 py-2 sm:py-2.5 gap-2 w-full">
-      {/* Brand Logo & Name: Tilawat.Ai */}
+      {/* Brand Name: Tilawat.Ai (Clean, Large, Icon-free) */}
       <Link
         href="/"
-        className="group flex items-center gap-2 sm:gap-2.5 transition-all shrink-0 active:scale-95"
+        className="group flex items-center tracking-tight transition-all shrink-0 active:scale-95"
         title="Tilawat.Ai Home"
       >
-        {/* Modern Layered Icon with Holy Quran on Rihal Stand */}
-        <div className="relative flex items-center justify-center shrink-0">
-          <div className="absolute -inset-0.5 rounded-xl bg-gradient-to-tr from-emerald-500/25 via-teal-400/20 to-emerald-600/25 blur-[3px] group-hover:blur-[6px] transition-all" />
-          <div className="relative w-8 h-8 sm:w-9 sm:h-9 rounded-xl p-0.5 bg-gradient-to-br from-[#059669] via-[#047857] to-[#064e3b] shadow-[0_2px_8px_rgba(4,120,87,0.3)] group-hover:scale-105 transition-transform duration-200">
-            <div className="w-full h-full rounded-[10px] bg-gradient-to-b from-[#064e3b] to-[#022c22] border border-emerald-400/40 flex items-center justify-center shadow-[inset_0_1px_2px_rgba(255,255,255,0.25)]">
-              {/* Authentic Holy Quran on Rihal (Quran Stand) */}
-              <svg
-                className="w-5 h-5 drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)] transition-transform duration-200 group-hover:scale-105"
-                viewBox="0 0 24 24"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                {/* Pure White Open Quran Pages */}
-                <path
-                  d="M3.5 5.5C6.5 4.2 9.5 4.5 12 6C14.5 4.5 17.5 4.2 20.5 5.5V15.5C17.5 14.2 14.5 14.5 12 16C9.5 14.5 6.5 14.2 3.5 15.5V5.5Z"
-                  fill="#f8fafc"
-                  stroke="#a7f3d0"
-                  strokeWidth="1.2"
-                  strokeLinejoin="round"
-                />
-                {/* Center Quran Spine */}
-                <path d="M12 6V16" stroke="#047857" strokeWidth="1.6" strokeLinecap="round" />
-                {/* Golden Bookmark Ribbon */}
-                <path d="M12 6V11.5L13.2 10.3L14.4 11.5V6" fill="#f59e0b" />
-                {/* Traditional Golden Rihal (Crossed Wooden Stand Legs) */}
-                <path d="M6 16.5L3 20" stroke="#fcd34d" strokeWidth="1.8" strokeLinecap="round" />
-                <path d="M18 16.5L21 20" stroke="#fcd34d" strokeWidth="1.8" strokeLinecap="round" />
-                <path d="M7.5 17.5L16.5 20.5" stroke="#fcd34d" strokeWidth="1.6" strokeLinecap="round" />
-                <path d="M16.5 17.5L7.5 20.5" stroke="#fcd34d" strokeWidth="1.6" strokeLinecap="round" />
-              </svg>
-            </div>
-          </div>
-        </div>
-
-        {/* Brand Typography: Tilawat.Ai */}
-        <div className="flex items-center tracking-tight">
-          <span className="font-display text-base sm:text-lg font-black text-[#0c2419] group-hover:text-[#061710] transition-colors">
-            Tilawat
-          </span>
-          <span className="font-display text-base sm:text-lg font-black text-emerald-600">
-            .
-          </span>
-          <span className="font-display text-base sm:text-lg font-black bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 bg-clip-text text-transparent group-hover:from-emerald-500 group-hover:to-teal-500 transition-all">
-            Ai
-          </span>
-        </div>
+        <span className="font-display text-xl sm:text-2xl md:text-[26px] font-black text-[#0c2419] group-hover:text-[#061710] transition-colors">
+          Tilawat
+        </span>
+        <span className="font-display text-xl sm:text-2xl md:text-[26px] font-black text-emerald-600">
+          .
+        </span>
+        <span className="font-display text-xl sm:text-2xl md:text-[26px] font-black bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 bg-clip-text text-transparent group-hover:from-emerald-500 group-hover:to-teal-500 transition-all">
+          Ai
+        </span>
       </Link>
 
       {/* Navigation Tabs Capsule (Pure Text Names - No Icons, No Overflow) */}
