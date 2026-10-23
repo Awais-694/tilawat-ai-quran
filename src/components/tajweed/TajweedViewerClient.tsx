@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { SURAHS_META, getSurahMeta } from "@/lib/quran/data";
 import { PdfCanvasViewer } from "@/components/common/PdfCanvasViewer";
+import { getTajweedPdf, saveTajweedPdf } from "@/lib/storage/tajweedStorage";
 
 export function TajweedViewerClient() {
   const router = useRouter();
@@ -15,6 +16,31 @@ export function TajweedViewerClient() {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+
+  // Offline caching states
+  const [cachedBlob, setCachedBlob] = useState<Blob | null>(null);
+  const [isSavedOffline, setIsSavedOffline] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    setCachedBlob(null);
+    setIsSavedOffline(false);
+
+    getTajweedPdf(selectedSurah)
+      .then((blob) => {
+        if (!active) return;
+        if (blob) {
+          setCachedBlob(blob);
+          setIsSavedOffline(true);
+        }
+      })
+      .catch(() => {});
+
+    return () => {
+      active = false;
+    };
+  }, [selectedSurah]);
 
   useEffect(() => {
     const sParam = searchParams.get("surah");
@@ -57,6 +83,34 @@ export function TajweedViewerClient() {
   const pdfUrl = `/api/pdf/tajweed/${selectedSurah}`;
   const downloadUrl = `/api/pdf/tajweed/${selectedSurah}?download=1`;
   const fullMushafUrl = "/tajveed-e-al-quran-ul-kareem.pdf";
+
+  const handleDownloadFile = async () => {
+    if (isDownloading) return;
+    setIsDownloading(true);
+    try {
+      let blobToUse = cachedBlob;
+      if (!blobToUse) {
+        const res = await fetch(pdfUrl);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        blobToUse = await res.blob();
+        await saveTajweedPdf(selectedSurah, blobToUse, currentMeta.name);
+        setCachedBlob(blobToUse);
+        setIsSavedOffline(true);
+      }
+      const u = URL.createObjectURL(blobToUse);
+      const a = document.createElement("a");
+      a.href = u;
+      a.download = `Surah_${selectedSurah}_${currentMeta.name}_Tajweed.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(u), 10000);
+    } catch {
+      window.open(downloadUrl, "_blank");
+    } finally {
+      setIsDownloading(false);
+    }
+  };
 
   const filteredSurahs = useMemo(() => {
     if (!searchQuery.trim()) return SURAHS_META;
@@ -157,18 +211,38 @@ export function TajweedViewerClient() {
               <span className="hidden sm:inline">Open Tab</span>
             </a>
 
-            {/* Download Surah Button */}
-            <a
-              href={downloadUrl}
-              download={`Surah_${currentMeta.number}_${currentMeta.name}_Tajweed.pdf`}
-              className="p-2 sm:px-3 sm:py-1.5 rounded-xl bg-white hover:bg-[#efe9d8] border border-[#ded5c0] text-[#112a1d] text-xs font-semibold shadow-sm transition-all flex items-center gap-1 active:scale-95 cursor-pointer"
-              title="Download Surah PDF"
+            {/* Download / Saved Offline Button */}
+            <button
+              onClick={handleDownloadFile}
+              disabled={isDownloading}
+              className={`p-2 sm:px-3 sm:py-1.5 rounded-xl border text-xs font-semibold shadow-sm transition-all flex items-center gap-1 active:scale-95 cursor-pointer ${
+                isSavedOffline
+                  ? "bg-emerald-50 hover:bg-emerald-100 border-emerald-300 text-emerald-900"
+                  : "bg-white hover:bg-[#efe9d8] border-[#ded5c0] text-[#112a1d]"
+              }`}
+              title={isSavedOffline ? "Saved for offline reading" : "Download Surah PDF for offline use"}
             >
-              <svg className="w-4 h-4 text-[#527060]" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-              </svg>
-              <span className="hidden sm:inline">Download</span>
-            </a>
+              {isDownloading ? (
+                <>
+                  <span className="animate-spin text-xs">⏳</span>
+                  <span className="hidden sm:inline">Saving…</span>
+                </>
+              ) : isSavedOffline ? (
+                <>
+                  <svg className="w-4 h-4 text-emerald-700" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                  </svg>
+                  <span className="hidden sm:inline">Saved Offline</span>
+                </>
+              ) : (
+                <>
+                  <svg className="w-4 h-4 text-[#527060]" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                  </svg>
+                  <span className="hidden sm:inline">Download</span>
+                </>
+              )}
+            </button>
           </div>
         </div>
 
@@ -266,6 +340,14 @@ export function TajweedViewerClient() {
       <PdfCanvasViewer
         key={`tajweed-canvas-${selectedSurah}`}
         pdfUrl={pdfUrl}
+        pdfBlob={cachedBlob}
+        onSaveOffline={async (blob) => {
+          try {
+            await saveTajweedPdf(selectedSurah, blob, currentMeta.name);
+            setCachedBlob(blob);
+            setIsSavedOffline(true);
+          } catch {}
+        }}
         title={`Surah ${currentMeta.name} Tajweed`}
       />
 
