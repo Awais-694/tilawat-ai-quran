@@ -102,30 +102,6 @@ export function TarjamaIndexClient() {
         </span>
       </div>
 
-      {/* Info Banner */}
-      <div className="rounded-2xl bg-gradient-to-r from-[#fbf8ee] via-white to-[#fbf8ee] border border-[#ded5c0] p-3.5 sm:p-4 shadow-xs">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 flex items-center justify-center shrink-0">
-            <svg className="w-5 h-5 text-emerald-800" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
-            </svg>
-          </div>
-          <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-2">
-              <span className="font-bold text-xs sm:text-sm text-[#112a1d]">
-                سورت منتخب کریں
-              </span>
-              <span className="text-[10px] font-bold bg-amber-100 text-amber-900 px-1.5 py-0.5 rounded">
-                اردو ترجمہ و تفسیر
-              </span>
-            </div>
-            <p className="text-xs text-[#527060] truncate">
-              کسی بھی سورۃ کا اصل اسکین شدہ مستند ترجمہ اور تفسیر پڑھیں
-            </p>
-          </div>
-        </div>
-      </div>
-
       {/* Search Input Box */}
       <div className="relative">
         <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-emerald-700/70">
