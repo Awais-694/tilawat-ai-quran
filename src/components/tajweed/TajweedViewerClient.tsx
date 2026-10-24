@@ -22,7 +22,6 @@ export function TajweedViewerClient() {
   const [selectedSurah, setSelectedSurah] = useState<number>(
     !isNaN(initialSurah) && initialSurah >= 1 && initialSurah <= 114 ? initialSurah : 1
   );
-  const [isFullscreen, setIsFullscreen] = useState(false);
 
   // Offline caching states
   const [cachedBlob, setCachedBlob] = useState<Blob | null>(null);
@@ -107,13 +106,7 @@ export function TajweedViewerClient() {
   };
 
   return (
-    <div
-      className={`mx-auto transition-all duration-300 ${
-        isFullscreen
-          ? "fixed inset-0 z-50 bg-[#f8f6f0] p-2 sm:p-4 flex flex-col"
-          : "max-w-5xl space-y-4 pb-16 px-2 sm:px-0"
-      }`}
-    >
+    <div className="max-w-5xl mx-auto space-y-4 pb-16 px-2 sm:px-0">
       {/* Top Navigation & Controls Bar */}
       <div className="flex flex-col gap-2.5 border-b border-[#ede7d8] pb-3 shrink-0">
         <div className="flex items-center justify-between gap-2 bg-white border border-[#ded5c0] rounded-2xl px-2.5 py-1.5 sm:px-3 sm:py-2 shadow-xs">
@@ -175,38 +168,8 @@ export function TajweedViewerClient() {
             </div>
           </div>
 
-          {/* Action buttons (Fullscreen, Open Tab, Download) */}
+          {/* Action buttons (Open Tab, Download) */}
           <div className="flex items-center gap-1.5 shrink-0">
-            {/* Fullscreen Toggle */}
-            <button
-              onClick={() => setIsFullscreen((prev) => !prev)}
-              className="p-1.5 sm:px-2.5 sm:py-1.5 rounded-xl bg-white hover:bg-[#efe9d8] border border-[#ded5c0] text-[#112a1d] text-xs font-semibold shadow-2xs transition-all flex items-center gap-1 active:scale-95 cursor-pointer"
-              title={isFullscreen ? "Exit Fullscreen" : "Fullscreen"}
-            >
-              <svg
-                className="w-3.5 h-3.5 text-emerald-800"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                viewBox="0 0 24 24"
-              >
-                {isFullscreen ? (
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M9 9L4 4m0 0h5m-5 0v5m11 11l5 5m0 0h-5m5 0v-5m-5-11l5-5m0 0h-5m5 0v5M9 15l-5 5m0 0h5m-5 0v-5"
-                  />
-                ) : (
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M4 8V4m0 0h4M4 4l5 5m11-5h-4m4 0v4m0-4l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5h-4m4 0v-4m0 4l-5-5"
-                  />
-                )}
-              </svg>
-              <span className="hidden md:inline">{isFullscreen ? "Exit" : "Expand"}</span>
-            </button>
-
             {/* Open in New Tab Button */}
             <a
               href={pdfUrl}
