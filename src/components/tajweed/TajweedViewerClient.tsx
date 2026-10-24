@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { SURAHS_META, getSurahMeta } from "@/lib/quran/data";
@@ -14,8 +14,6 @@ export function TajweedViewerClient() {
   // Read initial surah from query param ?surah=... or localStorage or default to 1 (Al-Fatihah)
   const [selectedSurah, setSelectedSurah] = useState<number>(1);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   // Offline caching states
   const [cachedBlob, setCachedBlob] = useState<Blob | null>(null);
@@ -64,7 +62,6 @@ export function TajweedViewerClient() {
 
   const handleSelectSurah = (surahNum: number) => {
     setSelectedSurah(surahNum);
-    setIsDropdownOpen(false);
     try {
       localStorage.setItem("tilawat_last_tajweed_surah", String(surahNum));
       window.history.replaceState(null, "", `/tajweed?surah=${surahNum}`);
@@ -111,17 +108,6 @@ export function TajweedViewerClient() {
     }
   };
 
-  const filteredSurahs = useMemo(() => {
-    if (!searchQuery.trim()) return SURAHS_META;
-    const q = searchQuery.toLowerCase().trim();
-    return SURAHS_META.filter(
-      (s) =>
-        s.number.toString().includes(q) ||
-        s.name.toLowerCase().includes(q) ||
-        s.arabicName.includes(q)
-    );
-  }, [searchQuery]);
-
   return (
     <div
       className={`mx-auto transition-all duration-300 ${
@@ -132,33 +118,60 @@ export function TajweedViewerClient() {
     >
       {/* Top Navigation & Controls Bar */}
       <div className="flex flex-col gap-2.5 border-b border-[#ede7d8] pb-3 shrink-0">
-        <div className="flex items-center justify-between gap-2">
-          {/* Back & Dashboard */}
-          <div className="flex items-center gap-2 shrink-0">
+        <div className="flex items-center justify-between gap-2 bg-white border border-[#ded5c0] rounded-2xl px-2.5 py-1.5 sm:px-3 sm:py-2 shadow-xs">
+          {/* Back & Quick Prev/Next */}
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
             <button
-              onClick={handleBack}
-              className="inline-flex items-center justify-center px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-semibold tracking-wide text-[#193d2b] bg-white hover:bg-[#efe9d8] active:bg-[#e4dcce] border border-[#d6cbaf] shadow-sm active:scale-95 transition-all cursor-pointer"
+              onClick={() => router.push("/tajweed")}
+              className="inline-flex items-center justify-center px-2.5 py-1.5 rounded-xl text-xs font-semibold text-[#193d2b] bg-[#faf7ee] hover:bg-[#efe8d6] active:bg-[#e4dcce] border border-[#d6cbaf] shadow-2xs active:scale-95 transition-all cursor-pointer"
+              title="Back to all 114 Surahs"
             >
-              Back
+              <span>←</span>
+              <span className="font-medium ml-1">Surahs</span>
             </button>
-            <Link
-              href="/"
-              className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-[#1e402e] bg-white hover:bg-[#efe9d8] border border-[#ded5c0] shadow-sm transition-all"
-            >
-              Dashboard
-            </Link>
+
+            {/* Quick Prev / Next Surah Navigation */}
+            <div className="flex items-center bg-[#fbf9f4] border border-[#ded5c0] rounded-xl p-0.5">
+              <button
+                onClick={() => handleSelectSurah(Math.max(1, selectedSurah - 1))}
+                disabled={selectedSurah <= 1}
+                className={`px-2 py-1 rounded-lg text-xs font-semibold flex items-center gap-1 transition-all ${
+                  selectedSurah <= 1
+                    ? "text-neutral-300 cursor-not-allowed"
+                    : "text-[#112a1d] hover:bg-white active:scale-95 cursor-pointer"
+                }`}
+                title="Previous Surah"
+              >
+                <span>←</span>
+                <span className="hidden md:inline text-[11px]">Prev</span>
+              </button>
+              <span className="text-[#ded5c0] text-xs px-0.5">|</span>
+              <button
+                onClick={() => handleSelectSurah(Math.min(114, selectedSurah + 1))}
+                disabled={selectedSurah >= 114}
+                className={`px-2 py-1 rounded-lg text-xs font-semibold flex items-center gap-1 transition-all ${
+                  selectedSurah >= 114
+                    ? "text-neutral-300 cursor-not-allowed"
+                    : "text-[#112a1d] hover:bg-white active:scale-95 cursor-pointer"
+                }`}
+                title="Next Surah"
+              >
+                <span className="hidden md:inline text-[11px]">Next</span>
+                <span>→</span>
+              </button>
+            </div>
           </div>
 
           {/* Surah Title Badge in center */}
           <div className="text-center min-w-0 flex-1 px-1">
-            <div className="flex items-center justify-center gap-2 flex-wrap">
-              <span className="font-bold text-sm sm:text-base text-[#112a1d] truncate">
+            <div className="flex items-center justify-center gap-1.5 sm:gap-2 flex-wrap">
+              <span className="font-bold text-xs sm:text-sm text-[#112a1d] truncate">
                 {currentMeta.number}. {currentMeta.name}
               </span>
-              <span className="font-quran text-base sm:text-lg text-emerald-900" dir="rtl">
-                {currentMeta.arabicName}
+              <span className="font-quran text-sm sm:text-base text-emerald-900 font-semibold" dir="rtl">
+                ({currentMeta.arabicName})
               </span>
-              <span className="text-[10px] sm:text-xs font-semibold text-emerald-800 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full shrink-0">
+              <span className="text-[10px] font-semibold text-emerald-800 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full shrink-0 hidden sm:inline">
                 Tajweed 16-Line
               </span>
             </div>
@@ -169,11 +182,11 @@ export function TajweedViewerClient() {
             {/* Fullscreen Toggle */}
             <button
               onClick={() => setIsFullscreen((prev) => !prev)}
-              className="p-2 sm:px-3 sm:py-1.5 rounded-xl bg-white hover:bg-[#efe9d8] border border-[#ded5c0] text-[#112a1d] text-xs font-semibold shadow-sm transition-all flex items-center gap-1 active:scale-95 cursor-pointer"
+              className="p-1.5 sm:px-2.5 sm:py-1.5 rounded-xl bg-white hover:bg-[#efe9d8] border border-[#ded5c0] text-[#112a1d] text-xs font-semibold shadow-2xs transition-all flex items-center gap-1 active:scale-95 cursor-pointer"
               title={isFullscreen ? "Exit Fullscreen" : "Fullscreen"}
             >
               <svg
-                className="w-4 h-4 text-emerald-800"
+                className="w-3.5 h-3.5 text-emerald-800"
                 fill="none"
                 stroke="currentColor"
                 strokeWidth="2"
@@ -201,10 +214,10 @@ export function TajweedViewerClient() {
               href={pdfUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="p-2 sm:px-3 sm:py-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white border border-emerald-600 text-xs font-semibold shadow-sm transition-all flex items-center gap-1 active:scale-95 cursor-pointer"
+              className="p-1.5 sm:px-2.5 sm:py-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white border border-emerald-600 text-xs font-semibold shadow-2xs transition-all flex items-center gap-1 active:scale-95 cursor-pointer"
               title="Open current Surah PDF in new tab"
             >
-              <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+              <svg className="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
               </svg>
               <span className="hidden sm:inline">Open Tab</span>
@@ -214,7 +227,7 @@ export function TajweedViewerClient() {
             <button
               onClick={handleDownloadFile}
               disabled={isDownloading}
-              className={`p-2 sm:px-3 sm:py-1.5 rounded-xl border text-xs font-semibold shadow-sm transition-all flex items-center gap-1 active:scale-95 cursor-pointer ${
+              className={`p-1.5 sm:px-2.5 sm:py-1.5 rounded-xl border text-xs font-semibold shadow-2xs transition-all flex items-center gap-1 active:scale-95 cursor-pointer ${
                 isSavedOffline
                   ? "bg-emerald-50 hover:bg-emerald-100 border-emerald-300 text-emerald-900"
                   : "bg-white hover:bg-[#efe9d8] border-[#ded5c0] text-[#112a1d]"
@@ -228,14 +241,14 @@ export function TajweedViewerClient() {
                 </>
               ) : isSavedOffline ? (
                 <>
-                  <svg className="w-4 h-4 text-emerald-700" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                  <svg className="w-3.5 h-3.5 text-emerald-700" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                   </svg>
-                  <span className="hidden sm:inline">Saved Offline</span>
+                  <span className="hidden sm:inline">Saved</span>
                 </>
               ) : (
                 <>
-                  <svg className="w-4 h-4 text-[#527060]" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <svg className="w-3.5 h-3.5 text-[#527060]" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                   </svg>
                   <span className="hidden sm:inline">Download</span>
@@ -243,95 +256,6 @@ export function TajweedViewerClient() {
               )}
             </button>
           </div>
-        </div>
-
-        {/* Second Row: Surah Selector & Prev/Next Navigation */}
-        <div className="flex items-center justify-between gap-2 bg-white border border-[#ded5c0] rounded-xl p-1.5 sm:p-2 shadow-sm">
-          {/* Previous Surah Button */}
-          <button
-            onClick={() => handleSelectSurah(Math.max(1, selectedSurah - 1))}
-            disabled={selectedSurah <= 1}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1 transition-all ${
-              selectedSurah <= 1
-                ? "text-neutral-300 cursor-not-allowed"
-                : "text-[#112a1d] hover:bg-[#faf7ee] border border-transparent hover:border-[#ded5c0] active:scale-95 cursor-pointer"
-            }`}
-            title="Previous Surah"
-          >
-            <span>←</span>
-            <span className="hidden sm:inline">Previous</span>
-          </button>
-
-          {/* Surah Dropdown Selector */}
-          <div className="relative flex-1 max-w-sm">
-            <button
-              onClick={() => setIsDropdownOpen((v) => !v)}
-              className="w-full flex items-center justify-between px-3 py-1.5 rounded-lg bg-[#fbf9f4] hover:bg-[#f6f1e3] border border-[#ded5c0] text-xs sm:text-sm font-semibold text-[#112a1d] transition-all cursor-pointer"
-            >
-              <span className="truncate">
-                {currentMeta.number}. {currentMeta.name} ({currentMeta.arabicName})
-              </span>
-              <svg className="w-4 h-4 text-[#527060] shrink-0 ml-1" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-              </svg>
-            </button>
-
-            {/* Dropdown Menu */}
-            {isDropdownOpen && (
-              <div className="absolute top-full left-0 right-0 mt-1 z-50 bg-white border border-[#ded5c0] rounded-xl shadow-xl max-h-72 overflow-hidden flex flex-col">
-                <div className="p-2 border-b border-[#ede7d8] bg-[#faf7ee]">
-                  <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search Surah by name or number..."
-                    className="w-full px-2.5 py-1.5 rounded-lg bg-white border border-[#ded5c0] text-xs text-[#112a1d] placeholder-[#859f90] focus:outline-none focus:border-emerald-600"
-                    autoFocus
-                  />
-                </div>
-                <div className="overflow-y-auto p-1 divide-y divide-[#f6f1e3]">
-                  {filteredSurahs.map((s) => (
-                    <button
-                      key={s.number}
-                      onClick={() => handleSelectSurah(s.number)}
-                      className={`w-full text-left px-3 py-2 rounded-lg text-xs flex items-center justify-between hover:bg-[#f6f1e3] transition-colors cursor-pointer ${
-                        s.number === selectedSurah
-                          ? "bg-emerald-50 text-emerald-900 font-bold border border-emerald-200"
-                          : "text-[#112a1d]"
-                      }`}
-                    >
-                      <span>
-                        {s.number}. {s.name}
-                      </span>
-                      <span className="font-quran text-sm text-emerald-800" dir="rtl">
-                        {s.arabicName}
-                      </span>
-                    </button>
-                  ))}
-                  {filteredSurahs.length === 0 && (
-                    <div className="p-4 text-center text-xs text-[#859f90]">
-                      No Surah found matching &quot;{searchQuery}&quot;
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Next Surah Button */}
-          <button
-            onClick={() => handleSelectSurah(Math.min(114, selectedSurah + 1))}
-            disabled={selectedSurah >= 114}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1 transition-all ${
-              selectedSurah >= 114
-                ? "text-neutral-300 cursor-not-allowed"
-                : "text-[#112a1d] hover:bg-[#faf7ee] border border-transparent hover:border-[#ded5c0] active:scale-95 cursor-pointer"
-            }`}
-            title="Next Surah"
-          >
-            <span className="hidden sm:inline">Next</span>
-            <span>→</span>
-          </button>
         </div>
       </div>
 

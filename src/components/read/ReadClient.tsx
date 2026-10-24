@@ -116,132 +116,107 @@ export function ReadClient({
         </div>
       )}
 
-      {/* Top Header Controls Toolbar */}
-      <div className="space-y-2 shrink-0">
-        {/* Row 1: Back to Surahs, Surah Title, Action Buttons */}
-        <div className="flex items-center justify-between gap-2 bg-white border border-[#ded5c0] rounded-2xl p-2 sm:p-2.5 shadow-xs flex-wrap">
-          <div className="flex items-center gap-2">
-            <Link
-              href="/read"
-              className="px-3 py-1.5 rounded-xl bg-[#faf7ee] hover:bg-[#efe8d6] active:bg-[#e4dcce] border border-[#ded5c0] text-xs font-semibold text-[#112a1d] shadow-xs active:scale-95 transition-all shrink-0"
-            >
-              ← Surahs
-            </Link>
+      {/* Top Header Controls Toolbar - Single Compact & Well-Organized Row */}
+      <div className="bg-white border border-[#ded5c0] rounded-2xl px-2.5 py-1.5 sm:px-3 sm:py-2 shadow-xs flex items-center justify-between gap-2 shrink-0">
+        {/* Left: Back to Surahs & Title */}
+        <div className="flex items-center gap-2 min-w-0">
+          <Link
+            href="/read"
+            className="px-2.5 py-1 rounded-xl bg-[#faf7ee] hover:bg-[#efe8d6] active:bg-[#e4dcce] border border-[#ded5c0] text-xs font-semibold text-[#112a1d] shadow-2xs active:scale-95 transition-all shrink-0 flex items-center gap-1"
+            title="All Surahs"
+          >
+            <span>←</span>
+            <span className="font-medium">Surahs</span>
+          </Link>
 
-            <div className="flex items-baseline gap-1.5 min-w-0">
-              <span className="font-bold text-sm sm:text-base text-[#112a1d] truncate">
-                {meta.number}. {meta.name}
-              </span>
-              <span className="font-quran text-emerald-900 text-sm hidden sm:inline" dir="rtl">
-                ({meta.arabicName})
-              </span>
-            </div>
-          </div>
-
-          {/* Right Action Buttons */}
-          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 flex-wrap">
-            {/* Download PDF button */}
-            <button
-              onClick={handleDownloadFile}
-              disabled={isDownloading}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all active:scale-95 shadow-xs cursor-pointer ${
-                isSavedOffline
-                  ? "bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 text-emerald-900"
-                  : "bg-gradient-to-r from-emerald-700 to-teal-800 hover:from-emerald-800 text-white"
-              }`}
-              title="Download 16-Line Surah PDF to device"
-            >
-              {isDownloading ? (
-                <>
-                  <span className="animate-spin text-xs">⏳</span>
-                  <span>Saving…</span>
-                </>
-              ) : isSavedOffline ? (
-                <>
-                  <svg className="w-3.5 h-3.5 text-emerald-700" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                  </svg>
-                  <span>Saved Offline</span>
-                </>
-              ) : (
-                <>
-                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
-                  </svg>
-                  <span>Download PDF</span>
-                </>
-              )}
-            </button>
-
-            {/* Open in Tab Button */}
-            <a
-              href={serverPdfUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="px-2.5 py-1.5 rounded-xl bg-white hover:bg-[#faf7ee] border border-[#ded5c0] text-xs font-semibold text-[#112a1d] flex items-center gap-1 active:scale-95 transition-all shadow-xs"
-              title="Open full PDF in a dedicated browser tab"
-            >
-              <svg className="w-3.5 h-3.5 text-[#527060]" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
-              </svg>
-              <span className="hidden sm:inline">Open Tab</span>
-            </a>
-
-            {/* Recite Mode with Mic */}
-            <Link
-              href={`/recite/${surahNumber}`}
-              className="px-2.5 py-1.5 rounded-xl bg-[#faf7ee] hover:bg-[#efe8d6] border border-[#ded5c0] text-emerald-900 font-bold text-xs flex items-center gap-1 shadow-xs active:scale-95 transition-all"
-              title="Test recitation with microphone"
-            >
-              <svg className="w-3.5 h-3.5 text-emerald-800" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 100-6 3 3 0 000 6z" />
-              </svg>
-              <span>Recite</span>
-            </Link>
+          <div className="flex items-baseline gap-1.5 min-w-0">
+            <span className="font-bold text-xs sm:text-sm text-[#112a1d] truncate">
+              {meta.number}. {meta.name}
+            </span>
+            <span className="font-quran text-emerald-900 text-xs sm:text-sm font-semibold hidden sm:inline" dir="rtl">
+              ({meta.arabicName})
+            </span>
           </div>
         </div>
 
-        {/* Row 2: Surah Navigation & Jump Dropdown (Prev, Select 1-114, Next) */}
-        <div className="flex items-center justify-between gap-2 bg-[#fbf9f4] border border-[#ded5c0] rounded-xl p-1.5 shadow-xs">
+        {/* Right: Prev/Next Quick Navigation & Action Buttons */}
+        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+          {/* Quick Prev / Next Surah Navigation */}
+          <div className="flex items-center bg-[#fbf9f4] border border-[#ded5c0] rounded-xl p-0.5">
+            <button
+              onClick={() => router.push(`/read/${Math.max(1, surahNumber - 1)}`)}
+              disabled={surahNumber <= 1}
+              className={`px-2 py-1 rounded-lg text-xs font-semibold flex items-center gap-1 transition-all ${
+                surahNumber <= 1
+                  ? "text-neutral-300 cursor-not-allowed"
+                  : "text-[#112a1d] hover:bg-white active:scale-95 cursor-pointer"
+              }`}
+              title="Previous Surah"
+            >
+              <span>←</span>
+              <span className="hidden md:inline text-[11px]">Prev</span>
+            </button>
+            <span className="text-[#ded5c0] text-xs px-0.5">|</span>
+            <button
+              onClick={() => router.push(`/read/${Math.min(114, surahNumber + 1)}`)}
+              disabled={surahNumber >= 114}
+              className={`px-2 py-1 rounded-lg text-xs font-semibold flex items-center gap-1 transition-all ${
+                surahNumber >= 114
+                  ? "text-neutral-300 cursor-not-allowed"
+                  : "text-[#112a1d] hover:bg-white active:scale-95 cursor-pointer"
+              }`}
+              title="Next Surah"
+            >
+              <span className="hidden md:inline text-[11px]">Next</span>
+              <span>→</span>
+            </button>
+          </div>
+
+          {/* Download PDF button */}
           <button
-            onClick={() => router.push(`/read/${Math.max(1, surahNumber - 1)}`)}
-            disabled={surahNumber <= 1}
-            className={`px-2.5 py-1 rounded-lg text-xs font-semibold flex items-center gap-1 transition-all ${
-              surahNumber <= 1
-                ? "text-neutral-300 cursor-not-allowed"
-                : "text-[#112a1d] hover:bg-white border border-transparent hover:border-[#ded5c0] active:scale-95 cursor-pointer"
+            onClick={handleDownloadFile}
+            disabled={isDownloading}
+            className={`px-2.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all active:scale-95 shadow-2xs cursor-pointer ${
+              isSavedOffline
+                ? "bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 text-emerald-900"
+                : "bg-emerald-800 hover:bg-emerald-900 text-white"
             }`}
-            title="Previous Surah"
+            title="Download 16-Line Surah PDF"
           >
-            <span>←</span>
-            <span className="hidden xs:inline">Prev Surah</span>
+            {isDownloading ? (
+              <>
+                <span className="animate-spin text-xs">⏳</span>
+                <span className="hidden sm:inline">Saving…</span>
+              </>
+            ) : isSavedOffline ? (
+              <>
+                <svg className="w-3.5 h-3.5 text-emerald-700" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+                <span className="hidden sm:inline">Saved</span>
+              </>
+            ) : (
+              <>
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                </svg>
+                <span className="hidden sm:inline">Download</span>
+              </>
+            )}
           </button>
 
-          <select
-            value={surahNumber}
-            onChange={(e) => router.push(`/read/${e.target.value}`)}
-            className="flex-1 max-w-sm text-xs sm:text-sm font-bold text-[#112a1d] bg-white border border-[#ded5c0] rounded-lg px-2.5 py-1.5 focus:outline-none cursor-pointer truncate shadow-2xs text-center"
+          {/* Open in Tab Button */}
+          <a
+            href={serverPdfUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="p-1.5 sm:px-2.5 sm:py-1.5 rounded-xl bg-white hover:bg-[#faf7ee] border border-[#ded5c0] text-xs font-semibold text-[#112a1d] flex items-center gap-1 active:scale-95 transition-all shadow-2xs"
+            title="Open PDF in dedicated browser tab"
           >
-            {SURAHS_META.map((s) => (
-              <option key={s.number} value={s.number}>
-                {s.number}. {s.name} ({s.arabicName})
-              </option>
-            ))}
-          </select>
-
-          <button
-            onClick={() => router.push(`/read/${Math.min(114, surahNumber + 1)}`)}
-            disabled={surahNumber >= 114}
-            className={`px-2.5 py-1 rounded-lg text-xs font-semibold flex items-center gap-1 transition-all ${
-              surahNumber >= 114
-                ? "text-neutral-300 cursor-not-allowed"
-                : "text-[#112a1d] hover:bg-white border border-transparent hover:border-[#ded5c0] active:scale-95 cursor-pointer"
-            }`}
-            title="Next Surah"
-          >
-            <span className="hidden xs:inline">Next Surah</span>
-            <span>→</span>
-          </button>
+            <svg className="w-3.5 h-3.5 text-[#527060]" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+            </svg>
+          </a>
         </div>
       </div>
 
