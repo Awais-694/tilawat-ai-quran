@@ -11,22 +11,16 @@ import {
 import { PdfCanvasViewer } from "@/components/common/PdfCanvasViewer";
 import { TarjamaIndexClient } from "./TarjamaIndexClient";
 
-function TarjamaContent() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const surahParam = searchParams.get("surah");
+interface TarjamaViewerProps {
+  initialSurah: number;
+}
 
-  // State: Default to URL ?surah=X or 1
-  const initialSurah = surahParam ? parseInt(surahParam, 10) : 1;
+function TarjamaViewer({ initialSurah }: TarjamaViewerProps) {
+  const router = useRouter();
   const [selectedSurahNumber, setSelectedSurahNumber] = useState<number>(
-    !isNaN(initialSurah) && initialSurah >= 1 && initialSurah <= 114 ? initialSurah : 1
+    initialSurah >= 1 && initialSurah <= 114 ? initialSurah : 1
   );
   const [isFullscreen, setIsFullscreen] = useState(false);
-
-  // If no surah parameter is present in URL, display the full 114 Surahs directory!
-  if (!surahParam) {
-    return <TarjamaIndexClient />;
-  }
 
   // Offline PDF storage states
   const [isOfflineSaved, setIsOfflineSaved] = useState(false);
@@ -37,16 +31,12 @@ function TarjamaContent() {
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const deviceFileInputRef = useRef<HTMLInputElement | null>(null);
 
-  // Read URL query parameter ?surah=X if provided
+  // Sync when initialSurah prop changes
   useEffect(() => {
-    const surahParam = searchParams.get("surah");
-    if (surahParam) {
-      const sNum = parseInt(surahParam, 10);
-      if (!isNaN(sNum) && sNum >= 1 && sNum <= 114) {
-        setSelectedSurahNumber(sNum);
-      }
+    if (initialSurah >= 1 && initialSurah <= 114) {
+      setSelectedSurahNumber(initialSurah);
     }
-  }, [searchParams]);
+  }, [initialSurah]);
 
   // Check and load offline PDF whenever selectedSurahNumber changes
   useEffect(() => {
@@ -489,6 +479,20 @@ function TarjamaContent() {
       />
     </div>
   );
+}
+
+function TarjamaContent() {
+  const searchParams = useSearchParams();
+  const surahParam = searchParams.get("surah");
+
+  if (!surahParam) {
+    return <TarjamaIndexClient />;
+  }
+
+  const sNum = parseInt(surahParam, 10);
+  const validSurah = !isNaN(sNum) && sNum >= 1 && sNum <= 114 ? sNum : 1;
+
+  return <TarjamaViewer initialSurah={validSurah} />;
 }
 
 export function TarjamaClient() {

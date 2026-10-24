@@ -8,19 +8,14 @@ import { PdfCanvasViewer } from "@/components/common/PdfCanvasViewer";
 import { getTajweedPdf, saveTajweedPdf } from "@/lib/storage/tajweedStorage";
 import { TajweedIndexClient } from "./TajweedIndexClient";
 
-export function TajweedViewerClient() {
+interface TajweedViewerProps {
+  initialSurah: number;
+}
+
+function TajweedViewer({ initialSurah }: TajweedViewerProps) {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const surahParam = searchParams.get("surah");
-
-  // If no surah parameter is present in URL, display the full 114 Surahs directory!
-  if (!surahParam) {
-    return <TajweedIndexClient />;
-  }
-
-  const initialSurah = parseInt(surahParam, 10);
   const [selectedSurah, setSelectedSurah] = useState<number>(
-    !isNaN(initialSurah) && initialSurah >= 1 && initialSurah <= 114 ? initialSurah : 1
+    initialSurah >= 1 && initialSurah <= 114 ? initialSurah : 1
   );
 
   // Offline caching states
@@ -49,13 +44,10 @@ export function TajweedViewerClient() {
   }, [selectedSurah]);
 
   useEffect(() => {
-    if (surahParam) {
-      const n = parseInt(surahParam, 10);
-      if (n >= 1 && n <= 114) {
-        setSelectedSurah(n);
-      }
+    if (initialSurah >= 1 && initialSurah <= 114) {
+      setSelectedSurah(initialSurah);
     }
-  }, [surahParam]);
+  }, [initialSurah]);
 
   const handleSelectSurah = (surahNum: number) => {
     setSelectedSurah(surahNum);
@@ -242,4 +234,18 @@ export function TajweedViewerClient() {
       </div>
     </div>
   );
+}
+
+export function TajweedViewerClient() {
+  const searchParams = useSearchParams();
+  const surahParam = searchParams.get("surah");
+
+  if (!surahParam) {
+    return <TajweedIndexClient />;
+  }
+
+  const sNum = parseInt(surahParam, 10);
+  const validSurah = !isNaN(sNum) && sNum >= 1 && sNum <= 114 ? sNum : 1;
+
+  return <TajweedViewer initialSurah={validSurah} />;
 }
