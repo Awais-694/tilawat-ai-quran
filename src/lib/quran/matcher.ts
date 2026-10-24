@@ -102,10 +102,13 @@ export function wordMatches(target: string, heard: string): boolean {
       if (phoneticCanon(ts) === phoneticCanon(hs)) return true;
       const skT = consonantSkeleton(ts);
       const skH = consonantSkeleton(hs);
-      if (skT.length >= 4 && skT === skH) return true;
+      if (skT.length >= 3 && skT === skH) return true;
+      if (skT.length >= 3 && phoneticCanon(skT) === phoneticCanon(skH)) return true;
       const minL = Math.min(ts.length, hs.length);
-      // Only allow 1-edit typo on long stems (>= 5 letters) to prevent false matches between 3-letter roots (e.g. فلق vs خلق)
-      if (minL >= 5 && editDistance(ts, hs) <= 1) return true;
+      // Allow 1-edit typo on stems >= 4 letters if either first or last letter matches
+      if (minL >= 4 && editDistance(ts, hs) <= 1) {
+        if (minL >= 5 || ts[0] === hs[0] || ts.slice(-1) === hs.slice(-1)) return true;
+      }
     }
   }
 
@@ -151,14 +154,19 @@ export function wordMatches(target: string, heard: string): boolean {
     return true;
   }
 
-  // Consonant skeleton matching for long Madd vowels / dagger alif variations (e.g. "الرحمن" vs "الرحمان")
+  // Consonant skeleton matching for long Madd vowels / dagger alif variations (e.g. "الرحمن" vs "الرحمان", "مالك" vs "ملك", "اهدنا" vs "هدنا")
   const skT = consonantSkeleton(tNorm);
   const skH = consonantSkeleton(hNorm);
-  if (skT.length >= 4 && skT === skH) return true;
+  if (skT.length >= 3 && skT === skH) return true;
+  if (skT.length >= 3 && phoneticCanon(skT) === phoneticCanon(skH)) return true;
 
   const minLen = Math.min(tNorm.length, hNorm.length);
-  // Fuzzy match only for longer words (>= 6 characters) with minor browser speech transcription variations
-  if (minLen >= 6 && editDistance(tNorm, hNorm) <= 1) return true;
+  // Fuzzy match for words >= 4 characters with minor browser speech transcription variations
+  if (minLen >= 4 && editDistance(tNorm, hNorm) <= 1) {
+    if (minLen >= 5 || tNorm[0] === hNorm[0] || tNorm.slice(-1) === hNorm.slice(-1)) {
+      return true;
+    }
+  }
   return false;
 }
 

@@ -57,31 +57,42 @@ export function useSpeechRecognition(onResult: ResultHandler) {
     rec.lang = "ar-SA";
     rec.continuous = true;
     rec.interimResults = true;
+    (rec as unknown as { maxAlternatives: number }).maxAlternatives = 5;
     sessionFinalsAppended.current = 0;
     rec.onresult = (e) => {
       let finalsInSession = 0;
       let interimText = "";
+      const interimAlts: string[] = [];
 
       for (let i = 0; i < e.results.length; i++) {
-        const r = e.results[i];
+        const r = e.results[i] as unknown as { length: number; isFinal: boolean; [idx: number]: { transcript: string } };
         if (r.isFinal) {
           finalsInSession++;
           if (finalsInSession > sessionFinalsAppended.current) {
-            const t = r[0].transcript.trim();
+            const t = r[0]?.transcript?.trim();
             if (t) {
               finalsAll.current.push(t);
             }
             sessionFinalsAppended.current = finalsInSession;
           }
         } else {
-          const chunk = r[0].transcript.trim();
+          const chunk = r[0]?.transcript?.trim();
           if (chunk) {
             interimText += (interimText ? " " : "") + chunk;
+          }
+          // Collect alternative hypotheses for fast speech disambiguation
+          if (r.length > 1) {
+            for (let a = 1; a < r.length; a++) {
+              const altChunk = r[a]?.transcript?.trim();
+              if (altChunk) {
+                interimAlts.push(altChunk);
+              }
+            }
           }
         }
       }
 
-      emit(interimText.trim());
+      handlerRef.current(finalsAll.current.join(" "), interimText.trim(), interimAlts);
     };
     rec.onerror = (e) => {
       if (e.error === "no-speech") {
