@@ -82,7 +82,6 @@ export function TajweedViewerClient() {
   const currentMeta = getSurahMeta(selectedSurah) || SURAHS_META[0];
   const pdfUrl = `/api/pdf/tajweed/${selectedSurah}`;
   const downloadUrl = `/api/pdf/tajweed/${selectedSurah}?download=1`;
-  const fullMushafUrl = "/tajveed-e-al-quran-ul-kareem.pdf";
 
   const handleDownloadFile = async () => {
     if (isDownloading) return;
@@ -351,18 +350,10 @@ export function TajweedViewerClient() {
         title={`Surah ${currentMeta.name} Tajweed`}
       />
 
-      {/* Bottom Footer Note with optional link to full 597MB Mushaf */}
+      {/* Bottom Footer Note */}
       <div className="flex items-center justify-between text-[11px] text-[#527060] px-1 pt-1">
         <span>Authentic Color-Coded Tajweed Quran (16-Line)</span>
-        <a
-          href={fullMushafUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="hover:text-emerald-800 underline decoration-dotted"
-          title="Download the full 597 MB master Tajweed Quran PDF"
-        >
-          Complete Quran PDF (597 MB)
-        </a>
+        <span className="text-[#859f90]">114 Surahs High Definition PDF</span>
       </div>
     </div>
   );

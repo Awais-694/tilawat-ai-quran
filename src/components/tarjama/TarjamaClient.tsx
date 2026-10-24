@@ -9,14 +9,24 @@ import {
   deleteTarjamaPdf,
 } from "@/lib/storage/tarjamaStorage";
 import { PdfCanvasViewer } from "@/components/common/PdfCanvasViewer";
+import { TarjamaIndexClient } from "./TarjamaIndexClient";
 
 function TarjamaContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const surahParam = searchParams.get("surah");
 
-  // State: Default to Surah 1 (Al-Fatiha) or URL ?surah=X
-  const [selectedSurahNumber, setSelectedSurahNumber] = useState<number>(1);
+  // State: Default to URL ?surah=X or 1
+  const initialSurah = surahParam ? parseInt(surahParam, 10) : 1;
+  const [selectedSurahNumber, setSelectedSurahNumber] = useState<number>(
+    !isNaN(initialSurah) && initialSurah >= 1 && initialSurah <= 114 ? initialSurah : 1
+  );
   const [isFullscreen, setIsFullscreen] = useState(false);
+
+  // If no surah parameter is present in URL, display the full 114 Surahs directory!
+  if (!surahParam) {
+    return <TarjamaIndexClient />;
+  }
 
   // Offline PDF storage states
   const [isOfflineSaved, setIsOfflineSaved] = useState(false);
@@ -92,6 +102,7 @@ function TarjamaContent() {
   const handleSelectSurah = (surahNumber: number) => {
     if (surahNumber >= 1 && surahNumber <= 114) {
       setSelectedSurahNumber(surahNumber);
+      router.push(`/tarjama?surah=${surahNumber}`);
     }
   };
 
@@ -221,10 +232,12 @@ function TarjamaContent() {
           {/* Top Row: Back Button & Title */}
           <div className="flex items-center justify-between gap-2 mb-2 sm:mb-3">
             <button
-              onClick={() => router.push("/surahs")}
-              className="inline-flex items-center justify-center px-4 py-1.5 rounded-xl text-xs sm:text-sm font-semibold tracking-wide text-[#112a1d] bg-[#faf7ee] hover:bg-[#efe8d6] active:bg-[#e4dcce] border border-[#ded5c0] shadow-xs active:scale-95 transition-all cursor-pointer"
+              onClick={() => router.push("/tarjama")}
+              className="inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-semibold tracking-wide text-[#112a1d] bg-[#faf7ee] hover:bg-[#efe8d6] active:bg-[#e4dcce] border border-[#ded5c0] shadow-xs active:scale-95 transition-all cursor-pointer"
+              title="سورتوں کی فہرست پر واپس جائیں"
             >
-              ← Back to Surahs
+              <span>←</span>
+              <span>All Surahs (سورتوں کی فہرست)</span>
             </button>
 
             <div className="text-right">
