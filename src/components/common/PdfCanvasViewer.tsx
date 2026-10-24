@@ -360,31 +360,6 @@ export function PdfCanvasViewer({
           </div>
         )}
       </div>
-
-      {/* Bottom Page Navigation Buttons */}
-      {totalPages > 1 && !isLoading && !loadError && (
-        <div className="w-full mt-3 bg-white border border-[#ded5c0] rounded-2xl p-2.5 shadow-xs flex items-center justify-between gap-3">
-          <button
-            onClick={handlePrevPage}
-            disabled={currentPage <= 1}
-            className="flex-1 py-2 px-3 rounded-xl bg-[#faf7ee] hover:bg-[#efe8d6] disabled:opacity-30 border border-[#ded5c0] text-[#112a1d] font-bold text-xs sm:text-sm flex items-center justify-center gap-1 active:scale-95 transition-all cursor-pointer"
-          >
-            ← Previous Page
-          </button>
-
-          <span className="text-xs sm:text-sm font-bold text-emerald-950 px-2 select-none">
-            {currentPage} / {totalPages}
-          </span>
-
-          <button
-            onClick={handleNextPage}
-            disabled={currentPage >= totalPages}
-            className="flex-1 py-2 px-3 rounded-xl bg-emerald-700 hover:bg-emerald-800 disabled:opacity-30 text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-1 active:scale-95 transition-all cursor-pointer"
-          >
-            Next Page →
-          </button>
-        </div>
-      )}
     </div>
   );
 }
