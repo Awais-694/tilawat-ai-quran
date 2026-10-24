@@ -28,6 +28,21 @@ function TarjamaViewer({ initialSurah }: TarjamaViewerProps) {
   const [isDownloading, setIsDownloading] = useState(false);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
 
+  // One-time cache migration: clear legacy misaligned / mismatched offline PDFs
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const v = localStorage.getItem("tarjama_cache_v3");
+      if (v !== "true") {
+        import("@/lib/storage/db").then(({ db }) => {
+          db.tarjamaPdfs.clear().catch(() => {});
+        });
+        localStorage.setItem("tarjama_cache_v3", "true");
+        setCachedBlob(null);
+        setIsOfflineSaved(false);
+      }
+    }
+  }, []);
+
   // Sync when initialSurah prop changes
   useEffect(() => {
     if (initialSurah >= 1 && initialSurah <= 114) {

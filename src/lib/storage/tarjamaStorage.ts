@@ -30,6 +30,11 @@ export async function getTarjamaPdf(surahNumber: number): Promise<Blob | null> {
       if (item) void db.tarjamaPdfs.delete(surahNumber);
       return null;
     }
+    // Corruption check: Surah 1 is ~200-400KB, if > 2MB it was previously corrupted by Surah 45
+    if (surahNumber === 1 && item.blob.size > 2000000) {
+      void db.tarjamaPdfs.delete(surahNumber);
+      return null;
+    }
     return item.blob;
   } catch (err) {
     console.error("Failed to get tarjama pdf from db:", err);

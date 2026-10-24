@@ -126,12 +126,6 @@ export function PdfCanvasViewer({
           }
 
           arrayBuffer = buf;
-
-          if (onSaveOffline) {
-            try {
-              onSaveOffline(new Blob([arrayBuffer], { type: "application/pdf" }));
-            } catch {}
-          }
         }
 
         if (cancelled || !arrayBuffer) return;
