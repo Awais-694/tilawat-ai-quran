@@ -338,96 +338,6 @@ export function DashboardClient() {
         </div>
       )}
 
-      {/* User Guide Showcase Card for New & Returning Users */}
-      <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-br from-white via-[#f7faf8] to-[#edf7f1] border border-emerald-250/90 p-3.5 sm:p-4.5 shadow-[0_4px_16px_rgba(20,50,30,0.05)]">
-        {/* Accent Bar */}
-        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-600 via-teal-600 to-amber-500" />
-        
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3.5">
-          {/* Left: Info */}
-          <div className="flex items-start gap-3">
-            <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-emerald-100/90 border border-emerald-300 text-emerald-800 flex items-center justify-center shrink-0 shadow-2xs mt-0.5">
-              <svg className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-800" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-              </svg>
-            </div>
-
-            <div className="min-w-0 space-y-1">
-              <div className="flex items-center gap-2 flex-wrap">
-                <h3 className="text-sm sm:text-base font-bold text-[#112a1d] tracking-tight">
-                  مکمل اردو رہنمائے صارف
-                </h3>
-                <span className="text-[10px] sm:text-[11px] font-semibold text-emerald-850 bg-emerald-100/90 border border-emerald-300 px-2 py-0.5 rounded-full">
-                  11 صفحات (HD Guide)
-                </span>
-                {isGuideSaved ? (
-                  <span className="text-[10px] sm:text-[11px] font-semibold text-teal-850 bg-teal-50 border border-teal-300 px-2 py-0.5 rounded-full flex items-center gap-1">
-                    <span>✓</span>
-                    <span>فون میں محفوظ ہے</span>
-                  </span>
-                ) : (
-                  <span className="text-[10px] sm:text-[11px] font-semibold text-amber-900 bg-amber-50 border border-amber-300 px-2 py-0.5 rounded-full">
-                    صرف پہلی بار ڈاؤنلوڈ کریں
-                  </span>
-                )}
-              </div>
-
-              <p className="text-xs text-[#355343] leading-relaxed">
-                ایپ کے تمام فیچرز، تلاوت، تجوید، ۱۶ سطری مصحف اور ترجمہ کی تصویری رہنمائی۔
-                {isGuideSaved
-                  ? " آپ کے فون میں مستقل محفوظ ہے، بغیر انٹرنیٹ بھی چلے گی۔"
-                  : " صرف پہلی بار ڈاؤنلوڈ ہوگی، پھر فون میں مستقل محفوظ رہے گی۔"}
-              </p>
-            </div>
-          </div>
-
-          {/* Right: Actions */}
-          <div className="flex items-center gap-2 shrink-0 self-end sm:self-center">
-            {/* Download/Save offline button */}
-            <button
-              onClick={handleSaveGuideOffline}
-              disabled={isDownloadingGuide}
-              className={`px-3 py-2 rounded-xl text-xs font-semibold shadow-2xs border transition-all flex items-center gap-1.5 active:scale-95 cursor-pointer ${
-                isGuideSaved
-                  ? "bg-white hover:bg-emerald-50 text-emerald-850 border-emerald-300"
-                  : "bg-emerald-50 hover:bg-emerald-100 text-emerald-900 border-emerald-300"
-              }`}
-              title={isGuideSaved ? "فون میں محفوظ ہے (دوبارہ فائل ڈاؤنلوڈ کرنے کے لیے کلک کریں)" : "فون میں محفوظ کریں تاکہ بعد میں بغیر انٹرنیٹ کھلے"}
-            >
-              {isDownloadingGuide ? (
-                <>
-                  <span className="animate-spin text-xs">⏳</span>
-                  <span>محفوظ ہو رہی ہے…</span>
-                </>
-              ) : isGuideSaved ? (
-                <>
-                  <svg className="w-3.5 h-3.5 text-emerald-700" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                  </svg>
-                  <span>محفوظ ہے ✓</span>
-                </>
-              ) : (
-                <>
-                  <svg className="w-3.5 h-3.5 text-emerald-800" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                  </svg>
-                  <span>محفوظ کریں</span>
-                </>
-              )}
-            </button>
-
-            {/* Read / View Guide Button */}
-            <Link
-              href="/guide"
-              className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-emerald-700 to-teal-800 hover:from-emerald-800 hover:to-teal-900 text-white text-xs sm:text-sm font-bold shadow-2xs hover:shadow-sm transition-all flex items-center gap-1 active:scale-95 cursor-pointer"
-            >
-              <span>رہنمائی دیکھیں</span>
-              <span className="text-xs">←</span>
-            </Link>
-          </div>
-        </div>
-      </div>
-
       {/* Quick Resume Card (Ayah Progress & Resume Prompt) */}
       {stats?.lastActive && lastActiveMeta && (
         <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-white border border-[#ded5c0] p-4 sm:p-5 shadow-[0_4px_16px_rgba(20,50,30,0.06)]">
@@ -548,6 +458,62 @@ export function DashboardClient() {
           value={stats ? `${stats.completedCount} / 114` : "…"}
           sublabel="Full Surahs"
         />
+      </div>
+
+      {/* Compact User Guide Option (English) - Placed below Streak & Stats */}
+      <div className="rounded-2xl bg-white border border-[#ded5c0] px-3.5 py-2.5 sm:px-4 sm:py-3 shadow-xs flex items-center justify-between gap-3">
+        <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+          <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 flex items-center justify-center shrink-0">
+            <svg className="w-4 h-4 text-emerald-700" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+            </svg>
+          </div>
+          <div className="min-w-0">
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <span className="font-bold text-xs sm:text-sm text-[#112a1d]">User Guide</span>
+              <span className="text-[10px] font-semibold text-emerald-800 bg-emerald-50 border border-emerald-200 px-1.5 py-0.2 rounded">11 Pages</span>
+              {isGuideSaved && (
+                <span className="text-[10px] font-semibold text-teal-850 bg-teal-50 border border-teal-200 px-1.5 py-0.2 rounded">Offline Ready ✓</span>
+              )}
+            </div>
+            <p className="text-[11px] sm:text-xs text-[#527060] truncate">
+              App tutorial & recitation guidelines
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-1.5 shrink-0">
+          <button
+            onClick={handleSaveGuideOffline}
+            disabled={isDownloadingGuide}
+            className="p-1.5 sm:px-2.5 sm:py-1.5 rounded-xl border border-[#ded5c0] hover:bg-[#faf7ee] text-xs font-medium text-[#193d2b] transition-all flex items-center gap-1 cursor-pointer active:scale-95"
+            title={isGuideSaved ? "Already saved in phone storage" : "Save to phone for offline reading"}
+          >
+            {isDownloadingGuide ? (
+              <span className="text-[11px]">Saving…</span>
+            ) : isGuideSaved ? (
+              <>
+                <span className="text-emerald-700 font-bold">✓</span>
+                <span className="hidden sm:inline text-[11px]">Saved</span>
+              </>
+            ) : (
+              <>
+                <svg className="w-3.5 h-3.5 text-emerald-800" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                </svg>
+                <span className="hidden sm:inline text-[11px]">Save</span>
+              </>
+            )}
+          </button>
+
+          <Link
+            href="/guide"
+            className="px-3 py-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-semibold shadow-2xs transition-all flex items-center gap-1 active:scale-95 cursor-pointer"
+          >
+            <span>View Guide</span>
+            <span className="text-xs">→</span>
+          </Link>
+        </div>
       </div>
 
 
