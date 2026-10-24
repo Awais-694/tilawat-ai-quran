@@ -83,21 +83,146 @@ export const MUQATTA_AT: Record<string, string[]> = {
  * (e.g. Chrome/Whisper returns single word "ياسين" instead of "يا سين").
  */
 export const MUQATTA_AT_FORMS: Record<string, string[]> = {
-  "يس": ["ياسين", "يس", "ياس"],
-  "طه": ["طاها", "طه", "طاه"],
-  "حم": ["حاميم", "حم"],
-  "طس": ["طاسين", "طس"],
-  "طسم": ["طاسين ميم", "طاسيم", "طسم"],
-  "ص": ["صاد", "ص"],
-  "ق": ["قاف", "ق"],
-  "ن": ["نون", "ن"],
-  "الم": ["الم"],
-  "المص": ["المص"],
-  "الر": ["الر"],
-  "المر": ["المر"],
-  "كهيعص": ["كهيعص"],
-  "عسق": ["عسق"],
+  "الم": [
+    "الم",
+    "الفلاميم",
+    "الفلميم",
+    "الف لام ميم",
+    "الفلام ميم",
+    "الف لاام مييم",
+    "الف لاااام مييييم",
+    "الفلامين",
+  ],
+  "المص": [
+    "المص",
+    "الفلاميمصاد",
+    "الف لام ميم صاد",
+    "الفلاميم صاد",
+    "الف لام ميم صااد",
+  ],
+  "الر": [
+    "الر",
+    "الفلامرا",
+    "الفلام را",
+    "الف لام را",
+    "الف لام راء",
+    "الف لاام را",
+    "الفلامراء",
+  ],
+  "المر": [
+    "المر",
+    "الفلاميمرا",
+    "الف لام ميم را",
+    "الفلاميم را",
+    "الف لام ميم راء",
+  ],
+  "كهيعص": [
+    "كهيعص",
+    "كافهاياعينصاد",
+    "كاف ها يا عين صاد",
+    "كاف هايا عين صاد",
+    "كافها ياعين صاد",
+    "كاف هاء ياء عين صاد",
+    "كاف هاء ياء عين صااد",
+  ],
+  "طه": [
+    "طه",
+    "طاها",
+    "طا ها",
+    "طاه",
+    "طاء هاء",
+    "طہ",
+  ],
+  "طسم": [
+    "طسم",
+    "طاسين ميم",
+    "طاسينميم",
+    "طا سين ميم",
+    "طاسيم",
+    "طاء سين ميم",
+    "طاسيين مييم",
+  ],
+  "طس": [
+    "طس",
+    "طاسين",
+    "طا سين",
+    "طاء سين",
+    "طاسيين",
+  ],
+  "يس": [
+    "يس",
+    "ياسين",
+    "يا سين",
+    "ياس",
+    "ياء سين",
+    "ياسيين",
+    "ياسین",
+  ],
+  "ص": [
+    "ص",
+    "صاد",
+    "صااد",
+    "صاااد",
+  ],
+  "حم": [
+    "حم",
+    "حاميم",
+    "حا ميم",
+    "حاء ميم",
+    "حامييم",
+    "حاميين",
+  ],
+  "عسق": [
+    "عسق",
+    "عين سين قاف",
+    "عينسينقاف",
+    "عين سين قااف",
+  ],
+  "حمعسق": [
+    "حمعسق",
+    "حم عسق",
+    "حاميم عين سين قاف",
+    "حا ميم عين سين قاف",
+  ],
+  "ق": [
+    "ق",
+    "قاف",
+    "قااف",
+    "قاااف",
+  ],
+  "ن": [
+    "ن",
+    "نون",
+    "نوون",
+    "نووون",
+  ],
 };
+
+/**
+ * Normalize individual spelled-out Muqatta'at letter names, folding elongation (Madd 6 harakat):
+ * e.g. "لاااام" -> "لام", "مییییم" -> "میم", "صاااد" -> "صاد", "قاااف" -> "قاف"
+ */
+export function normalizeMuqattaatLetter(w: string): string {
+  const norm = normalizeArabic(w).replace(/(.)\1+/g, "$1");
+  const rawDedup = w.replace(/(.)\1+/g, "$1");
+
+  if (w.startsWith("الف") || norm.startsWith("الف") || norm === "الف") return "الف";
+  if (w.startsWith("لام") || norm.startsWith("لام") || norm === "لام" || rawDedup === "لام") return "لام";
+  if (w.startsWith("ميم") || norm.startsWith("ميم") || norm === "ميم" || rawDedup === "ميم") return "ميم";
+  if (w.startsWith("صاد") || norm.startsWith("صاد") || norm === "صاد" || rawDedup === "صاد") return "صاد";
+  if (w.startsWith("قاف") || norm.startsWith("قاف") || norm === "قاف" || rawDedup === "قاف") return "قاف";
+  if (w.startsWith("نون") || norm.startsWith("نون") || norm === "نون" || rawDedup === "نون") return "نون";
+  if (w.startsWith("سين") || norm.startsWith("سين") || norm === "سين" || rawDedup === "سين") return "سين";
+  if (w.startsWith("عين") || norm.startsWith("عين") || norm === "عين" || rawDedup === "عين") return "عين";
+  if (w.startsWith("كاف") || norm.startsWith("كاف") || norm === "كاف" || rawDedup === "كاف") return "كاف";
+  if (norm === "طا" || norm === "طاء" || rawDedup === "طا") return "طا";
+  if (norm === "ها" || norm === "هاء" || rawDedup === "ها") return "ها";
+  if (norm === "يا" || norm === "ياء" || rawDedup === "يا") return "يا";
+  if (norm === "را" || norm === "راء" || rawDedup === "را") return "را";
+  if (norm === "حا" || norm === "حاء" || rawDedup === "حا") return "حا";
+
+  return norm;
+}
 
 /**
  * Common speech engine acoustic and language-model transcription variants
@@ -149,7 +274,9 @@ export const WORD_ALIASES: Record<string, string[]> = {
  * Collapse spelled-out muqatta'at letter names (or single-word recognizer aliases)
  * in a heard-word batch into the single mushaf token, e.g.:
  * ["الف","لام","ميم"] -> ["الم"]
+ * ["الف","لاااام","مييييم"] -> ["الم"] (elongated Madd)
  * ["ياسين"] -> ["يس"]
+ * ["الفلاميم"] -> ["الم"]
  */
 export function collapseMuqattaat(
   words: string[],
@@ -162,37 +289,61 @@ export function collapseMuqattaat(
   let i = 0;
   const n = words.length;
 
+  const letterMatches = (heardWord: string, targetLetter: string): boolean => {
+    if (heardWord === targetLetter) return true;
+    const normH = normalizeMuqattaatLetter(heardWord);
+    return normH === targetLetter;
+  };
+
   const isStrictPrefixAt = (pos: number): boolean => {
     if (!letters) return false;
     const rem = n - pos;
     if (rem <= 0 || rem >= letters.length) return false;
     for (let k = 0; k < rem; k++) {
-      if (words[pos + k] !== letters[k]) return false;
+      if (!letterMatches(words[pos + k], letters[k])) return false;
     }
     return true;
   };
 
   while (i < n) {
-    // 1. Single-word alias (e.g. "ياسين" for "يس", "طاها" for "طه")
-    if (aliases.includes(words[i])) {
+    const curWord = words[i];
+    const wDedup = curWord.replace(/(.)\1+/g, "$1");
+
+    // 1. Single-word alias (e.g. "ياسين", "طاها", "الفلاميم", "حاميم", "الم")
+    if (aliases.includes(curWord) || aliases.includes(wDedup)) {
       out.push(muqToken);
       i++;
       continue;
     }
 
-    // 2. Multi-word alias (e.g. "طاسين ميم")
-    if (i + 1 < n && aliases.includes(words[i] + " " + words[i + 1])) {
-      out.push(muqToken);
-      i += 2;
-      continue;
+    // 2. Multi-word alias (e.g. "طاسين ميم", "الف لام ميم", "كاف ها يا عين صاد")
+    let matchedAlias = false;
+    for (let len = 5; len >= 2; len--) {
+      if (i + len <= n) {
+        const slice = words.slice(i, i + len);
+        const joined = slice.join(" ");
+        const joinedDedup = slice.map((w) => w.replace(/(.)\1+/g, "$1")).join(" ");
+        const joinedNorm = slice.map((w) => normalizeMuqattaatLetter(w)).join(" ");
+        if (
+          aliases.includes(joined) ||
+          aliases.includes(joinedDedup) ||
+          aliases.includes(joinedNorm)
+        ) {
+          out.push(muqToken);
+          i += len;
+          matchedAlias = true;
+          break;
+        }
+      }
     }
+    if (matchedAlias) continue;
 
-    // 3. Full spelled-out letters (e.g. ["يا", "سين"])
+    // 3. Full spelled-out letters with elongation support (e.g. ["الف", "لاااام", "مييييم"])
     if (letters) {
       let full = i + letters.length <= n;
       if (full) {
         for (let k = 0; k < letters.length; k++) {
-          if (words[i + k] !== letters[k]) {
+          if (!letterMatches(words[i + k], letters[k])) {
             full = false;
             break;
           }
@@ -204,7 +355,10 @@ export function collapseMuqattaat(
         continue;
       }
 
-      if (isStrictPrefixAt(i)) return { words: out, carry: words.slice(i) };
+      // 4. Incomplete letter prefix (paused recitation, e.g. user said "الف" and paused)
+      if (isStrictPrefixAt(i)) {
+        return { words: out, carry: words.slice(i) };
+      }
     }
 
     out.push(words[i]);

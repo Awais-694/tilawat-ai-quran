@@ -63,69 +63,16 @@ export function useRecitation(tokens: WordToken[], initialRevealed: number = 0) 
         const starts: number[] =
           committed === 0 && basmalaLen > 0 ? [0, basmalaLen] : [committed];
         // Har candidate ke liye: muqatta'at (e.g. الم, يس) ke liye bole gaye
-        // harfon ke naam ("الف لام ميم", "يا سين", ya single alias "ياسين") ko mushaf token me collapse karo.
+        // harfon ke naam ("الف لام ميم", "یا سین", ya single alias "یٰسین") ko mushaf token me collapse karo.
         const procFor = (s: number): { proc: string[]; carryAfter: string[] } => {
-          let input = [...carryRef.current, ...rawNew];
-          const proc: string[] = [];
-          let pos = skipEmpty(expected, s);
-          let carryAfter: string[] = [];
-          for (;;) {
-            const tok = pos < expected.length ? expected[pos] : "";
-            if (!tok || input.length === 0) break;
-
-            // 1. Single-word alias check (e.g. "ياسين" for "يس", "طاها" for "طه")
-            const aliases = MUQATTA_AT_FORMS[tok];
-            if (aliases && aliases.includes(input[0])) {
-              proc.push(tok);
-              input = input.slice(1);
-              pos = skipEmpty(expected, pos + 1);
-              continue;
-            }
-
-            // 2. Multi-word alias check (e.g. "طاسين ميم")
-            if (aliases && input.length >= 2 && aliases.includes(input[0] + " " + input[1])) {
-              proc.push(tok);
-              input = input.slice(2);
-              pos = skipEmpty(expected, pos + 1);
-              continue;
-            }
-
-            // 3. Spelled-out letter sequence check (e.g. ["يا", "سين"])
-            const letters = MUQATTA_AT[tok];
-            if (!letters) break;
-            let full = input.length >= letters.length;
-            if (full) {
-              for (let k = 0; k < letters.length; k++) {
-                if (input[k] !== letters[k]) {
-                  full = false;
-                  break;
-                }
-              }
-            }
-            if (full) {
-              proc.push(tok);
-              input = input.slice(letters.length);
-              pos = skipEmpty(expected, pos + 1);
-              continue;
-            }
-            let pre = input.length < letters.length;
-            if (pre) {
-              for (let k = 0; k < input.length; k++) {
-                if (input[k] !== letters[k]) {
-                  pre = false;
-                  break;
-                }
-              }
-            }
-            if (pre) {
-              carryAfter = input;
-              input = [];
-              break;
-            }
-            break;
+          const input = [...carryRef.current, ...rawNew];
+          const pos = skipEmpty(expected, s);
+          const tok = pos < expected.length ? expected[pos] : "";
+          if (tok && (MUQATTA_AT[tok] || MUQATTA_AT_FORMS[tok])) {
+            const res = collapseMuqattaat(input, tok);
+            return { proc: res.words, carryAfter: res.carry };
           }
-          proc.push(...input);
-          return { proc, carryAfter };
+          return { proc: input, carryAfter: [] };
         };
         // Jeetne wali position woh jahan SAB SE ZYADA NAYE lafz match hon
         let best: { revealed: number; wrongWords: string[] } | null = null;
