@@ -178,152 +178,120 @@ export function DashboardClient() {
         </div>
       </div>
 
-      {/* Four Main Modes Quick Access with Clear Interactive Action Buttons */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      {/* Four Main Modes All on a Single Horizontal Line */}
+      <div className="grid grid-cols-4 gap-1.5 sm:gap-2.5">
         {/* Mode 1: Recite with Mic */}
         <Link
           href="/surahs"
-          className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-white via-[#fcfaf6] to-[#f8f4ea] border border-[#ded5c0] hover:border-emerald-600/70 p-3.5 sm:p-4 shadow-2xs hover:shadow-md active:scale-[0.99] transition-all flex items-center justify-between gap-3"
+          className="group relative overflow-hidden rounded-2xl bg-gradient-to-b from-white to-[#f4fbf6] border border-emerald-200/90 hover:border-emerald-600 p-2 sm:p-3 shadow-2xs hover:shadow-md active:scale-95 transition-all flex flex-col items-center justify-between text-center gap-1.5 cursor-pointer"
         >
-          <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-emerald-500 to-teal-700 group-hover:w-1.5 transition-all" />
+          <div className="absolute top-0 left-0 right-0 h-1 bg-emerald-600 group-hover:h-1.5 transition-all" />
 
-          <div className="flex items-center gap-3 min-w-0 pl-1">
-            <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-emerald-50 to-teal-100/60 border border-emerald-200/80 text-emerald-800 flex items-center justify-center shrink-0 shadow-2xs group-hover:scale-105 transition-transform">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 100-6 3 3 0 000 6z" />
-              </svg>
+          <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl bg-emerald-50 border border-emerald-200/80 text-emerald-800 flex items-center justify-center shrink-0 shadow-2xs group-hover:scale-105 group-hover:bg-emerald-700 group-hover:text-white transition-all mt-0.5">
+            <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 100-6 3 3 0 000 6z" />
+            </svg>
+          </div>
+
+          <div className="w-full min-w-0">
+            <div className="font-bold text-[11px] sm:text-xs md:text-sm text-[#112a1d] group-hover:text-emerald-900 transition-colors truncate">
+              Recite
             </div>
-            <div className="min-w-0">
-              <div className="flex items-center gap-1.5 flex-wrap">
-                <span className="font-bold text-sm sm:text-base text-[#112a1d] group-hover:text-emerald-900 transition-colors">
-                  Recite with Mic
-                </span>
-                <span className="text-[10px] font-extrabold uppercase tracking-wider bg-emerald-100 text-emerald-800 border border-emerald-300/60 px-1.5 py-0.5 rounded-full">
-                  AI Test
-                </span>
-              </div>
-              <p className="text-xs text-[#527060] truncate">Speech recognition & test</p>
+            <div className="text-[9px] sm:text-[10px] text-emerald-700 font-extrabold uppercase tracking-wider hidden xs:block truncate">
+              AI Mic
             </div>
           </div>
 
-          <div className="shrink-0">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-700 group-hover:bg-emerald-800 text-white font-bold text-xs shadow-xs group-hover:shadow transition-all">
-              <span>Recite</span>
-              <svg className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
-              </svg>
-            </span>
-          </div>
+          <span className="w-full py-1 px-1 rounded-lg bg-emerald-700 group-hover:bg-emerald-800 text-white font-bold text-[10px] sm:text-xs flex items-center justify-center gap-0.5 shadow-2xs transition-all">
+            <span>Recite</span>
+            <span className="group-hover:translate-x-0.5 transition-transform text-[9px] sm:text-[10px]">→</span>
+          </span>
         </Link>
 
         {/* Mode 2: Simple Quran Reader */}
         <Link
           href="/read"
-          className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-white via-[#fcfaf6] to-[#fcf6e8] border border-[#ded5c0] hover:border-amber-600/70 p-3.5 sm:p-4 shadow-2xs hover:shadow-md active:scale-[0.99] transition-all flex items-center justify-between gap-3"
+          className="group relative overflow-hidden rounded-2xl bg-gradient-to-b from-white to-[#fdfaf2] border border-amber-200/90 hover:border-amber-600 p-2 sm:p-3 shadow-2xs hover:shadow-md active:scale-95 transition-all flex flex-col items-center justify-between text-center gap-1.5 cursor-pointer"
         >
-          <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-amber-500 to-amber-700 group-hover:w-1.5 transition-all" />
+          <div className="absolute top-0 left-0 right-0 h-1 bg-amber-600 group-hover:h-1.5 transition-all" />
 
-          <div className="flex items-center gap-3 min-w-0 pl-1">
-            <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-[#fff8eb] to-[#fef3c7] border border-[#f59e0b]/40 text-amber-800 flex items-center justify-center shrink-0 shadow-2xs group-hover:scale-105 transition-transform">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-              </svg>
+          <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl bg-[#fff8eb] border border-[#f59e0b]/40 text-amber-800 flex items-center justify-center shrink-0 shadow-2xs group-hover:scale-105 group-hover:bg-amber-800 group-hover:text-white transition-all mt-0.5">
+            <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+            </svg>
+          </div>
+
+          <div className="w-full min-w-0">
+            <div className="font-bold text-[11px] sm:text-xs md:text-sm text-[#112a1d] group-hover:text-amber-900 transition-colors truncate">
+              16-Line
             </div>
-            <div className="min-w-0">
-              <div className="flex items-center gap-1.5 flex-wrap">
-                <span className="font-bold text-sm sm:text-base text-[#112a1d] group-hover:text-amber-900 transition-colors">
-                  Read Quran
-                </span>
-                <span className="text-[10px] font-extrabold uppercase tracking-wider bg-amber-100 text-amber-900 border border-amber-300/60 px-1.5 py-0.5 rounded-full">
-                  16-Line
-                </span>
-              </div>
-              <p className="text-xs text-[#527060] truncate">Full Mushaf 16-Line</p>
+            <div className="text-[9px] sm:text-[10px] text-amber-800 font-extrabold uppercase tracking-wider hidden xs:block truncate">
+              Mushaf
             </div>
           </div>
 
-          <div className="shrink-0">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-800 group-hover:bg-amber-900 text-white font-bold text-xs shadow-xs group-hover:shadow transition-all">
-              <span>Read</span>
-              <svg className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
-              </svg>
-            </span>
-          </div>
+          <span className="w-full py-1 px-1 rounded-lg bg-amber-800 group-hover:bg-amber-900 text-white font-bold text-[10px] sm:text-xs flex items-center justify-center gap-0.5 shadow-2xs transition-all">
+            <span>Read</span>
+            <span className="group-hover:translate-x-0.5 transition-transform text-[9px] sm:text-[10px]">→</span>
+          </span>
         </Link>
 
         {/* Mode 3: Tajweed Quran PDF */}
         <Link
           href="/tajweed"
-          className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-white via-[#fcfaf6] to-[#ecfdf5] border border-[#ded5c0] hover:border-teal-600/70 p-3.5 sm:p-4 shadow-2xs hover:shadow-md active:scale-[0.99] transition-all flex items-center justify-between gap-3"
+          className="group relative overflow-hidden rounded-2xl bg-gradient-to-b from-white to-[#f0fdfa] border border-teal-200/90 hover:border-teal-600 p-2 sm:p-3 shadow-2xs hover:shadow-md active:scale-95 transition-all flex flex-col items-center justify-between text-center gap-1.5 cursor-pointer"
         >
-          <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-teal-500 to-emerald-700 group-hover:w-1.5 transition-all" />
+          <div className="absolute top-0 left-0 right-0 h-1 bg-teal-600 group-hover:h-1.5 transition-all" />
 
-          <div className="flex items-center gap-3 min-w-0 pl-1">
-            <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-[#ecfdf5] to-teal-100/70 border border-teal-300/70 text-teal-800 flex items-center justify-center shrink-0 shadow-2xs group-hover:scale-105 transition-transform">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9 10h6m-6 3h4" />
-              </svg>
+          <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl bg-[#ecfdf5] border border-teal-300/70 text-teal-800 flex items-center justify-center shrink-0 shadow-2xs group-hover:scale-105 group-hover:bg-teal-700 group-hover:text-white transition-all mt-0.5">
+            <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 10h6m-6 3h4" />
+            </svg>
+          </div>
+
+          <div className="w-full min-w-0">
+            <div className="font-bold text-[11px] sm:text-xs md:text-sm text-[#112a1d] group-hover:text-teal-900 transition-colors truncate">
+              Tajweed
             </div>
-            <div className="min-w-0">
-              <div className="flex items-center gap-1.5 flex-wrap">
-                <span className="font-bold text-sm sm:text-base text-[#112a1d] group-hover:text-teal-900 transition-colors">
-                  Tajweed Quran
-                </span>
-                <span className="text-[10px] font-extrabold uppercase tracking-wider bg-teal-100 text-teal-900 border border-teal-300/60 px-1.5 py-0.5 rounded-full">
-                  Color Coded
-                </span>
-              </div>
-              <p className="text-xs text-[#527060] truncate">Tajweed-e-Al-Quran</p>
+            <div className="text-[9px] sm:text-[10px] text-teal-800 font-extrabold uppercase tracking-wider hidden xs:block truncate">
+              Color PDF
             </div>
           </div>
 
-          <div className="shrink-0">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-teal-700 group-hover:bg-teal-800 text-white font-bold text-xs shadow-xs group-hover:shadow transition-all">
-              <span>Tajweed</span>
-              <svg className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
-              </svg>
-            </span>
-          </div>
+          <span className="w-full py-1 px-1 rounded-lg bg-teal-700 group-hover:bg-teal-800 text-white font-bold text-[10px] sm:text-xs flex items-center justify-center gap-0.5 shadow-2xs transition-all">
+            <span>Tajweed</span>
+            <span className="group-hover:translate-x-0.5 transition-transform text-[9px] sm:text-[10px]">→</span>
+          </span>
         </Link>
 
         {/* Mode 4: Quran Translation & Tafseer */}
         <Link
           href="/tarjama"
-          className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-white via-[#fcfaf6] to-[#f0fdf4] border border-[#ded5c0] hover:border-emerald-600/70 p-3.5 sm:p-4 shadow-2xs hover:shadow-md active:scale-[0.99] transition-all flex items-center justify-between gap-3"
+          className="group relative overflow-hidden rounded-2xl bg-gradient-to-b from-white to-[#ecfdf5] border border-emerald-250 hover:border-emerald-700 p-2 sm:p-3 shadow-2xs hover:shadow-md active:scale-95 transition-all flex flex-col items-center justify-between text-center gap-1.5 cursor-pointer"
         >
-          <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-emerald-600 to-teal-800 group-hover:w-1.5 transition-all" />
+          <div className="absolute top-0 left-0 right-0 h-1 bg-[#165b38] group-hover:h-1.5 transition-all" />
 
-          <div className="flex items-center gap-3 min-w-0 pl-1">
-            <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-[#f0fdf4] to-emerald-100/70 border border-emerald-300/70 text-emerald-800 flex items-center justify-center shrink-0 shadow-2xs group-hover:scale-105 transition-transform">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
-                <path strokeLinecap="round" strokeLinejoin="round" d="M3 5h4M5 3v4m10 9h6m-3-3v6" />
-              </svg>
+          <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl bg-[#f0fdf4] border border-emerald-300/70 text-emerald-800 flex items-center justify-center shrink-0 shadow-2xs group-hover:scale-105 group-hover:bg-[#165b38] group-hover:text-white transition-all mt-0.5">
+            <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3 5h4M5 3v4m10 9h6m-3-3v6" />
+            </svg>
+          </div>
+
+          <div className="w-full min-w-0">
+            <div className="font-bold text-[11px] sm:text-xs md:text-sm text-[#112a1d] group-hover:text-emerald-900 transition-colors truncate">
+              Tarjama
             </div>
-            <div className="min-w-0">
-              <div className="flex items-center gap-1.5 flex-wrap">
-                <span className="font-bold text-sm sm:text-base text-[#112a1d] group-hover:text-emerald-900 transition-colors">
-                  Translation
-                </span>
-                <span className="text-[10px] font-extrabold uppercase tracking-wider bg-emerald-100 text-emerald-900 border border-emerald-300/60 px-1.5 py-0.5 rounded-full">
-                  Urdu
-                </span>
-              </div>
-              <p className="text-xs text-[#527060] truncate">Kanz-ul-Irfan Urdu Tarjama</p>
+            <div className="text-[9px] sm:text-[10px] text-emerald-850 font-extrabold uppercase tracking-wider hidden xs:block truncate">
+              Urdu
             </div>
           </div>
 
-          <div className="shrink-0">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-750 bg-[#165b38] group-hover:bg-[#124b2e] text-white font-bold text-xs shadow-xs group-hover:shadow transition-all">
-              <span>Tarjama</span>
-              <svg className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
-              </svg>
-            </span>
-          </div>
+          <span className="w-full py-1 px-1 rounded-lg bg-[#165b38] group-hover:bg-[#114b2d] text-white font-bold text-[10px] sm:text-xs flex items-center justify-center gap-0.5 shadow-2xs transition-all">
+            <span>Tarjama</span>
+            <span className="group-hover:translate-x-0.5 transition-transform text-[9px] sm:text-[10px]">→</span>
+          </span>
         </Link>
       </div>
 
