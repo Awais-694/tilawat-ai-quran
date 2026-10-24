@@ -25,9 +25,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <BismillahSplash />
         <SwRegister />
         <ThemeInit />
-        <header className="sticky top-0 z-40 backdrop-blur-xl bg-[#ffffff]/90 border-b border-[#e6dfd1] shadow-[0_2px_12px_rgba(20,50,30,0.05)] w-full">
-          <Navbar />
-        </header>
+        <Navbar />
 
 
         <main className="max-w-4xl mx-auto px-1 sm:px-6 py-2 sm:py-6">{children}</main>

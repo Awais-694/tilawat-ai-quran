@@ -6,12 +6,26 @@ import { usePathname } from "next/navigation";
 export function Navbar() {
   const pathname = usePathname() || "";
 
+  // The 4 Quran reading/recitation/tarjama/tajweed sections:
+  // When user opens any of the 4 Quran options, hide the top navbar so maximum screen space is dedicated to the Quran!
+  const isQuranReadingSection =
+    pathname.startsWith("/read") ||
+    pathname.startsWith("/recite") ||
+    pathname.startsWith("/surahs") ||
+    pathname.startsWith("/tajweed") ||
+    pathname.startsWith("/tarjama");
+
+  if (isQuranReadingSection) {
+    return null;
+  }
+
   const isTranslation = pathname.startsWith("/tarjama");
   const isProgress = pathname.startsWith("/stats") || pathname.startsWith("/streak");
   const isSettings = pathname.startsWith("/settings");
 
   return (
-    <nav className="max-w-4xl mx-auto flex items-center justify-between px-3 sm:px-6 py-2.5 sm:py-3 gap-2 w-full">
+    <header className="sticky top-0 z-40 backdrop-blur-xl bg-[#ffffff]/90 border-b border-[#e6dfd1] shadow-[0_2px_12px_rgba(20,50,30,0.05)] w-full">
+      <nav className="max-w-4xl mx-auto flex items-center justify-between px-3 sm:px-6 py-2.5 sm:py-3 gap-2 w-full">
       {/* Brand Name: Tilawat.Ai (Clean, Large, Icon-free) */}
       <Link
         href="/"
@@ -114,5 +128,6 @@ export function Navbar() {
         </Link>
       </div>
     </nav>
+    </header>
   );
 }
