@@ -48,14 +48,6 @@ export interface SavedTajweedPdfRecord {
   name: string;
 }
 
-export interface SavedAppFileRecord {
-  id: string; // e.g. "user-guide"
-  blob: Blob;
-  size: number;
-  savedAt: number;
-  name: string;
-}
-
 class TilawatDB extends Dexie {
   progress!: Table<SurahProgress, number>;
   sessions!: Table<RecitationSession & { id?: number }, number>;
@@ -64,7 +56,6 @@ class TilawatDB extends Dexie {
   tarjamaPdfs!: Table<SavedTarjamaPdfRecord, number>;
   mushaf16Pdfs!: Table<SavedMushaf16PdfRecord, number>;
   tajweedPdfs!: Table<SavedTajweedPdfRecord, number>;
-  appFiles!: Table<SavedAppFileRecord, string>;
 
   constructor() {
     super("tilawat-db");
@@ -98,18 +89,7 @@ class TilawatDB extends Dexie {
       mushaf16Pdfs: "surahNumber, savedAt",
       tajweedPdfs: "surahNumber, savedAt",
     });
-    this.version(5).stores({
-      progress: "surahNumber",
-      sessions: "++id, surahNumber, startedAt",
-      activity: "date",
-      wrongWords: "word",
-      tarjamaPdfs: "surahNumber, savedAt",
-      mushaf16Pdfs: "surahNumber, savedAt",
-      tajweedPdfs: "surahNumber, savedAt",
-      appFiles: "id, savedAt",
-    });
   }
 }
 
 export const db = new TilawatDB();
-
