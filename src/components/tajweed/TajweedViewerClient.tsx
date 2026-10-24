@@ -6,13 +6,22 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { SURAHS_META, getSurahMeta } from "@/lib/quran/data";
 import { PdfCanvasViewer } from "@/components/common/PdfCanvasViewer";
 import { getTajweedPdf, saveTajweedPdf } from "@/lib/storage/tajweedStorage";
+import { TajweedIndexClient } from "./TajweedIndexClient";
 
 export function TajweedViewerClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const surahParam = searchParams.get("surah");
 
-  // Read initial surah from query param ?surah=... or localStorage or default to 1 (Al-Fatihah)
-  const [selectedSurah, setSelectedSurah] = useState<number>(1);
+  // If no surah parameter is present in URL, display the full 114 Surahs directory!
+  if (!surahParam) {
+    return <TajweedIndexClient />;
+  }
+
+  const initialSurah = parseInt(surahParam, 10);
+  const [selectedSurah, setSelectedSurah] = useState<number>(
+    !isNaN(initialSurah) && initialSurah >= 1 && initialSurah <= 114 ? initialSurah : 1
+  );
   const [isFullscreen, setIsFullscreen] = useState(false);
 
   // Offline caching states
@@ -41,30 +50,19 @@ export function TajweedViewerClient() {
   }, [selectedSurah]);
 
   useEffect(() => {
-    const sParam = searchParams.get("surah");
-    if (sParam) {
-      const n = parseInt(sParam, 10);
+    if (surahParam) {
+      const n = parseInt(surahParam, 10);
       if (n >= 1 && n <= 114) {
         setSelectedSurah(n);
-        return;
       }
     }
-    try {
-      const saved = localStorage.getItem("tilawat_last_tajweed_surah");
-      if (saved) {
-        const n = parseInt(saved, 10);
-        if (n >= 1 && n <= 114) {
-          setSelectedSurah(n);
-        }
-      }
-    } catch {}
-  }, [searchParams]);
+  }, [surahParam]);
 
   const handleSelectSurah = (surahNum: number) => {
     setSelectedSurah(surahNum);
     try {
       localStorage.setItem("tilawat_last_tajweed_surah", String(surahNum));
-      window.history.replaceState(null, "", `/tajweed?surah=${surahNum}`);
+      router.push(`/tajweed?surah=${surahNum}`);
     } catch {}
   };
 
