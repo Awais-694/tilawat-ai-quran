@@ -22,7 +22,8 @@ scratch/
 # Ignore large full-book PDFs in public root
 /public/*.pdf
 
-# Allow Surah PDFs for 16-line reading, tarjama, and tajweed
+# Allow Surah PDFs for 16-line reading, tarjama, and tajweed, plus user-guide.pdf
+!/public/user-guide.pdf
 !/public/mushaf16/surahs/*.pdf
 !/public/tarjama/surahs/*.pdf
 !/public/tajweed/surahs/*.pdf

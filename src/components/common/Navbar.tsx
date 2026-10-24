@@ -13,7 +13,8 @@ export function Navbar() {
     pathname.startsWith("/recite") ||
     pathname.startsWith("/surahs") ||
     pathname.startsWith("/tajweed") ||
-    pathname.startsWith("/tarjama");
+    pathname.startsWith("/tarjama") ||
+    pathname.startsWith("/guide");
 
   if (isQuranReadingSection) {
     return null;

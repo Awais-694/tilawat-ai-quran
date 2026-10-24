@@ -14,6 +14,12 @@ import {
   type DayStreakItem,
 } from "@/lib/quran/streak";
 import type { DailyActivity } from "@/lib/storage/db";
+import {
+  isGuidePdfSaved,
+  saveGuidePdf,
+  downloadGuideToDevice,
+  getGuidePdf,
+} from "@/lib/storage/guideStorage";
 
 interface Stats {
   streak: number;
@@ -29,6 +35,9 @@ interface Stats {
 export function DashboardClient() {
   const [stats, setStats] = useState<Stats | null>(null);
   const [lastAyah, setLastAyah] = useState<number | null>(null);
+  const [isGuideSaved, setIsGuideSaved] = useState(false);
+  const [isDownloadingGuide, setIsDownloadingGuide] = useState(false);
+  const [guideToast, setGuideToast] = useState<string | null>(null);
 
   const loadStats = async () => {
     const activity = await db.activity.toArray();
@@ -136,7 +145,33 @@ export function DashboardClient() {
 
   useEffect(() => {
     void loadStats();
+    isGuidePdfSaved().then(setIsGuideSaved).catch(() => {});
   }, []);
+
+  const handleSaveGuideOffline = async () => {
+    if (isDownloadingGuide) return;
+    setIsDownloadingGuide(true);
+    setGuideToast("رہنمائے صارف ڈاؤنلوڈ اور محفوظ ہو رہی ہے...");
+    try {
+      let blob = await getGuidePdf();
+      if (!blob) {
+        const res = await fetch("/user-guide.pdf");
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        blob = await res.blob();
+        await saveGuidePdf(blob);
+      }
+      downloadGuideToDevice(blob);
+      setIsGuideSaved(true);
+      setGuideToast("رہنمائے صارف فون میں مستقل محفوظ ہو گئی ہے اور ڈاؤنلوڈز میں شامل کر دی گئی ہے!");
+      setTimeout(() => setGuideToast(null), 5000);
+    } catch (err) {
+      console.error("Failed to save user guide:", err);
+      setGuideToast("ڈاؤنلوڈ میں خرابی آئی۔ براہ کرم انٹرنیٹ کنکشن چیک کریں۔");
+      setTimeout(() => setGuideToast(null), 5000);
+    } finally {
+      setIsDownloadingGuide(false);
+    }
+  };
 
   const handleResetSurah = async (surahNum: number, e: React.MouseEvent) => {
     e.preventDefault();
@@ -293,6 +328,104 @@ export function DashboardClient() {
             <span className="group-hover:translate-x-0.5 transition-transform text-[9px] sm:text-[10px]">→</span>
           </span>
         </Link>
+      </div>
+
+      {/* Guide Toast Notification */}
+      {guideToast && (
+        <div className="bg-emerald-800 text-white text-xs sm:text-sm font-semibold px-4 py-2.5 rounded-xl shadow-md text-center transition-all animate-fade-in flex items-center justify-center gap-2">
+          <span>✓</span>
+          <span>{guideToast}</span>
+        </div>
+      )}
+
+      {/* User Guide Showcase Card for New & Returning Users */}
+      <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-br from-white via-[#f7faf8] to-[#edf7f1] border border-emerald-250/90 p-3.5 sm:p-4.5 shadow-[0_4px_16px_rgba(20,50,30,0.05)]">
+        {/* Accent Bar */}
+        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-600 via-teal-600 to-amber-500" />
+        
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3.5">
+          {/* Left: Info */}
+          <div className="flex items-start gap-3">
+            <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-emerald-100/90 border border-emerald-300 text-emerald-800 flex items-center justify-center shrink-0 shadow-2xs mt-0.5">
+              <svg className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-800" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+              </svg>
+            </div>
+
+            <div className="min-w-0 space-y-1">
+              <div className="flex items-center gap-2 flex-wrap">
+                <h3 className="text-sm sm:text-base font-bold text-[#112a1d] tracking-tight">
+                  مکمل اردو رہنمائے صارف
+                </h3>
+                <span className="text-[10px] sm:text-[11px] font-semibold text-emerald-850 bg-emerald-100/90 border border-emerald-300 px-2 py-0.5 rounded-full">
+                  11 صفحات (HD Guide)
+                </span>
+                {isGuideSaved ? (
+                  <span className="text-[10px] sm:text-[11px] font-semibold text-teal-850 bg-teal-50 border border-teal-300 px-2 py-0.5 rounded-full flex items-center gap-1">
+                    <span>✓</span>
+                    <span>فون میں محفوظ ہے</span>
+                  </span>
+                ) : (
+                  <span className="text-[10px] sm:text-[11px] font-semibold text-amber-900 bg-amber-50 border border-amber-300 px-2 py-0.5 rounded-full">
+                    صرف پہلی بار ڈاؤنلوڈ کریں
+                  </span>
+                )}
+              </div>
+
+              <p className="text-xs text-[#355343] leading-relaxed">
+                ایپ کے تمام فیچرز، تلاوت، تجوید، ۱۶ سطری مصحف اور ترجمہ کی تصویری رہنمائی۔
+                {isGuideSaved
+                  ? " آپ کے فون میں مستقل محفوظ ہے، بغیر انٹرنیٹ بھی چلے گی۔"
+                  : " صرف پہلی بار ڈاؤنلوڈ ہوگی، پھر فون میں مستقل محفوظ رہے گی۔"}
+              </p>
+            </div>
+          </div>
+
+          {/* Right: Actions */}
+          <div className="flex items-center gap-2 shrink-0 self-end sm:self-center">
+            {/* Download/Save offline button */}
+            <button
+              onClick={handleSaveGuideOffline}
+              disabled={isDownloadingGuide}
+              className={`px-3 py-2 rounded-xl text-xs font-semibold shadow-2xs border transition-all flex items-center gap-1.5 active:scale-95 cursor-pointer ${
+                isGuideSaved
+                  ? "bg-white hover:bg-emerald-50 text-emerald-850 border-emerald-300"
+                  : "bg-emerald-50 hover:bg-emerald-100 text-emerald-900 border-emerald-300"
+              }`}
+              title={isGuideSaved ? "فون میں محفوظ ہے (دوبارہ فائل ڈاؤنلوڈ کرنے کے لیے کلک کریں)" : "فون میں محفوظ کریں تاکہ بعد میں بغیر انٹرنیٹ کھلے"}
+            >
+              {isDownloadingGuide ? (
+                <>
+                  <span className="animate-spin text-xs">⏳</span>
+                  <span>محفوظ ہو رہی ہے…</span>
+                </>
+              ) : isGuideSaved ? (
+                <>
+                  <svg className="w-3.5 h-3.5 text-emerald-700" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                  </svg>
+                  <span>محفوظ ہے ✓</span>
+                </>
+              ) : (
+                <>
+                  <svg className="w-3.5 h-3.5 text-emerald-800" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                  </svg>
+                  <span>محفوظ کریں</span>
+                </>
+              )}
+            </button>
+
+            {/* Read / View Guide Button */}
+            <Link
+              href="/guide"
+              className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-emerald-700 to-teal-800 hover:from-emerald-800 hover:to-teal-900 text-white text-xs sm:text-sm font-bold shadow-2xs hover:shadow-sm transition-all flex items-center gap-1 active:scale-95 cursor-pointer"
+            >
+              <span>رہنمائی دیکھیں</span>
+              <span className="text-xs">←</span>
+            </Link>
+          </div>
+        </div>
       </div>
 
       {/* Quick Resume Card (Ayah Progress & Resume Prompt) */}
