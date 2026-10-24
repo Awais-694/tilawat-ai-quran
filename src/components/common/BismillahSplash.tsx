@@ -2,14 +2,6 @@
 
 import { useEffect, useState } from "react";
 
-// Declare window global augmentation
-declare global {
-  interface Window {
-    __BISMILLAH_PAGE_LOAD_ID?: string;
-    __BISMILLAH_SHOWN_IN_LOAD?: boolean;
-  }
-}
-
 export function BismillahSplash() {
   const [visible, setVisible] = useState(false);
   const [fading, setFading] = useState(false);
@@ -17,67 +9,46 @@ export function BismillahSplash() {
   useEffect(() => {
     if (typeof window === "undefined") return;
 
-    // Fast check: if already displayed in this browser document load, exit immediately
-    if (window.__BISMILLAH_SHOWN_IN_LOAD) {
-      return;
-    }
-
-    // Initialize unique page load identifier once per full browser document load
-    if (!window.__BISMILLAH_PAGE_LOAD_ID) {
-      window.__BISMILLAH_PAGE_LOAD_ID = `${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
-    }
-
-    // Check browser navigation type
-    let isBackForward = false;
+    // Detect if this is an explicit browser reload / refresh
     let isReload = false;
     try {
       const navEntry = performance.getEntriesByType("navigation")[0] as PerformanceNavigationTiming | undefined;
       if (navEntry) {
-        if (navEntry.type === "back_forward") isBackForward = true;
         if (navEntry.type === "reload") isReload = true;
       } else if (window.performance && (window.performance as unknown as { navigation?: { type: number } }).navigation) {
         const type = (window.performance as unknown as { navigation: { type: number } }).navigation.type;
-        if (type === 2) isBackForward = true;
         if (type === 1) isReload = true;
       }
     } catch {
       // safe fallback
     }
 
-    // Never display on browser back/forward history navigation
-    if (isBackForward) {
-      window.__BISMILLAH_SHOWN_IN_LOAD = true;
-      return;
-    }
-
-    // Check sessionStorage to verify whether this is an internal client-side route navigation
-    // (e.g. clicking "Weekly Report", "Back", "Surahs", etc.) vs a fresh reload or app open
-    let isSameClientSession = false;
+    // Check if the app has already been opened in this browser session
+    let alreadyShownInSession = false;
     try {
-      const storedPageLoadId = sessionStorage.getItem("tilawat_bismillah_page_load");
-      if (storedPageLoadId === window.__BISMILLAH_PAGE_LOAD_ID) {
-        isSameClientSession = true;
-      }
+      alreadyShownInSession = sessionStorage.getItem("tilawat_bismillah_shown") === "true";
     } catch {
       // safe fallback
     }
 
-    // Client-side route transitions (like clicking "Weekly Report" or "Back")
-    // must NEVER trigger the splash screen!
-    if (isSameClientSession && !isReload) {
-      window.__BISMILLAH_SHOWN_IN_LOAD = true;
+    // Only show Bismillah splash screen when:
+    // 1. The user explicitly refreshes the page (isReload)
+    // 2. OR when opening the app/tab fresh for the first time (!alreadyShownInSession)
+    // Never show on clicking any Surah or navigating Back!
+    const shouldShow = isReload || !alreadyShownInSession;
+
+    if (!shouldShow) {
       return;
     }
 
-    // Mark as shown for this document load and session
-    window.__BISMILLAH_SHOWN_IN_LOAD = true;
+    // Mark as shown in session storage so subsequent Surah clicks or Back clicks NEVER trigger it
     try {
-      sessionStorage.setItem("tilawat_bismillah_page_load", window.__BISMILLAH_PAGE_LOAD_ID);
+      sessionStorage.setItem("tilawat_bismillah_shown", "true");
     } catch {
       // ignore
     }
 
-    // Display splash screen on fresh app open or browser reload
+    // Display splash screen
     setVisible(true);
 
     const timer = setTimeout(() => {
@@ -103,9 +74,6 @@ export function BismillahSplash() {
   }, []);
 
   const handleDismiss = () => {
-    if (typeof window !== "undefined") {
-      window.__BISMILLAH_SHOWN_IN_LOAD = true;
-    }
     setFading(true);
     setTimeout(() => setVisible(false), 300);
   };
