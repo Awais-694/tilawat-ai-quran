@@ -235,13 +235,10 @@ export function StreakClient() {
               <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
             </svg>
           </div>
-          <div className="min-w-0 space-y-0.5">
-            <h3 className="font-bold text-xs sm:text-sm text-[#112a1d] group-hover:text-emerald-950 transition-colors">
-              Daily Tasks & Quran Planner
+          <div className="min-w-0">
+            <h3 className="font-bold text-sm sm:text-base text-[#112a1d] group-hover:text-emerald-950 transition-colors">
+              Daily Planner
             </h3>
-            <p className="text-[11px] sm:text-xs text-[#527060] truncate">
-              Daily Tilawat checklist & daily goal tracking
-            </p>
           </div>
         </div>
 

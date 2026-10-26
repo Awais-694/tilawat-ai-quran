@@ -640,13 +640,10 @@ export function TodoListClient() {
         
         {/* Planner Header: Title & Clean Date Badge (No useless icons) */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#ede7d8] pb-3">
-          <div className="space-y-0.5">
+          <div>
             <h1 className="font-display text-2xl sm:text-3xl font-bold text-[#112a1d] tracking-tight">
-              Daily Tasks
+              Daily Planner
             </h1>
-            <p className="text-xs sm:text-sm text-[#527060] font-medium">
-              Daily Tilawat checklist & high-focus priorities
-            </p>
           </div>
 
           {/* Clean Modern Date Display (No useless icons) */}
