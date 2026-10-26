@@ -319,8 +319,13 @@ export function ReadClient({
         pdfUrl={serverPdfUrl}
         pdfBlob={cachedBlob}
         onSaveOffline={async (blob) => {
-          setCachedBlob(blob);
-          setIsSavedOffline(true);
+          try {
+            await saveMushaf16Pdf(surahNumber, blob, meta.name);
+            setCachedBlob(blob);
+            setIsSavedOffline(true);
+          } catch (e) {
+            console.warn("Failed to auto-save 16-line PDF offline:", e);
+          }
         }}
         title={`Surah ${meta.number}. ${meta.name} (${meta.arabicName})`}
       />

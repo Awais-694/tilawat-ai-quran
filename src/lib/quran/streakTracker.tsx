@@ -216,12 +216,10 @@ export function useStreakTracker({
   surahNumber?: number;
   enabled?: boolean;
 }) {
-  const [secondsOnPage, setSecondsOnPage] = useState(0);
+  const secondsOnPageRef = useRef(0);
   const [streakUnlocked, setStreakUnlocked] = useState(false);
-  const [showToast, setShowToast] = useState(false);
   const threshold = STREAK_THRESHOLDS[mode];
   const bufferRef = useRef(0);
-  const alreadyCelebrated = useRef(false);
 
   useEffect(() => {
     if (!enabled) return;
@@ -248,9 +246,9 @@ export function useStreakTracker({
     const timer = setInterval(() => {
       if (typeof document !== "undefined" && document.visibilityState === "visible") {
         bufferRef.current += 1;
-        setSecondsOnPage((s) => s + 1);
+        secondsOnPageRef.current += 1;
 
-        // Flush to storage every 4-5 seconds
+        // Flush to storage every 4-5 seconds silently
         if (bufferRef.current >= 4) {
           void flush();
         }
@@ -270,7 +268,7 @@ export function useStreakTracker({
   }, [mode, surahNumber, enabled, threshold]);
 
   return {
-    secondsOnPage,
+    secondsOnPage: secondsOnPageRef.current,
     threshold,
     streakUnlocked,
     showToast: false,

@@ -86,8 +86,17 @@ export function PdfCanvasViewer({
     });
   }, []);
 
+  const onSaveOfflineRef = useRef(onSaveOffline);
+  onSaveOfflineRef.current = onSaveOffline;
+  const loadedKeyRef = useRef<string | null>(null);
+
   // Load PDF document
   useEffect(() => {
+    // If already loaded for this exact URL, do not reload or blink
+    if (loadedKeyRef.current === pdfUrl && pdfDoc) {
+      return;
+    }
+
     let cancelled = false;
     setIsLoading(true);
     setLoadError(null);
@@ -100,7 +109,7 @@ export function PdfCanvasViewer({
 
         let arrayBuffer: ArrayBuffer | null = null;
 
-        // Use cached blob only if valid and not empty (> 100 bytes)
+        // 1. Use cached blob only if valid and not empty (> 100 bytes)
         if (pdfBlob && pdfBlob.size > 100) {
           try {
             const buf = await pdfBlob.arrayBuffer();
@@ -112,7 +121,7 @@ export function PdfCanvasViewer({
           }
         }
 
-        // Fetch fresh from server if no cached blob or if cached blob was empty/corrupt
+        // 2. Fetch fresh from server if no cached blob or if cached blob was empty
         if (!arrayBuffer) {
           const res = await fetch(pdfUrl);
           if (!res.ok) {
@@ -126,6 +135,16 @@ export function PdfCanvasViewer({
           }
 
           arrayBuffer = buf;
+
+          // AUTO-SAVE OFFLINE: Whenever user opens any Surah online, auto-save into IndexedDB!
+          if (onSaveOfflineRef.current) {
+            try {
+              const freshBlob = new Blob([buf], { type: "application/pdf" });
+              void onSaveOfflineRef.current(freshBlob);
+            } catch (autoErr) {
+              console.warn("Auto-save offline error:", autoErr);
+            }
+          }
         }
 
         if (cancelled || !arrayBuffer) return;
@@ -139,6 +158,7 @@ export function PdfCanvasViewer({
         const doc = await loadingTask.promise;
         if (cancelled) return;
 
+        loadedKeyRef.current = pdfUrl;
         setPdfDoc(doc);
         setTotalPages(doc.numPages);
         setIsLoading(false);
@@ -156,7 +176,7 @@ export function PdfCanvasViewer({
     return () => {
       cancelled = true;
     };
-  }, [pdfUrl, pdfBlob, ensurePdfJs, onSaveOffline]);
+  }, [pdfUrl, pdfBlob, ensurePdfJs]);
 
   // Render current page onto Canvas
   const renderCurrentPage = useCallback(async () => {
