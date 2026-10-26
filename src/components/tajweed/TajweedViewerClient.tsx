@@ -112,7 +112,7 @@ function TajweedViewer({ initialSurah }: TajweedViewerProps) {
       {/* Top Navigation & Controls Bar */}
       <div className="flex flex-col gap-2.5 border-b border-[#ede7d8] pb-3 shrink-0">
         <div className="flex items-center justify-between gap-2 bg-white border border-[#ded5c0] rounded-2xl px-2.5 py-1.5 sm:px-3 sm:py-2 shadow-xs">
-          {/* Back & Quick Prev/Next */}
+          {/* Back to Surahs list */}
           <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
             <button
               onClick={() => router.push("/tajweed")}
@@ -122,37 +122,6 @@ function TajweedViewer({ initialSurah }: TajweedViewerProps) {
               <span>←</span>
               <span className="font-medium ml-1">Surahs</span>
             </button>
-
-            {/* Quick Prev / Next Surah Navigation */}
-            <div className="flex items-center bg-[#fbf9f4] border border-[#ded5c0] rounded-xl p-0.5">
-              <button
-                onClick={() => handleSelectSurah(Math.max(1, selectedSurah - 1))}
-                disabled={selectedSurah <= 1}
-                className={`px-2 py-1 rounded-lg text-xs font-semibold flex items-center gap-1 transition-all ${
-                  selectedSurah <= 1
-                    ? "text-neutral-300 cursor-not-allowed"
-                    : "text-[#112a1d] hover:bg-white active:scale-95 cursor-pointer"
-                }`}
-                title="Previous Surah"
-              >
-                <span>←</span>
-                <span className="hidden md:inline text-[11px]">Prev</span>
-              </button>
-              <span className="text-[#ded5c0] text-xs px-0.5">|</span>
-              <button
-                onClick={() => handleSelectSurah(Math.min(114, selectedSurah + 1))}
-                disabled={selectedSurah >= 114}
-                className={`px-2 py-1 rounded-lg text-xs font-semibold flex items-center gap-1 transition-all ${
-                  selectedSurah >= 114
-                    ? "text-neutral-300 cursor-not-allowed"
-                    : "text-[#112a1d] hover:bg-white active:scale-95 cursor-pointer"
-                }`}
-                title="Next Surah"
-              >
-                <span className="hidden md:inline text-[11px]">Next</span>
-                <span>→</span>
-              </button>
-            </div>
           </div>
 
           {/* Surah Title Badge in center */}

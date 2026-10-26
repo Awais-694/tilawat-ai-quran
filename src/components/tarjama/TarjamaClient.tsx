@@ -30,22 +30,6 @@ function TarjamaViewer({ initialSurah }: TarjamaViewerProps) {
   const [, setPdfSize] = useState<number | null>(null);
   const [isDownloading, setIsDownloading] = useState(false);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
-  const [isCompleted, setIsCompleted] = useState(false);
-
-  // Check if completed in IndexedDB
-  useEffect(() => {
-    let active = true;
-    db.progress.get(selectedSurahNumber).then((p) => {
-      if (active && p) {
-        setIsCompleted(Boolean(p.completed || (p.completedTimes ?? 0) > 0));
-      } else if (active) {
-        setIsCompleted(false);
-      }
-    });
-    return () => {
-      active = false;
-    };
-  }, [selectedSurahNumber]);
 
   // Active reading live timer
   // Streak & Active reading timer (30 seconds threshold for 1-day streak)
@@ -53,49 +37,6 @@ function TarjamaViewer({ initialSurah }: TarjamaViewerProps) {
     mode: "translation",
     surahNumber: selectedSurahNumber,
   });
-
-  // Toggle Completed status
-  const handleToggleCompleted = async () => {
-    const nextState = !isCompleted;
-    setIsCompleted(nextState);
-    const today = getLocalDateString();
-    try {
-      const ex = await db.progress.get(selectedSurahNumber);
-      const sMeta = surahsMeta.find((s) => s.number === selectedSurahNumber) ?? surahsMeta[0];
-      const approxWords = sMeta.numberOfAyahs * 12;
-      await db.progress.put({
-        surahNumber: selectedSurahNumber,
-        revealedWords: nextState ? approxWords : (ex?.revealedWords ?? 0),
-        totalWords: approxWords,
-        completed: nextState,
-        completedAt: nextState ? Date.now() : ex?.completedAt,
-        completedTimes: nextState ? (ex?.completedTimes ?? 0) + 1 : (ex?.completedTimes ?? 0),
-        lastPracticedAt: Date.now(),
-        lastAyahNumber: sMeta.numberOfAyahs,
-      });
-
-      const row = await db.activity.get(today);
-      const current = row ?? {
-        date: today,
-        wordsRevealed: 0,
-        mistakes: 0,
-        sessions: 1,
-        timeSpentSeconds: 60,
-        surahsPracticed: [selectedSurahNumber],
-      };
-      await db.activity.put({
-        ...current,
-        sessions: (current.sessions ?? 0) + (nextState ? 1 : 0),
-        wordsRevealed: (current.wordsRevealed ?? 0) + (nextState ? approxWords : 0),
-        surahsPracticed: Array.from(new Set([...(current.surahsPracticed ?? []), selectedSurahNumber])),
-      });
-
-      setStatusMessage(nextState ? "ما شاء اللہ! سورت مکمل درج ہو گئی ہے ✓" : "سورت مکمل اسٹیٹس ہٹا دیا گیا");
-      setTimeout(() => setStatusMessage(null), 3000);
-    } catch (err) {
-      console.error("Failed to toggle tarjama completion:", err);
-    }
-  };
 
   // One-time cache migration: clear legacy misaligned / mismatched offline PDFs
   useEffect(() => {
@@ -160,32 +101,10 @@ function TarjamaViewer({ initialSurah }: TarjamaViewerProps) {
     );
   }, [selectedSurahNumber]);
 
-  const prevSurah = useMemo(() => {
-    if (selectedSurahNumber <= 1) return null;
-    return surahsMeta.find((s) => s.number === selectedSurahNumber - 1) ?? null;
-  }, [selectedSurahNumber]);
-
-  const nextSurah = useMemo(() => {
-    if (selectedSurahNumber >= 114) return null;
-    return surahsMeta.find((s) => s.number === selectedSurahNumber + 1) ?? null;
-  }, [selectedSurahNumber]);
-
   const handleSelectSurah = (surahNumber: number) => {
     if (surahNumber >= 1 && surahNumber <= 114) {
       setSelectedSurahNumber(surahNumber);
       router.push(`/tarjama?surah=${surahNumber}`);
-    }
-  };
-
-  const handlePrevSurah = () => {
-    if (prevSurah) {
-      handleSelectSurah(prevSurah.number);
-    }
-  };
-
-  const handleNextSurah = () => {
-    if (nextSurah) {
-      handleSelectSurah(nextSurah.number);
     }
   };
 
@@ -261,7 +180,7 @@ function TarjamaViewer({ initialSurah }: TarjamaViewerProps) {
       {/* Compact Top Navigation & Controls Bar */}
       <div className="flex flex-col gap-2.5 border-b border-[#ede7d8] pb-3 shrink-0">
         <div className="flex items-center justify-between gap-2 bg-white border border-[#ded5c0] rounded-2xl px-2.5 py-1.5 sm:px-3 sm:py-2 shadow-xs">
-          {/* Back & Quick Prev/Next */}
+          {/* Back to Surahs list */}
           <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
             <button
               onClick={() => router.push("/tarjama")}
@@ -271,37 +190,6 @@ function TarjamaViewer({ initialSurah }: TarjamaViewerProps) {
               <span>←</span>
               <span className="font-medium ml-1">Surahs</span>
             </button>
-
-            {/* Quick Prev / Next Surah Navigation */}
-            <div className="flex items-center bg-[#fbf9f4] border border-[#ded5c0] rounded-xl p-0.5">
-              <button
-                onClick={handlePrevSurah}
-                disabled={!prevSurah}
-                className={`px-2 py-1 rounded-lg text-xs font-semibold flex items-center gap-1 transition-all ${
-                  !prevSurah
-                    ? "text-neutral-300 cursor-not-allowed"
-                    : "text-[#112a1d] hover:bg-white active:scale-95 cursor-pointer"
-                }`}
-                title="Previous Surah"
-              >
-                <span>←</span>
-                <span className="hidden md:inline text-[11px]">Prev</span>
-              </button>
-              <span className="text-[#ded5c0] text-xs px-0.5">|</span>
-              <button
-                onClick={handleNextSurah}
-                disabled={!nextSurah}
-                className={`px-2 py-1 rounded-lg text-xs font-semibold flex items-center gap-1 transition-all ${
-                  !nextSurah
-                    ? "text-neutral-300 cursor-not-allowed"
-                    : "text-[#112a1d] hover:bg-white active:scale-95 cursor-pointer"
-                }`}
-                title="Next Surah"
-              >
-                <span className="hidden md:inline text-[11px]">Next</span>
-                <span>→</span>
-              </button>
-            </div>
           </div>
 
           {/* Surah Title Badge in center */}
@@ -319,21 +207,8 @@ function TarjamaViewer({ initialSurah }: TarjamaViewerProps) {
             </div>
           </div>
 
-          {/* Action buttons (Completed, Open Tab, Download) */}
+          {/* Action buttons (Open Tab, Download) */}
           <div className="flex items-center gap-1.5 shrink-0">
-            {/* Mark Surah Completed Button */}
-            <button
-              onClick={handleToggleCompleted}
-              className={`p-1.5 sm:px-2.5 sm:py-1.5 rounded-xl border text-xs font-semibold shadow-2xs transition-all flex items-center gap-1 active:scale-95 cursor-pointer ${
-                isCompleted
-                  ? "bg-emerald-100 hover:bg-emerald-200 border-emerald-400 text-emerald-950 font-bold"
-                  : "bg-white hover:bg-[#efe9d8] border-[#ded5c0] text-[#112a1d]"
-              }`}
-              title={isCompleted ? "Surah completed (tap to toggle)" : "Mark Surah translation as completed"}
-            >
-              <span className={isCompleted ? "text-emerald-700 font-bold" : "text-[#527060]"}>✓</span>
-              <span className="hidden sm:inline">{isCompleted ? "Completed" : "Mark Done"}</span>
-            </button>
 
             {/* Open in New Tab Button */}
             <a
