@@ -738,12 +738,10 @@ export function ReciteClient({
         })}
       </MushafPage>
 
-      {/* Simple Centered Ma Sha Allah Popup (Pure Arabic Calligraphy, exactly 2 seconds) */}
+      {/* Simple Centered Ma Sha Allah Popup (Pure Arabic Calligraphy with Close/Cross Button) */}
       {showToast && (
         <div
-          onClick={() => setShowToast(false)}
-          title="Tap to dismiss"
-          className={`fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 px-8 sm:px-10 py-4 sm:py-5 rounded-2xl sm:rounded-3xl bg-white/95 border-2 border-[#c5a059] shadow-[0_20px_50px_rgba(20,50,30,0.25)] backdrop-blur-xl flex items-center justify-center text-center select-none cursor-pointer transition-all duration-700 ${
+          className={`fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 px-8 sm:px-12 py-5 sm:py-6 rounded-2xl sm:rounded-3xl bg-white/95 border-2 border-[#c5a059] shadow-[0_20px_50px_rgba(20,50,30,0.25)] backdrop-blur-xl flex flex-col items-center justify-center text-center select-none transition-all duration-500 relative min-w-[200px] ${
             toastFading
               ? "opacity-0 scale-95 pointer-events-none"
               : "opacity-100 scale-100 animate-in fade-in zoom-in-95 duration-500"
@@ -751,52 +749,26 @@ export function ReciteClient({
           role="status"
           aria-live="polite"
         >
+          {/* Close Cross Button */}
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowToast(false);
+            }}
+            className="absolute top-2 right-2 w-6 h-6 rounded-full bg-[#faf7ee] hover:bg-[#ede7d8] active:scale-90 border border-[#d6cbaf] text-[#996515] flex items-center justify-center text-xs font-bold cursor-pointer transition-all shadow-2xs"
+            title="Close (بند کریں)"
+            aria-label="Close"
+          >
+            ✕
+          </button>
+
           <span
-            className="text-3xl sm:text-4xl md:text-5xl font-quran text-[#996515] font-bold leading-none select-none px-2"
+            className="text-3xl sm:text-4xl md:text-5xl font-quran text-[#996515] font-bold leading-none select-none px-2 pt-1"
             dir="rtl"
           >
             مَا شَاءَ اللّٰهُ
           </span>
-        </div>
-      )}
-
-      {/* Surah Completion Banner */}
-      {(completed || (total > 0 && displayRevealed >= total)) && (
-        <div className="bg-gradient-to-r from-[#143323] via-[#1a442f] to-[#143323] text-white rounded-2xl sm:rounded-3xl p-4 sm:p-5 shadow-lg border border-emerald-500/30 text-center space-y-2.5 my-3 animate-in fade-in slide-in-from-bottom-3 duration-500">
-          <div className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-emerald-500/20 border border-emerald-400 text-emerald-300 text-xl font-bold">
-            ✓
-          </div>
-          <div className="space-y-1">
-            <h3 className="font-quran text-2xl sm:text-3xl text-emerald-200" dir="rtl">
-              مَا شَاءَ اللّٰهُ تَبَارَكَ اللّٰهُ
-            </h3>
-            <p className="text-xs sm:text-sm font-semibold text-emerald-100">
-              Surah {loaded.meta.name} ({loaded.meta.arabicName}) successfully completed!
-            </p>
-            <p className="text-[11px] sm:text-xs text-emerald-200/80">
-              {total} words recited • Progress, active time & accuracy saved to your account.
-            </p>
-          </div>
-          <div className="flex items-center justify-center gap-2 pt-1 flex-wrap">
-            <Link
-              href="/stats"
-              className="px-4 py-2 rounded-xl bg-white text-emerald-950 hover:bg-emerald-50 font-bold text-xs sm:text-sm shadow-sm active:scale-95 transition-all"
-            >
-              View Progress & Stats →
-            </Link>
-            <Link
-              href="/"
-              className="px-4 py-2 rounded-xl bg-emerald-950/60 hover:bg-emerald-950 text-emerald-200 border border-emerald-700/60 font-semibold text-xs sm:text-sm active:scale-95 transition-all"
-            >
-              Dashboard
-            </Link>
-            <button
-              onClick={handleReset}
-              className="px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white font-medium text-xs sm:text-sm active:scale-95 transition-all cursor-pointer"
-            >
-              Recite Again
-            </button>
-          </div>
         </div>
       )}
 
