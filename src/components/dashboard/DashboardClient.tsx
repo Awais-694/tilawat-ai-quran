@@ -31,106 +31,129 @@ export function DashboardClient() {
   const [lastAyah, setLastAyah] = useState<number | null>(null);
 
   const loadStats = async () => {
-    const activity = await db.activity.toArray();
-    const progress = await db.progress.toArray();
-    const totalWords = activity.reduce((s, a) => s + a.wordsRevealed, 0);
-    const totalMistakes = activity.reduce((s, a) => s + a.mistakes, 0);
-
-    // 1. Completed Surahs: Surahs that are finished
-    // Unique by surahNumber (Map ensures exactly one entry per surah)
-    const completedMap = new Map<number, SurahProgress>();
-    for (const p of progress) {
-      if (p.completed || (p.completedTimes ?? 0) > 0 || (p.totalWords > 0 && p.revealedWords >= p.totalWords)) {
-        completedMap.set(p.surahNumber, p);
-      }
-    }
-    const completedList = Array.from(completedMap.values()).sort(
-      (a, b) => (b.completedAt || b.lastPracticedAt || 0) - (a.completedAt || a.lastPracticedAt || 0)
-    );
-
-    // 2. In-Progress Surahs: ONLY half-recited surahs!
-    // (revealedWords > 0, revealedWords < totalWords, and NOT currently completed)
-    const inProgressList = progress
-      .filter((p) => !p.completed && p.revealedWords > 0 && (p.totalWords ? p.revealedWords < p.totalWords : true))
-      .sort((a, b) => (b.lastPracticedAt || 0) - (a.lastPracticedAt || 0));
-
-    // 3. Resume Card Item: ONLY a currently half-read surah!
-    let active = inProgressList[0] ?? null;
-
     try {
-      const rawLast = localStorage.getItem("tilawat_last_recitation");
-      if (rawLast) {
-        const parsed = JSON.parse(rawLast);
-        if (
-          parsed &&
-          typeof parsed.surahNumber === "number" &&
-          !parsed.completed &&
-          (parsed.revealedWords || 0) > 0 &&
-          (parsed.revealedWords || 0) < (parsed.totalWords || Infinity)
-        ) {
-          const lsTime = parsed.timestamp || 0;
-          const dbTime = active?.lastPracticedAt || 0;
-          if (!active || lsTime >= dbTime) {
-            active = {
-              surahNumber: parsed.surahNumber,
-              revealedWords: parsed.revealedWords || 0,
-              totalWords: parsed.totalWords || 0,
-              completed: false,
-              lastPracticedAt: lsTime || Date.now(),
-              lastAyahNumber: parsed.lastAyahNumber || 1,
-            };
+      const activity = await db.activity.toArray();
+      const progress = await db.progress.toArray();
+      const totalWords = activity.reduce((s, a) => s + a.wordsRevealed, 0);
+      const totalMistakes = activity.reduce((s, a) => s + a.mistakes, 0);
+
+      // 1. Completed Surahs: Surahs that are finished
+      // Unique by surahNumber (Map ensures exactly one entry per surah)
+      const completedMap = new Map<number, SurahProgress>();
+      for (const p of progress) {
+        if (p.completed || (p.completedTimes ?? 0) > 0 || (p.totalWords > 0 && p.revealedWords >= p.totalWords)) {
+          completedMap.set(p.surahNumber, p);
+        }
+      }
+      const completedList = Array.from(completedMap.values()).sort(
+        (a, b) => (b.completedAt || b.lastPracticedAt || 0) - (a.completedAt || a.lastPracticedAt || 0)
+      );
+
+      // 2. In-Progress Surahs: ONLY half-recited surahs!
+      // (revealedWords > 0, revealedWords < totalWords, and NOT currently completed)
+      const inProgressList = progress
+        .filter((p) => !p.completed && p.revealedWords > 0 && (p.totalWords ? p.revealedWords < p.totalWords : true))
+        .sort((a, b) => (b.lastPracticedAt || 0) - (a.lastPracticedAt || 0));
+
+      // 3. Resume Card Item: ONLY a currently half-read surah!
+      let active = inProgressList[0] ?? null;
+
+      try {
+        const rawLast = localStorage.getItem("tilawat_last_recitation");
+        if (rawLast) {
+          const parsed = JSON.parse(rawLast);
+          if (
+            parsed &&
+            typeof parsed.surahNumber === "number" &&
+            !parsed.completed &&
+            (parsed.revealedWords || 0) > 0 &&
+            (parsed.revealedWords || 0) < (parsed.totalWords || Infinity)
+          ) {
+            const lsTime = parsed.timestamp || 0;
+            const dbTime = active?.lastPracticedAt || 0;
+            if (!active || lsTime >= dbTime) {
+              active = {
+                surahNumber: parsed.surahNumber,
+                revealedWords: parsed.revealedWords || 0,
+                totalWords: parsed.totalWords || 0,
+                completed: false,
+                lastPracticedAt: lsTime || Date.now(),
+                lastAyahNumber: parsed.lastAyahNumber || 1,
+              };
+            }
           }
         }
+      } catch {}
+
+      // If no surah is half-read, default to ready state for Surah 1 Al-Fatihah
+      if (!active) {
+        active = {
+          surahNumber: 1,
+          revealedWords: 0,
+          totalWords: 29,
+          completed: false,
+          lastPracticedAt: Date.now(),
+          lastAyahNumber: 1,
+        };
       }
-    } catch {}
 
-    // If no surah is half-read, default to ready state for Surah 1 Al-Fatihah
-    if (!active) {
-      active = {
-        surahNumber: 1,
-        revealedWords: 0,
-        totalWords: 29,
-        completed: false,
-        lastPracticedAt: Date.now(),
-        lastAyahNumber: 1,
-      };
-    }
+      const actMap = new Map<string, DailyActivity>();
+      for (const a of activity) {
+        actMap.set(a.date, a);
+      }
+      const activeDates = activity.filter((a) => a.wordsRevealed > 0).map((a) => a.date);
+      const streak = calcCurrentStreak(activeDates);
+      const longestStreak = calcLongestStreak(activeDates);
+      const rollingDays = getRolling7Days(actMap);
 
-    const actMap = new Map<string, DailyActivity>();
-    for (const a of activity) {
-      actMap.set(a.date, a);
-    }
-    const activeDates = activity.filter((a) => a.wordsRevealed > 0).map((a) => a.date);
-    const streak = calcCurrentStreak(activeDates);
-    const longestStreak = calcLongestStreak(activeDates);
-    const rollingDays = getRolling7Days(actMap);
+      setStats({
+        streak,
+        longestStreak,
+        rollingDays,
+        accuracy:
+          totalWords + totalMistakes > 0
+            ? Math.round((totalWords / (totalWords + totalMistakes)) * 100)
+            : null,
+        inProgress: inProgressList.slice(0, 4),
+        completedCount: completedList.length,
+        completedList,
+        lastActive: active,
+      });
 
-    setStats({
-      streak,
-      longestStreak,
-      rollingDays,
-      accuracy:
-        totalWords + totalMistakes > 0
-          ? Math.round((totalWords / (totalWords + totalMistakes)) * 100)
-          : null,
-      inProgress: inProgressList.slice(0, 4),
-      completedCount: completedList.length,
-      completedList,
-      lastActive: active,
-    });
-
-    if (active) {
-      if (active.lastAyahNumber) {
-        setLastAyah(active.lastAyahNumber);
-      } else if (active.revealedWords > 0) {
-        const s = await loadSurah(active.surahNumber);
-        if (s) {
-          const idx = Math.max(0, Math.min(active.revealedWords - 1, s.tokens.length - 1));
-          setLastAyah(s.tokens[idx]?.ayahNumber || 1);
+      if (active) {
+        if (active.lastAyahNumber) {
+          setLastAyah(active.lastAyahNumber);
+        } else if (active.revealedWords > 0) {
+          const s = await loadSurah(active.surahNumber);
+          if (s) {
+            const idx = Math.max(0, Math.min(active.revealedWords - 1, s.tokens.length - 1));
+            setLastAyah(s.tokens[idx]?.ayahNumber || 1);
+          }
+        } else {
+          setLastAyah(1);
         }
-      } else {
-        setLastAyah(1);
       }
+    } catch (err) {
+      console.error("Failed to load dashboard stats:", err);
+      // Fallback defaults so dashboard never remains blank
+      setStats({
+        streak: 0,
+        longestStreak: 0,
+        rollingDays: getRolling7Days(new Map()),
+        accuracy: null,
+        inProgress: [],
+        completedCount: 0,
+        completedList: [],
+        lastActive: {
+          surahNumber: 1,
+          revealedWords: 0,
+          totalWords: 29,
+          completed: false,
+          lastPracticedAt: Date.now(),
+          lastAyahNumber: 1,
+        },
+      });
+      setLastAyah(1);
     }
   };
 

@@ -89,6 +89,26 @@ class TilawatDB extends Dexie {
       mushaf16Pdfs: "surahNumber, savedAt",
       tajweedPdfs: "surahNumber, savedAt",
     });
+    this.version(5).stores({
+      progress: "surahNumber",
+      sessions: "++id, surahNumber, startedAt",
+      activity: "date",
+      wrongWords: "word",
+      tarjamaPdfs: "surahNumber, savedAt",
+      mushaf16Pdfs: "surahNumber, savedAt",
+      tajweedPdfs: "surahNumber, savedAt",
+      appFiles: "id, savedAt",
+    });
+    this.version(6).stores({
+      progress: "surahNumber",
+      sessions: "++id, surahNumber, startedAt",
+      activity: "date",
+      wrongWords: "word",
+      tarjamaPdfs: "surahNumber, savedAt",
+      mushaf16Pdfs: "surahNumber, savedAt",
+      tajweedPdfs: "surahNumber, savedAt",
+      appFiles: null,
+    });
   }
 }
 
