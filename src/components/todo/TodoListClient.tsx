@@ -155,7 +155,7 @@ export function TodoListClient() {
         setData(freshDayPlanner);
         localStorage.setItem(STORAGE_KEY, JSON.stringify(freshDayPlanner));
         localStorage.setItem(STORAGE_LAST_DATE_KEY, todayIso);
-        showToast("🌙 12:00 AM: نیا دن شروع ہو گیا ہے! پچھلا ریکارڈ محفوظ کر کے لسٹ ری سیٹ کر دی گئی ہے۔");
+        showToast("🌙 12:00 AM Midnight: New day started! Previous record saved and tasks reset.");
       } else {
         // Same day or first visit
         if (parsedData && typeof parsedData === "object") {
@@ -242,7 +242,7 @@ export function TodoListClient() {
             localStorage.setItem(STORAGE_LAST_DATE_KEY, newIso);
           } catch {}
 
-          showToast("🌙 رات کے 12 بج گئے ہیں! آج کی کارکردگی محفوظ ہو گئی اور نئے دن کے لیے ٹاسک لسٹ تیار ہے۔");
+          showToast("🌙 12:00 AM Midnight: Daily performance saved and checklist reset for the new day.");
           return resetPlanner;
         });
       }, msUntilMidnight);
@@ -302,16 +302,6 @@ export function TodoListClient() {
       ...prev,
       [listKey]: prev[listKey].map((it) =>
         it.id === id ? { ...it, completed: !it.completed } : it
-      ),
-    }));
-  };
-
-  // Explicit set item status (Done / Not Done)
-  const setItemStatus = (listKey: "tasks" | "priorities", id: string, completed: boolean) => {
-    setData((prev) => ({
-      ...prev,
-      [listKey]: prev[listKey].map((it) =>
-        it.id === id ? { ...it, completed } : it
       ),
     }));
   };
@@ -428,7 +418,7 @@ export function TodoListClient() {
     const list: Array<{
       date: string;
       dayLabel: string;
-      shortDate: string;
+      displayDate: string;
       percentage: number;
       completed: number;
       total: number;
@@ -447,7 +437,9 @@ export function TodoListClient() {
       const iso = `${y}-${m}-${dayStr}`;
 
       const dayLabel = d.toLocaleDateString("en-US", { weekday: "short" });
-      const shortDate = d.toLocaleDateString("en-US", { month: "numeric", day: "numeric" });
+      const monthShort = d.toLocaleDateString("en-US", { month: "short" });
+      const dayNum = d.getDate();
+      const displayDate = `${monthShort} ${dayNum}`;
       const isToday = iso === todayIso;
 
       if (isToday) {
@@ -455,7 +447,7 @@ export function TodoListClient() {
         list.push({
           date: iso,
           dayLabel,
-          shortDate,
+          displayDate,
           percentage: todayPercentage,
           completed: completedCount,
           total: totalCount,
@@ -467,7 +459,7 @@ export function TodoListClient() {
         list.push({
           date: iso,
           dayLabel,
-          shortDate,
+          displayDate,
           percentage: histItem ? histItem.percentage : 0,
           completed: histItem ? histItem.completed : 0,
           total: histItem ? histItem.total : 0,
@@ -514,7 +506,7 @@ export function TodoListClient() {
         </Link>
       </div>
 
-      {/* PERFORMANCE PERCENTAGE SECTION: DAILY (ROZANA) & WEEKLY (HAR WEEK) */}
+      {/* PERFORMANCE PERCENTAGE SECTION: CLEAN ENGLISH UI */}
       <div className="bg-white border border-[#ded5c0] rounded-2xl sm:rounded-3xl p-4 sm:p-5 shadow-xs space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#ede7d8] pb-3">
           <div className="flex items-center gap-2">
@@ -541,7 +533,7 @@ export function TodoListClient() {
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-[#143323] uppercase tracking-wider flex items-center gap-1.5">
                 <span className="w-2 h-2 rounded-full bg-emerald-600 animate-pulse" />
-                <span>Today's Performance (روزانہ)</span>
+                <span>Today's Performance</span>
               </span>
               <span
                 className={`text-xs font-bold px-2 py-0.5 rounded-full ${
@@ -553,7 +545,7 @@ export function TodoListClient() {
                 }`}
               >
                 {todayPercentage === 100
-                  ? "ماشاء اللہ! Done"
+                  ? "100% Completed"
                   : todayPercentage > 0
                   ? "In Progress"
                   : "Not Started"}
@@ -583,7 +575,7 @@ export function TodoListClient() {
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-[#143323] uppercase tracking-wider flex items-center gap-1.5">
                 <span>📅</span>
-                <span>Weekly Average (ہر ہفتے)</span>
+                <span>Weekly Average</span>
               </span>
               <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-900 border border-emerald-200">
                 Last 7 Days
@@ -613,30 +605,30 @@ export function TodoListClient() {
         <div className="pt-1">
           <div className="flex items-center justify-between mb-2 px-1">
             <span className="text-[11px] font-bold text-[#527060] uppercase tracking-wider">
-              Weekly Breakdown (روزانہ کی کارکردگی):
+              Weekly Breakdown (Last 7 Days):
             </span>
             <span className="text-[10px] text-[#8e8574]">
-              Hover or tap a day to see score
+              Daily scores & status
             </span>
           </div>
 
-          <div className="grid grid-cols-7 gap-1.5 text-center">
+          <div className="grid grid-cols-7 gap-1.5 sm:gap-2 text-center">
             {last7Days.map((d) => (
               <div
                 key={d.date}
                 className={`p-2 rounded-xl border transition-all ${
                   d.isToday
-                    ? "bg-emerald-50/90 border-emerald-400 ring-1 ring-emerald-300"
+                    ? "bg-emerald-50/90 border-emerald-400 ring-1 ring-emerald-300 shadow-2xs"
                     : d.hasData
                     ? "bg-[#faf8f3] border-[#ded5c0]"
                     : "bg-[#f5f1e6]/60 border-[#eae3d2]"
                 }`}
               >
-                <div className="text-[10px] font-bold text-[#143323] truncate">
+                <div className="text-[11px] font-bold text-[#143323] truncate">
                   {d.dayLabel}
                 </div>
                 <div className="text-[9px] text-[#8e8574] truncate mb-1">
-                  {d.shortDate}
+                  {d.displayDate}
                 </div>
 
                 {/* Vertical mini bar */}
@@ -675,37 +667,23 @@ export function TodoListClient() {
       {/* Main Printable / Planner Sheet Card */}
       <div className="bg-white border border-[#ded5c0] rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-sm space-y-5">
         
-        {/* Planner Header: Title & Name/Date Box */}
-        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 border-b border-[#ede7d8] pb-4">
+        {/* Planner Header: Title & Clean Date Badge (NAME Removed as requested) */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#ede7d8] pb-4">
           <div className="space-y-1">
             <h1 className="font-display text-2xl sm:text-3xl font-bold text-[#112a1d] tracking-tight">
-              Daily Task
+              Daily Tasks
             </h1>
             <p className="text-xs sm:text-sm text-[#527060] font-medium">
               Daily Tilawat checklist, priorities & reflection notes
             </p>
           </div>
 
-          {/* Name & Date Table Box */}
-          <div className="w-full sm:w-64 border border-[#ded5c0] rounded-xl overflow-hidden bg-[#faf8f3] text-xs divide-y divide-[#ded5c0] shadow-2xs">
-            <div className="flex items-center px-3 py-1.5 gap-2">
-              <span className="font-bold text-[#143323] uppercase w-12 shrink-0 text-[11px]">Name:</span>
-              <input
-                type="text"
-                placeholder="Enter name..."
-                value={data.userName}
-                onChange={(e) => setData({ ...data, userName: e.target.value })}
-                className="w-full bg-transparent font-medium text-[#112a1d] focus:outline-none placeholder:text-gray-400 text-xs py-0.5"
-              />
-            </div>
-            <div className="flex items-center px-3 py-1.5 gap-2">
-              <span className="font-bold text-[#143323] uppercase w-12 shrink-0 text-[11px]">Date:</span>
-              <input
-                type="text"
-                value={data.date}
-                onChange={(e) => setData({ ...data, date: e.target.value })}
-                className="w-full bg-transparent font-medium text-[#112a1d] focus:outline-none text-xs py-0.5"
-              />
+          {/* Clean Modern Date Display (Name Removed) */}
+          <div className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-[#faf8f3] border border-[#ded5c0] shadow-2xs self-start sm:self-auto">
+            <span className="text-base text-emerald-800">📅</span>
+            <div className="flex flex-col">
+              <span className="text-[10px] font-bold text-[#8e8574] uppercase tracking-wider">Date</span>
+              <span className="text-xs font-bold text-[#143323]">{data.date || getTodayFormatted()}</span>
             </div>
           </div>
         </div>
@@ -713,67 +691,79 @@ export function TodoListClient() {
         {/* 2-Column Responsive Layout */}
         <div className="grid grid-cols-1 md:grid-cols-12 gap-5">
           
-          {/* LEFT COLUMN: TODAY'S CHECKLIST (Span 7 on desktop) */}
+          {/* LEFT COLUMN: TODAY'S CHECKLIST (ELEVATED, MODERN DESIGN) */}
           <div className="md:col-span-7 flex flex-col space-y-3">
-            {/* Tasks Container */}
-            <div className="border border-[#ded5c0] rounded-2xl overflow-hidden bg-white shadow-2xs flex flex-col justify-between">
+            <div className="border border-[#ded5c0] rounded-2xl overflow-hidden bg-white shadow-xs flex flex-col justify-between">
               <div>
                 {/* Header Banner */}
-                <div className="bg-gradient-to-r from-[#143323] via-[#1a442f] to-[#143323] text-white px-4 py-2.5 flex items-center justify-between">
-                  <span className="font-bold text-xs sm:text-sm uppercase tracking-wider flex items-center gap-1.5">
-                    <svg className="w-4 h-4 text-emerald-300" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
-                    </svg>
-                    <span>Today's Checklist</span>
-                  </span>
-                  <span className="text-[11px] font-semibold text-emerald-100 bg-white/10 border border-white/10 px-2 py-0.5 rounded-full">
+                <div className="bg-gradient-to-r from-[#143323] via-[#1b4731] to-[#143323] text-white px-4 py-3 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="w-6 h-6 rounded-lg bg-emerald-500/20 border border-emerald-400/30 flex items-center justify-center">
+                      <svg className="w-3.5 h-3.5 text-emerald-300" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                      </svg>
+                    </div>
+                    <span className="font-bold text-xs sm:text-sm uppercase tracking-wider">
+                      Today's Checklist
+                    </span>
+                  </div>
+
+                  <span className="text-xs font-bold text-emerald-100 bg-white/10 border border-white/15 px-2.5 py-1 rounded-full shadow-2xs">
                     {data.tasks.filter((t) => t.completed).length}/{data.tasks.length} Completed
                   </span>
                 </div>
 
-                {/* Filter Tabs: All, Done, Not Done */}
-                <div className="flex items-center gap-1 px-3 py-2 bg-[#faf8f3] border-b border-[#ede7d8] text-[11px] font-semibold">
-                  <span className="text-[#8e8574] mr-1 text-[10px] uppercase tracking-wider">Filter:</span>
-                  <button
-                    type="button"
-                    onClick={() => setTaskFilter("all")}
-                    className={`px-2.5 py-0.5 rounded-lg transition-all cursor-pointer ${
-                      taskFilter === "all"
-                        ? "bg-[#143323] text-white shadow-2xs"
-                        : "text-[#527060] hover:bg-[#ede7d8]"
-                    }`}
-                  >
-                    All ({data.tasks.length})
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setTaskFilter("done")}
-                    className={`px-2.5 py-0.5 rounded-lg transition-all cursor-pointer ${
-                      taskFilter === "done"
-                        ? "bg-emerald-700 text-white shadow-2xs"
-                        : "text-[#527060] hover:bg-emerald-50"
-                    }`}
-                  >
-                    Done ({data.tasks.filter((t) => t.completed).length})
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setTaskFilter("not_done")}
-                    className={`px-2.5 py-0.5 rounded-lg transition-all cursor-pointer ${
-                      taskFilter === "not_done"
-                        ? "bg-amber-600 text-white shadow-2xs"
-                        : "text-[#527060] hover:bg-amber-50"
-                    }`}
-                  >
-                    Not Done ({data.tasks.filter((t) => !t.completed).length})
-                  </button>
+                {/* Filter Tabs: Modern Segmented Control Pills */}
+                <div className="flex items-center justify-between px-3.5 py-2.5 bg-[#faf8f3] border-b border-[#ede7d8] text-xs">
+                  <div className="flex items-center gap-1.5 bg-[#eae2ce]/50 p-1 rounded-xl border border-[#ded5c0]/70">
+                    <button
+                      type="button"
+                      onClick={() => setTaskFilter("all")}
+                      className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                        taskFilter === "all"
+                          ? "bg-white text-[#143323] shadow-xs font-bold"
+                          : "text-[#527060] hover:text-[#143323]"
+                      }`}
+                    >
+                      All ({data.tasks.length})
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setTaskFilter("done")}
+                      className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                        taskFilter === "done"
+                          ? "bg-emerald-700 text-white shadow-xs font-bold"
+                          : "text-[#527060] hover:text-[#143323]"
+                      }`}
+                    >
+                      Done ({data.tasks.filter((t) => t.completed).length})
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setTaskFilter("not_done")}
+                      className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                        taskFilter === "not_done"
+                          ? "bg-amber-600 text-white shadow-xs font-bold"
+                          : "text-[#527060] hover:text-[#143323]"
+                      }`}
+                    >
+                      Pending ({data.tasks.filter((t) => !t.completed).length})
+                    </button>
+                  </div>
+
+                  <span className="text-[11px] text-[#8e8574] hidden sm:inline">
+                    Tap circle to check off
+                  </span>
                 </div>
 
-                {/* Tasks List with internal inside scrolling (fixed height container) */}
-                <div className="p-2 sm:p-3 space-y-1.5 max-h-[300px] overflow-y-auto scrollbar-thin">
+                {/* Tasks List with modern, refined cards */}
+                <div className="p-3 space-y-2 max-h-[320px] overflow-y-auto scrollbar-thin">
                   {filteredTasks.length === 0 ? (
-                    <div className="py-8 text-center text-xs text-[#8e8574] space-y-2">
-                      <p className="font-semibold text-[#143323]">
+                    <div className="py-10 text-center text-xs text-[#8e8574] space-y-2">
+                      <div className="w-10 h-10 mx-auto rounded-full bg-emerald-50 border border-emerald-200/80 flex items-center justify-center text-emerald-800 text-base">
+                        ✓
+                      </div>
+                      <p className="font-semibold text-sm text-[#143323]">
                         {data.tasks.length === 0
                           ? "No tasks yet for today."
                           : `No ${taskFilter === "done" ? "completed" : "pending"} tasks.`}
@@ -788,20 +778,23 @@ export function TodoListClient() {
                     filteredTasks.map((task) => (
                       <div
                         key={task.id}
-                        className={`group flex items-center justify-between py-2 px-2.5 rounded-xl hover:bg-[#fbf9f4] border border-[#ede7d8]/60 transition-all ${
-                          task.completed ? "bg-[#f5f8f5]/80" : "bg-white"
+                        className={`group flex items-center justify-between p-2.5 sm:p-3 rounded-xl border transition-all ${
+                          task.completed
+                            ? "bg-[#f4f8f5]/90 border-emerald-200/80 text-[#527060]"
+                            : "bg-white hover:bg-[#fcfaf5] border-[#ded5c0] hover:border-emerald-300 shadow-2xs"
                         }`}
                       >
-                        {/* Task text & Checkbox */}
+                        {/* Task text & Circular Custom Checkbox */}
                         <div
                           onClick={() => toggleItem("tasks", task.id)}
-                          className="flex items-center gap-2.5 min-w-0 pr-2 cursor-pointer flex-1"
+                          className="flex items-center gap-3 min-w-0 pr-2 cursor-pointer flex-1 select-none"
                         >
+                          {/* Circular Smooth Checkbox */}
                           <div
-                            className={`w-4 h-4 sm:w-4.5 sm:h-4.5 rounded-md border flex items-center justify-center shrink-0 transition-all ${
+                            className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-all duration-200 ${
                               task.completed
-                                ? "bg-emerald-700 border-emerald-700 text-white shadow-2xs"
-                                : "border-[#c4ba9f] bg-white group-hover:border-emerald-700"
+                                ? "bg-emerald-600 border-emerald-600 text-white shadow-2xs scale-105"
+                                : "border-[#c4ba9f] bg-white group-hover:border-emerald-600"
                             }`}
                           >
                             {task.completed && (
@@ -811,8 +804,9 @@ export function TodoListClient() {
                             )}
                           </div>
 
+                          {/* Task Text */}
                           <span
-                            className={`text-xs sm:text-sm font-medium transition-all select-none break-words ${
+                            className={`text-xs sm:text-sm font-medium transition-all break-words ${
                               task.completed
                                 ? "line-through text-neutral-400 font-normal"
                                 : "text-[#112a1d]"
@@ -822,40 +816,32 @@ export function TodoListClient() {
                           </span>
                         </div>
 
-                        {/* Status Options: Done & Not Done buttons + Delete button */}
-                        <div className="flex items-center gap-1 shrink-0 ml-2">
+                        {/* Status Action & Delete Icon */}
+                        <div className="flex items-center gap-1.5 shrink-0 ml-2">
+                          {/* Status Pill Toggle */}
                           <button
                             type="button"
-                            onClick={() => setItemStatus("tasks", task.id, true)}
-                            className={`px-2 py-0.5 text-[10px] font-bold rounded-md transition-all cursor-pointer ${
+                            onClick={() => toggleItem("tasks", task.id)}
+                            className={`px-2.5 py-1 text-[11px] font-bold rounded-lg transition-all cursor-pointer ${
                               task.completed
-                                ? "bg-emerald-700 text-white shadow-2xs"
-                                : "bg-neutral-100 text-neutral-600 hover:bg-emerald-50 hover:text-emerald-700"
+                                ? "bg-emerald-100 text-emerald-800 hover:bg-emerald-200 border border-emerald-300"
+                                : "bg-[#faf8f3] text-[#527060] hover:bg-emerald-50 hover:text-emerald-800 border border-[#ded5c0]"
                             }`}
-                            title="Mark as Done"
+                            title="Toggle status"
                           >
-                            Done
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setItemStatus("tasks", task.id, false)}
-                            className={`px-2 py-0.5 text-[10px] font-bold rounded-md transition-all cursor-pointer ${
-                              !task.completed
-                                ? "bg-amber-600 text-white shadow-2xs"
-                                : "bg-neutral-100 text-neutral-600 hover:bg-amber-50 hover:text-amber-700"
-                            }`}
-                            title="Mark as Not Done"
-                          >
-                            Not Done
+                            {task.completed ? "✓ Done" : "Mark Done"}
                           </button>
 
+                          {/* Delete button on hover */}
                           <button
                             type="button"
                             onClick={() => deleteItem("tasks", task.id)}
-                            className="opacity-0 group-hover:opacity-100 text-[#8e8574] hover:text-rose-600 p-1 text-xs transition-opacity rounded-md hover:bg-rose-50"
+                            className="opacity-40 group-hover:opacity-100 text-[#8e8574] hover:text-rose-600 p-1.5 text-xs transition-opacity rounded-lg hover:bg-rose-50 cursor-pointer"
                             title="Delete task"
                           >
-                            ✕
+                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
                           </button>
                         </div>
                       </div>
@@ -865,9 +851,9 @@ export function TodoListClient() {
 
                 {/* Quick Add Suggestions Chips */}
                 {data.tasks.length === 0 && (
-                  <div className="px-3 py-2 bg-[#faf8f3] border-t border-[#ede7d8] space-y-1.5">
+                  <div className="px-3.5 py-2.5 bg-[#faf8f3] border-t border-[#ede7d8] space-y-1.5">
                     <span className="text-[10px] font-bold uppercase tracking-wider text-[#527060] block">
-                      Quick Suggestions (ایک کلک پر شامل کریں):
+                      Quick Suggestions:
                     </span>
                     <div className="flex flex-wrap gap-1.5">
                       {QUICK_SUGGESTIONS.map((sug) => (
@@ -875,7 +861,7 @@ export function TodoListClient() {
                           key={sug}
                           type="button"
                           onClick={() => handleAddTask(undefined, sug)}
-                          className="px-2 py-1 rounded-lg border border-[#ded5c0] bg-white hover:bg-emerald-50 hover:border-emerald-300 text-[11px] font-semibold text-[#143323] transition-all cursor-pointer active:scale-95"
+                          className="px-2.5 py-1 rounded-lg border border-[#ded5c0] bg-white hover:bg-emerald-50 hover:border-emerald-300 text-[11px] font-semibold text-[#143323] transition-all cursor-pointer active:scale-95 shadow-2xs"
                         >
                           + {sug}
                         </button>
@@ -885,21 +871,24 @@ export function TodoListClient() {
                 )}
               </div>
 
-              {/* Add Task Input Form */}
+              {/* Add Task Input Form: Modern & Polished */}
               <form onSubmit={(e) => handleAddTask(e)} className="p-3 border-t border-[#ede7d8] bg-[#faf8f3]">
                 <div className="flex items-center gap-2">
-                  <input
-                    type="text"
-                    placeholder="+ Add new task (e.g. Surah Mulk before sleep)..."
-                    value={newTaskInput}
-                    onChange={(e) => setNewTaskInput(e.target.value)}
-                    className="flex-1 bg-white border border-[#ded5c0] rounded-xl px-3 py-1.5 text-xs sm:text-sm text-[#112a1d] focus:outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 placeholder:text-[#8e8574]"
-                  />
+                  <div className="relative flex-1">
+                    <input
+                      type="text"
+                      placeholder="Add a new daily goal or task..."
+                      value={newTaskInput}
+                      onChange={(e) => setNewTaskInput(e.target.value)}
+                      className="w-full bg-white border border-[#ded5c0] rounded-xl px-3.5 py-2 text-xs sm:text-sm text-[#112a1d] focus:outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 placeholder:text-[#8e8574] shadow-2xs transition-all"
+                    />
+                  </div>
                   <button
                     type="submit"
-                    className="px-3.5 py-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 active:scale-95 text-white text-xs font-bold transition-all shrink-0 cursor-pointer shadow-2xs"
+                    className="px-4 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 active:scale-95 text-white text-xs sm:text-sm font-bold transition-all shrink-0 cursor-pointer shadow-xs flex items-center gap-1"
                   >
-                    Add
+                    <span>+</span>
+                    <span>Add</span>
                   </button>
                 </div>
               </form>
@@ -910,8 +899,8 @@ export function TodoListClient() {
           <div className="md:col-span-5 flex flex-col space-y-4">
             
             {/* 1. TOP PRIORITIES */}
-            <div className="border border-[#ded5c0] rounded-2xl overflow-hidden bg-white shadow-2xs">
-              <div className="bg-gradient-to-r from-[#143323] to-[#1c4731] text-white px-3.5 py-2 flex items-center justify-between">
+            <div className="border border-[#ded5c0] rounded-2xl overflow-hidden bg-white shadow-xs">
+              <div className="bg-gradient-to-r from-[#143323] to-[#1c4731] text-white px-3.5 py-2.5 flex items-center justify-between">
                 <span className="font-bold text-xs uppercase tracking-wider">
                   Top Priorities
                 </span>
@@ -928,14 +917,14 @@ export function TodoListClient() {
                   data.priorities.map((item) => (
                     <div
                       key={item.id}
-                      className="group flex items-center justify-between py-1.5 first:pt-0 last:pb-0"
+                      className="group flex items-center justify-between py-2 first:pt-0 last:pb-0"
                     >
                       <div
                         onClick={() => toggleItem("priorities", item.id)}
-                        className="flex items-center gap-2 cursor-pointer flex-1 min-w-0 pr-2"
+                        className="flex items-center gap-2.5 cursor-pointer flex-1 min-w-0 pr-2"
                       >
                         <div
-                          className={`w-3.5 h-3.5 rounded border flex items-center justify-center shrink-0 transition-all ${
+                          className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 transition-all ${
                             item.completed
                               ? "bg-amber-600 border-amber-600 text-white"
                               : "border-[#ded5c0] bg-white group-hover:border-amber-600"
@@ -960,7 +949,7 @@ export function TodoListClient() {
                       <button
                         type="button"
                         onClick={() => deleteItem("priorities", item.id)}
-                        className="opacity-0 group-hover:opacity-100 text-[#8e8574] hover:text-rose-600 text-xs px-1"
+                        className="opacity-0 group-hover:opacity-100 text-[#8e8574] hover:text-rose-600 text-xs px-1 cursor-pointer"
                       >
                         ✕
                       </button>
@@ -976,11 +965,11 @@ export function TodoListClient() {
                       placeholder="Add priority goal..."
                       value={newPriorityInput}
                       onChange={(e) => setNewPriorityInput(e.target.value)}
-                      className="w-full bg-[#faf8f3] border border-[#ded5c0] rounded-xl px-2.5 py-1 text-xs text-[#112a1d] focus:outline-none focus:border-amber-600 placeholder:text-[#8e8574]"
+                      className="w-full bg-[#faf8f3] border border-[#ded5c0] rounded-xl px-2.5 py-1.5 text-xs text-[#112a1d] focus:outline-none focus:border-amber-600 placeholder:text-[#8e8574]"
                     />
                     <button
                       type="submit"
-                      className="px-2.5 py-1 rounded-xl bg-amber-600 hover:bg-amber-700 active:scale-95 text-white text-xs font-bold transition-all shrink-0 cursor-pointer shadow-2xs"
+                      className="px-3 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 active:scale-95 text-white text-xs font-bold transition-all shrink-0 cursor-pointer shadow-2xs"
                     >
                       Add
                     </button>
@@ -990,8 +979,8 @@ export function TodoListClient() {
             </div>
 
             {/* 2. NOTES & REFLECTIONS */}
-            <div className="border border-[#ded5c0] rounded-2xl overflow-hidden bg-white shadow-2xs">
-              <div className="bg-gradient-to-r from-[#143323] to-[#1c4731] text-white px-3.5 py-2 flex items-center justify-between">
+            <div className="border border-[#ded5c0] rounded-2xl overflow-hidden bg-white shadow-xs">
+              <div className="bg-gradient-to-r from-[#143323] to-[#1c4731] text-white px-3.5 py-2.5 flex items-center justify-between">
                 <span className="font-bold text-xs uppercase tracking-wider">
                   Notes & Reflections
                 </span>
