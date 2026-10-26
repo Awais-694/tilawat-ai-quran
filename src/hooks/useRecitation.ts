@@ -107,82 +107,88 @@ export function useRecitation(tokens: WordToken[], initialRevealed: number = 0) 
         }
       }
       processedFinalWords.current = finalWords.length;
-      let interimWords = wordsOf(interimText);
-      const rLive = skipEmpty(expected, committed);
-      const muqLive = rLive < expected.length ? expected[rLive] : "";
-      if ((MUQATTA_AT[muqLive] || MUQATTA_AT_FORMS[muqLive]) && interimWords.length > 0) {
-        interimWords = collapseMuqattaat(interimWords, muqLive).words;
-      }
+      const rawInterimWords = wordsOf(interimText);
 
-      // Live interim matching for fast recitation:
-      // Match incoming words in sequence against the expected Quran tokens starting from committed.
-      // Dynamic Ayah Boundary & Spoken-Word Guards:
-      // 1. If the current Ayah is not yet finished, interim CANNOT reveal any word from the next Ayah.
-      // 2. If the user recites fast in one continuous breath and 100% completes the current Ayah,
-      //    the spoken words of the next Ayah reveal INSTANTLY without waiting for speech pauses.
-      // 3. Under no circumstances can interim reveal beyond the immediate next Ayah.
-      // 4. Interim can NEVER reveal more tokens than the words actually uttered by the speaker.
-      let live = committed;
-      if (interimWords.length > 0 && committed < tokens.length) {
-        const curAyah = tokens[committed]?.ayahNumber ?? 1;
-        // Find where the current Ayah ends
-        let curAyahEnd = committed;
-        while (curAyahEnd < tokens.length && tokens[curAyahEnd].ayahNumber === curAyah) {
-          curAyahEnd++;
+      // Live interim matching for both slow (word-by-word) and fast (continuous Hadr) recitation:
+      // Candidate start positions: only allow skipping Basmala if at the very beginning (committed === 0)
+      const interimStarts: number[] =
+        committed === 0 && basmalaLen > 0 ? [0, basmalaLen] : [committed];
+
+      let bestInterimRevealed = committed;
+
+      for (const startPos of interimStarts) {
+        let interimWords = rawInterimWords;
+        const rLive = skipEmpty(expected, startPos);
+        const muqLive = rLive < expected.length ? expected[rLive] : "";
+        if ((MUQATTA_AT[muqLive] || MUQATTA_AT_FORMS[muqLive]) && interimWords.length > 0) {
+          interimWords = collapseMuqattaat(interimWords, muqLive).words;
         }
-        curAyahEnd = skipEmpty(expected, curAyahEnd);
 
-        // Run strict sequential match on primary interim words
-        let interimMatch = matchMany(expected, committed, interimWords, expectedForms);
+        if (interimWords.length > 0 && startPos < tokens.length) {
+          const curAyah = tokens[startPos]?.ayahNumber ?? 1;
+          // Find where the current Ayah ends
+          let curAyahEnd = startPos;
+          while (curAyahEnd < tokens.length && tokens[curAyahEnd].ayahNumber === curAyah) {
+            curAyahEnd++;
+          }
+          curAyahEnd = skipEmpty(expected, curAyahEnd);
 
-        // If primary interim didn't advance or alternative hypotheses are available, test top alternatives
-        if (interimAlts && interimAlts.length > 0) {
-          for (const altText of interimAlts) {
-            let altWords = wordsOf(altText);
-            if ((MUQATTA_AT[muqLive] || MUQATTA_AT_FORMS[muqLive]) && altWords.length > 0) {
-              altWords = collapseMuqattaat(altWords, muqLive).words;
-            }
-            if (altWords.length > 0) {
-              const altMatch = matchMany(expected, committed, altWords, expectedForms);
-              if (altMatch.revealed > interimMatch.revealed) {
-                interimMatch = altMatch;
+          // Run strict sequential match on primary interim words
+          let interimMatch = matchMany(expected, startPos, interimWords, expectedForms);
+
+          // If primary interim didn't advance or alternative hypotheses are available, test top alternatives
+          if (interimAlts && interimAlts.length > 0) {
+            for (const altText of interimAlts) {
+              let altWords = wordsOf(altText);
+              if ((MUQATTA_AT[muqLive] || MUQATTA_AT_FORMS[muqLive]) && altWords.length > 0) {
+                altWords = collapseMuqattaat(altWords, muqLive).words;
+              }
+              if (altWords.length > 0) {
+                const altMatch = matchMany(expected, startPos, altWords, expectedForms);
+                if (altMatch.revealed > interimMatch.revealed) {
+                  interimMatch = altMatch;
+                }
               }
             }
           }
-        }
 
-        // Dynamic Ayah Boundary Guard:
-        // If the user recites fast in one continuous breath and 100% completes the current Ayah,
-        // allow the recited words of subsequent completed Ayahs to reveal seamlessly without waiting.
-        // If an Ayah is not yet finished, interim strictly CANNOT reveal any word from the next Ayah.
-        let allowableBoundary = curAyahEnd;
-        let testAyah = curAyah;
-        while (interimMatch.revealed >= allowableBoundary && allowableBoundary < tokens.length) {
-          testAyah++;
-          let nextEnd = allowableBoundary;
-          while (nextEnd < tokens.length && tokens[nextEnd].ayahNumber === testAyah) {
-            nextEnd++;
+          // Dynamic Ayah Boundary Guard:
+          // If the user recites fast in one continuous breath and completes the current Ayah,
+          // allow the recited words of subsequent completed Ayahs to reveal seamlessly without waiting.
+          let allowableBoundary = curAyahEnd;
+          let testAyah = curAyah;
+          while (interimMatch.revealed >= allowableBoundary && allowableBoundary < tokens.length) {
+            testAyah++;
+            let nextEnd = allowableBoundary;
+            while (nextEnd < tokens.length && tokens[nextEnd].ayahNumber === testAyah) {
+              nextEnd++;
+            }
+            nextEnd = skipEmpty(expected, nextEnd);
+            if (nextEnd > allowableBoundary) {
+              allowableBoundary = nextEnd;
+            } else {
+              break;
+            }
           }
-          nextEnd = skipEmpty(expected, nextEnd);
-          if (nextEnd > allowableBoundary) {
-            allowableBoundary = nextEnd;
-          } else {
-            break;
+          const maxBoundary = allowableBoundary;
+
+          // Strict Lookahead Limit: Cannot reveal more tokens than words actually spoken (+2 for compound/particles)
+          const maxAllowed = Math.min(
+            maxBoundary,
+            startPos + interimWords.length + 2,
+            expected.length
+          );
+
+          const cappedMatch = Math.min(interimMatch.revealed, maxAllowed);
+          if (cappedMatch > bestInterimRevealed) {
+            bestInterimRevealed = cappedMatch;
           }
         }
-        const maxBoundary = allowableBoundary;
+      }
 
-        // Strict Lookahead Limit: Cannot reveal more tokens than words actually spoken (+1 for compound/clitics)
-        const maxAllowed = Math.min(
-          maxBoundary,
-          committed + interimWords.length + 1,
-          expected.length
-        );
-
-        const cappedMatch = Math.min(interimMatch.revealed, maxAllowed);
-        if (cappedMatch > committed) {
-          live = cappedMatch;
-        }
+      let live = committed;
+      if (bestInterimRevealed > committed) {
+        live = bestInterimRevealed;
       }
 
       // When live match from speech stream advances, lock it in so the word reveals

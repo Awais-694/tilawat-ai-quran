@@ -44,21 +44,26 @@ export function useSpeechRecognition(onResult: ResultHandler) {
   handlerRef.current = onResult;
   const finalsAll = useRef<string[]>([]);
   const sessionFinalsAppended = useRef(0);
+  const restartTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const emit = (interim: string) =>
-    handlerRef.current(finalsAll.current.join(" "), interim);
+  const startSession = () => {
+    if (!wantListening.current || typeof window === "undefined") return;
 
-  const start = () => {
-    if (!supported) return;
-    if (wantListening.current) return; // pehle se chal rahi hai — double start nahi
+    try {
+      recRef.current?.stop();
+    } catch {}
+
     const w = window as unknown as Record<string, new () => SRInstance>;
     const Ctor = w.SpeechRecognition || w.webkitSpeechRecognition;
+    if (!Ctor) return;
+
     const rec = new Ctor();
     rec.lang = "ar-SA";
     rec.continuous = true;
     rec.interimResults = true;
     (rec as unknown as { maxAlternatives: number }).maxAlternatives = 5;
     sessionFinalsAppended.current = 0;
+
     rec.onresult = (e) => {
       let finalsInSession = 0;
       let interimText = "";
@@ -94,6 +99,7 @@ export function useSpeechRecognition(onResult: ResultHandler) {
 
       handlerRef.current(finalsAll.current.join(" "), interimText.trim(), interimAlts);
     };
+
     rec.onerror = (e) => {
       if (e.error === "no-speech") {
         // Normal silence/pause — Chrome triggers this when speech pauses.
@@ -114,23 +120,51 @@ export function useSpeechRecognition(onResult: ResultHandler) {
         setError("No microphone was detected. Please connect a microphone and try again.");
       }
     };
+
     rec.onend = () => {
       if (wantListening.current) {
         sessionFinalsAppended.current = 0;
-        try { rec.start(); } catch { /* already running */ }
+        if (restartTimerRef.current) clearTimeout(restartTimerRef.current);
+        // Clean restart with fresh instance so pauses between words never stall the mic
+        restartTimerRef.current = setTimeout(() => {
+          if (wantListening.current) {
+            startSession();
+          }
+        }, 60);
       } else {
         setListening(false);
       }
     };
+
     recRef.current = rec;
-    wantListening.current = true;
     setError(null);
-    try { rec.start(); setListening(true); } catch { wantListening.current = false; /* retry ho sakegi */ }
+    try {
+      rec.start();
+      setListening(true);
+    } catch {
+      if (wantListening.current) {
+        if (restartTimerRef.current) clearTimeout(restartTimerRef.current);
+        restartTimerRef.current = setTimeout(() => {
+          if (wantListening.current) startSession();
+        }, 100);
+      }
+    }
+  };
+
+  const start = () => {
+    if (!supported) return;
+    if (wantListening.current) return;
+    wantListening.current = true;
+    startSession();
   };
 
   const stop = () => {
     wantListening.current = false;
-    recRef.current?.stop();
+    if (restartTimerRef.current) clearTimeout(restartTimerRef.current);
+    try {
+      recRef.current?.stop();
+    } catch {}
+    recRef.current = null;
     setListening(false);
   };
 
@@ -139,6 +173,15 @@ export function useSpeechRecognition(onResult: ResultHandler) {
     sessionFinalsAppended.current = 0;
   };
 
-  useEffect(() => () => { wantListening.current = false; recRef.current?.stop(); }, []);
+  useEffect(() => {
+    return () => {
+      wantListening.current = false;
+      if (restartTimerRef.current) clearTimeout(restartTimerRef.current);
+      try {
+        recRef.current?.stop();
+      } catch {}
+    };
+  }, []);
+
   return { supported, listening, error, start, stop, resetFinals };
 }

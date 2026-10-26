@@ -66,11 +66,49 @@ export function wordMatches(target: string, heard: string): boolean {
   if (tNorm === hNorm) return true;
   if (phoneticCanon(tNorm) === phoneticCanon(hNorm)) return true;
 
+  // Deduplication for elongated Madd vowels and Shaddah vocal drag (e.g. "حكيييم" -> "حكيم", "سييين" -> "سين")
+  const dedup = (s: string) => s.replace(/(.)\1+/g, "$1");
+  const tDedup = dedup(tNorm);
+  const hDedup = dedup(hNorm);
+  if (tDedup === hDedup) return true;
+  if (phoneticCanon(tDedup) === phoneticCanon(hDedup)) return true;
+
   // Aliases check (e.g. Speech engine writing "انزل" for "انذر", "الله" for "لله")
   const tAliases = WORD_ALIASES[target] || WORD_ALIASES[tNorm];
-  if (tAliases && (tAliases.includes(heard) || tAliases.includes(hNorm))) return true;
+  if (tAliases && (tAliases.includes(heard) || tAliases.includes(hNorm) || tAliases.includes(hDedup))) return true;
   const hAliases = WORD_ALIASES[heard] || WORD_ALIASES[hNorm];
-  if (hAliases && (hAliases.includes(target) || hAliases.includes(tNorm))) return true;
+  if (hAliases && (hAliases.includes(target) || hAliases.includes(tNorm) || hAliases.includes(tDedup))) return true;
+
+  // Direct conjunction prefix tolerance (و / ف added or dropped in speech recognition)
+  if ((tNorm.startsWith("و") || tNorm.startsWith("ف")) && tNorm.slice(1) === hNorm) return true;
+  if ((hNorm.startsWith("و") || hNorm.startsWith("ف")) && hNorm.slice(1) === tNorm) return true;
+
+  // Direct definite article tolerance (ال / وال added or dropped in speech recognition)
+  if (tNorm.startsWith("ال") && tNorm.slice(2) === hNorm) return true;
+  if (hNorm.startsWith("ال") && hNorm.slice(2) === tNorm) return true;
+  if (tNorm.startsWith("وال") && (tNorm.slice(1) === hNorm || tNorm.slice(3) === hNorm)) return true;
+  if (hNorm.startsWith("وال") && (hNorm.slice(1) === tNorm || hNorm.slice(3) === tNorm)) return true;
+
+  // Plural noun/verb suffix equivalence (ـون vs ـين e.g. المرسلون vs المرسلين, يؤمنون vs يؤمنين)
+  if (
+    tNorm.length >= 4 &&
+    hNorm.length >= 4 &&
+    ((tNorm.endsWith("ون") && hNorm.endsWith("ين")) || (tNorm.endsWith("ين") && hNorm.endsWith("ون"))) &&
+    tNorm.slice(0, -2) === hNorm.slice(0, -2)
+  ) {
+    return true;
+  }
+
+  // Final Alif Maksura vs Yaa vs Alef equivalence (e.g. علي vs على vs علا)
+  if (
+    tNorm.length >= 3 &&
+    hNorm.length >= 3 &&
+    tNorm.slice(0, -1) === hNorm.slice(0, -1) &&
+    /[ياى]/.test(tNorm.slice(-1)) &&
+    /[ياى]/.test(hNorm.slice(-1))
+  ) {
+    return true;
+  }
 
   // Taa Marbuta / Taa open variation in construct state (e.g. "رحمه" vs "رحمت", "نعمه" vs "نعمت")
   if (
@@ -358,7 +396,48 @@ export function matchMany(
       }
     }
 
-    // 6. Full History Rolling Buffer Check:
+    // 6. Fast Recitation 1-Token Lookahead (حدر):
+    // In fast recitation, a speech recognizer frequently elides or omits unstressed particles
+    // (e.g. "على" in "على صراط", or "و", "ف", "في", "من", "ما", "ان", "لا", "يا"), or a fast elision skips 1 word.
+    // If w matches token rNext (r + 1), and either the next heard word confirms alignment or token r is a particle:
+    const rNext = skipEmpty(expectedNormalized, r + 1);
+    if (rNext < expectedNormalized.length) {
+      const isRParticle = (idx: number): boolean => {
+        const text = expectedNormalized[idx] || "";
+        return (
+          text.length <= 3 ||
+          ["علي", "على", "في", "من", "ما", "ان", "لا", "يا", "ثم", "بل", "اذ", "قد", "عن", "انما", "كان", "هم", "هو"].includes(text)
+        );
+      };
+
+      if (matches(rNext, w)) {
+        const rNextNext = skipEmpty(expectedNormalized, rNext + 1);
+        const nextConfirms =
+          i + 1 < heardWords.length &&
+          (matches(rNextNext, heardWords[i + 1]) ||
+            (i + 2 < heardWords.length && matches(rNextNext, heardWords[i + 1] + heardWords[i + 2])));
+
+        if (nextConfirms || isRParticle(r)) {
+          r = skipEmpty(expectedNormalized, rNext + 1);
+          i++;
+          continue;
+        }
+      }
+
+      // Check 2-token particle lookahead (e.g. "و" + "ما" or "ان" + "لا" omitted in fast recitation)
+      const rNext2 = skipEmpty(expectedNormalized, rNext + 1);
+      if (rNext2 < expectedNormalized.length && matches(rNext2, w)) {
+        const rNext3 = skipEmpty(expectedNormalized, rNext2 + 1);
+        const nextConfirms2 = i + 1 < heardWords.length && matches(rNext3, heardWords[i + 1]);
+        if (nextConfirms2 || (isRParticle(r) && isRParticle(rNext))) {
+          r = skipEmpty(expectedNormalized, rNext2 + 1);
+          i++;
+          continue;
+        }
+      }
+    }
+
+    // 7. Full History Rolling Buffer Check:
     // In continuous speech recognition, heardWords can be a long rolling buffer of the entire recitation session.
     // Check if w was already matched in ANY previous token (0 to r - 1).
     // If it was already matched earlier in the sequence, skip it cleanly WITHOUT flagging as a mistake!
