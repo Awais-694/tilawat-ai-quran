@@ -6,16 +6,17 @@ import { usePathname } from "next/navigation";
 export function Navbar() {
   const pathname = usePathname() || "";
 
-  // The 4 Quran reading/recitation/tarjama/tajweed sections:
-  // When user opens any of the 4 Quran options, hide the top navbar so maximum screen space is dedicated to the Quran!
-  const isQuranReadingSection =
+  // When user opens Quran reading sections or Daily Task planner (/todo),
+  // hide the top navbar so maximum screen space is dedicated to the content!
+  const shouldHideNavbar =
     pathname.startsWith("/read") ||
     pathname.startsWith("/recite") ||
     pathname.startsWith("/surahs") ||
     pathname.startsWith("/tajweed") ||
-    pathname.startsWith("/tarjama");
+    pathname.startsWith("/tarjama") ||
+    pathname.startsWith("/todo");
 
-  if (isQuranReadingSection) {
+  if (shouldHideNavbar) {
     return null;
   }
 

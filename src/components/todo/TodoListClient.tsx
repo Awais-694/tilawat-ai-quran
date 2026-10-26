@@ -15,25 +15,10 @@ interface PlannerData {
   date: string;
   tasks: TodoItem[];
   priorities: TodoItem[];
-  reminders: TodoItem[];
   notes: string;
-}
-
-export interface DayHistoryEntry {
-  id: string;
-  date: string;
-  userName: string;
-  tasks: TodoItem[];
-  priorities: TodoItem[];
-  reminders: TodoItem[];
-  notes: string;
-  completedCount: number;
-  totalCount: number;
-  savedAt: number;
 }
 
 const STORAGE_KEY = "tilawat_todo_planner_v1";
-const HISTORY_STORAGE_KEY = "tilawat_todo_history_v1";
 
 function getTodayFormatted(): string {
   const d = new Date();
@@ -60,10 +45,6 @@ const DEFAULT_PLANNER: PlannerData = {
     { id: "p1", text: "Keep recitation streak alive today", completed: false },
     { id: "p2", text: "Practice Tajweed pronunciation with AI mic", completed: false },
   ],
-  reminders: [
-    { id: "r1", text: "Perform 5 Daily Prayers on time", completed: false },
-    { id: "r2", text: "Make Istighfar & Durood Sharif", completed: false },
-  ],
   notes: "رَبِّ زِدْنِي عِلْمًا — O my Lord, increase me in knowledge.",
 };
 
@@ -71,8 +52,6 @@ export function TodoListClient() {
   const router = useRouter();
   const [data, setData] = useState<PlannerData>(() => DEFAULT_PLANNER);
   const [loaded, setLoaded] = useState(false);
-  const [history, setHistory] = useState<DayHistoryEntry[]>([]);
-  const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [statusFeedback, setStatusFeedback] = useState<string | null>(null);
 
   // Filter for tasks list: "all" | "done" | "not_done"
@@ -81,10 +60,9 @@ export function TodoListClient() {
   // New item inputs
   const [newTaskInput, setNewTaskInput] = useState("");
   const [newPriorityInput, setNewPriorityInput] = useState("");
-  const [newReminderInput, setNewReminderInput] = useState("");
   const [noteSavedFeedback, setNoteSavedFeedback] = useState(false);
 
-  // Load planner & history from localStorage on mount
+  // Load planner from localStorage on mount
   useEffect(() => {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
@@ -96,7 +74,6 @@ export function TodoListClient() {
             date: parsed.date || getTodayFormatted(),
             tasks: Array.isArray(parsed.tasks) ? parsed.tasks : DEFAULT_PLANNER.tasks,
             priorities: Array.isArray(parsed.priorities) ? parsed.priorities : DEFAULT_PLANNER.priorities,
-            reminders: Array.isArray(parsed.reminders) ? parsed.reminders : DEFAULT_PLANNER.reminders,
             notes: typeof parsed.notes === "string" ? parsed.notes : DEFAULT_PLANNER.notes,
           });
         }
@@ -105,15 +82,6 @@ export function TodoListClient() {
           ...DEFAULT_PLANNER,
           date: getTodayFormatted(),
         });
-      }
-
-      // Load history
-      const rawHist = localStorage.getItem(HISTORY_STORAGE_KEY);
-      if (rawHist) {
-        const parsedHist = JSON.parse(rawHist);
-        if (Array.isArray(parsedHist)) {
-          setHistory(parsedHist);
-        }
       }
     } catch {}
     setLoaded(true);
@@ -143,7 +111,7 @@ export function TodoListClient() {
   };
 
   // Generic toggle
-  const toggleItem = (listKey: "tasks" | "priorities" | "reminders", id: string) => {
+  const toggleItem = (listKey: "tasks" | "priorities", id: string) => {
     setData((prev) => ({
       ...prev,
       [listKey]: prev[listKey].map((it) =>
@@ -153,7 +121,7 @@ export function TodoListClient() {
   };
 
   // Explicit set item status (Done / Not Done)
-  const setItemStatus = (listKey: "tasks" | "priorities" | "reminders", id: string, completed: boolean) => {
+  const setItemStatus = (listKey: "tasks" | "priorities", id: string, completed: boolean) => {
     setData((prev) => ({
       ...prev,
       [listKey]: prev[listKey].map((it) =>
@@ -163,7 +131,7 @@ export function TodoListClient() {
   };
 
   // Generic delete
-  const deleteItem = (listKey: "tasks" | "priorities" | "reminders", id: string) => {
+  const deleteItem = (listKey: "tasks" | "priorities", id: string) => {
     setData((prev) => ({
       ...prev,
       [listKey]: prev[listKey].filter((it) => it.id !== id),
@@ -194,18 +162,6 @@ export function TodoListClient() {
     setNewPriorityInput("");
   };
 
-  // Add Reminder
-  const handleAddReminder = (e?: React.FormEvent) => {
-    e?.preventDefault();
-    const text = newReminderInput.trim();
-    if (!text) return;
-    setData((prev) => ({
-      ...prev,
-      reminders: [...prev.reminders, { id: `r_${Date.now()}`, text, completed: false }],
-    }));
-    setNewReminderInput("");
-  };
-
   // Save Note button
   const handleSaveNote = () => {
     try {
@@ -216,95 +172,35 @@ export function TodoListClient() {
     } catch {}
   };
 
-  // Quick suggestion chips
-  const addSuggestedTask = (text: string) => {
-    if (data.tasks.some((t) => t.text === text)) return;
-    setData((prev) => ({
-      ...prev,
-      tasks: [...prev.tasks, { id: `t_${Date.now()}`, text, completed: false }],
-    }));
-  };
-
   // Clear completed
   const handleClearCompleted = () => {
     setData((prev) => ({
       ...prev,
       tasks: prev.tasks.filter((t) => !t.completed),
       priorities: prev.priorities.filter((p) => !p.completed),
-      reminders: prev.reminders.filter((r) => !r.completed),
     }));
     showToast("Completed tasks cleared.");
   };
 
-  // Save current day to previous tasks history
-  const saveCurrentDayToHistory = (silent = false): DayHistoryEntry[] => {
-    const all = [...data.tasks, ...data.priorities, ...data.reminders];
-    const completed = all.filter((i) => i.completed).length;
-
-    const newEntry: DayHistoryEntry = {
-      id: `hist_${Date.now()}`,
-      date: data.date || getTodayFormatted(),
-      userName: data.userName || "User",
-      tasks: [...data.tasks],
-      priorities: [...data.priorities],
-      reminders: [...data.reminders],
-      notes: data.notes,
-      completedCount: completed,
-      totalCount: all.length,
-      savedAt: Date.now(),
-    };
-
-    // Filter out duplicates for the exact same date & prepend
-    const updated = [
-      newEntry,
-      ...history.filter((h) => h.date !== newEntry.date),
-    ].slice(0, 30); // Keep last 30 days
-
-    setHistory(updated);
-    try {
-      localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(updated));
-    } catch {}
-
-    if (!silent) {
-      showToast(`Previous tasks for "${newEntry.date}" saved to history!`);
-    }
-    return updated;
-  };
-
-  // Reset for a new day (automatically archives previous tasks first)
+  // Reset for a new day
   const handleResetNewDay = () => {
     if (typeof window !== "undefined") {
-      const confirmMsg =
-        "Start a new day? Your previous tasks data will be safely saved to History, and tasks will reset for the new day.";
+      const confirmMsg = "Start a new day? All daily tasks will be reset to unchecked.";
       if (!window.confirm(confirmMsg)) return;
     }
 
-    // 1. Save previous tasks to history first!
-    saveCurrentDayToHistory(true);
-
-    // 2. Reset tasks for the new day
     setData((prev) => ({
       ...prev,
       date: getTodayFormatted(),
       tasks: prev.tasks.map((t) => ({ ...t, completed: false })),
       priorities: prev.priorities.map((p) => ({ ...p, completed: false })),
-      reminders: prev.reminders.map((r) => ({ ...r, completed: false })),
     }));
 
-    showToast("Previous tasks saved to history! New day started.");
-  };
-
-  // Delete history entry
-  const handleDeleteHistoryEntry = (id: string) => {
-    const updated = history.filter((h) => h.id !== id);
-    setHistory(updated);
-    try {
-      localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(updated));
-    } catch {}
+    showToast("New day started! Tasks reset.");
   };
 
   // Stats
-  const allItems = [...data.tasks, ...data.priorities, ...data.reminders];
+  const allItems = [...data.tasks, ...data.priorities];
   const totalCount = allItems.length;
   const completedCount = allItems.filter((i) => i.completed).length;
   const allTasksCompleted = data.tasks.length > 0 && data.tasks.every((t) => t.completed);
@@ -627,83 +523,7 @@ export function TodoListClient() {
               </div>
             </div>
 
-            {/* 2. REMINDER (Icon removed, Add button added) */}
-            <div className="border border-[#ded5c0] rounded-2xl overflow-hidden bg-white shadow-2xs">
-              <div className="bg-gradient-to-r from-[#143323] to-[#1c4731] text-white px-3.5 py-2 flex items-center justify-between">
-                <span className="font-bold text-xs uppercase tracking-wider">
-                  Reminders
-                </span>
-                <span className="text-[10px] font-bold text-sky-200 bg-sky-400/20 border border-sky-300/30 px-2 py-0.5 rounded-full">
-                  Daily
-                </span>
-              </div>
-              <div className="p-2.5 sm:p-3 divide-y divide-[#f0ede6]">
-                <div className="space-y-1 min-h-[70px] max-h-[140px] overflow-y-auto scrollbar-thin pr-1">
-                  {data.reminders.map((item) => (
-                    <div
-                      key={item.id}
-                      onClick={() => toggleItem("reminders", item.id)}
-                      className={`group flex items-center justify-between py-1.5 px-2 rounded-lg hover:bg-sky-50/50 cursor-pointer transition-colors ${
-                        item.completed ? "bg-gray-50/80" : ""
-                      }`}
-                    >
-                      <div className="flex items-center gap-2 min-w-0 pr-2">
-                        <div
-                          className={`w-4 h-4 rounded-md border flex items-center justify-center shrink-0 transition-all ${
-                            item.completed
-                              ? "bg-sky-700 border-sky-700 text-white"
-                              : "border-[#c4ba9f] bg-white group-hover:border-sky-600"
-                          }`}
-                        >
-                          {item.completed && (
-                            <svg className="w-2.5 h-2.5 text-white stroke-current" fill="none" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
-                            </svg>
-                          )}
-                        </div>
-                        <span
-                          className={`text-xs font-medium truncate ${
-                            item.completed ? "line-through text-neutral-400 font-normal" : "text-[#112a1d]"
-                          }`}
-                        >
-                          {item.text}
-                        </span>
-                      </div>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          deleteItem("reminders", item.id);
-                        }}
-                        className="opacity-0 group-hover:opacity-100 text-[#8e8574] hover:text-rose-600 p-0.5 text-xs transition-opacity rounded"
-                      >
-                        ✕
-                      </button>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Form with Add button */}
-                <form onSubmit={handleAddReminder} className="pt-2 mt-1">
-                  <div className="flex items-center gap-1.5">
-                    <input
-                      type="text"
-                      placeholder="+ Add reminder..."
-                      value={newReminderInput}
-                      onChange={(e) => setNewReminderInput(e.target.value)}
-                      className="flex-1 bg-[#faf8f3] border border-[#ded5c0] rounded-xl px-2.5 py-1.5 text-xs text-[#112a1d] focus:outline-none focus:border-sky-600 focus:bg-white placeholder:text-[#8e8574]"
-                    />
-                    <button
-                      type="submit"
-                      className="px-3 py-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 active:scale-95 text-white text-xs font-bold transition-all shrink-0 cursor-pointer shadow-2xs"
-                    >
-                      Add
-                    </button>
-                  </div>
-                </form>
-              </div>
-            </div>
-
-            {/* 3. NOTES / REFLECTIONS (Icon removed, Add/Save button added) */}
+            {/* 2. NOTES & REFLECTIONS */}
             <div className="border border-[#ded5c0] rounded-2xl overflow-hidden bg-white shadow-2xs">
               <div className="bg-gradient-to-r from-[#143323] to-[#1c4731] text-white px-3.5 py-2 flex items-center justify-between">
                 <span className="font-bold text-xs uppercase tracking-wider">
@@ -713,7 +533,7 @@ export function TodoListClient() {
               </div>
               <div className="p-2.5 sm:p-3 space-y-2">
                 <textarea
-                  rows={3}
+                  rows={4}
                   placeholder="Jot down Tadabbur thoughts, Ayah notes, or daily reflections here..."
                   value={data.notes}
                   onChange={(e) => setData({ ...data, notes: e.target.value })}
@@ -737,48 +557,27 @@ export function TodoListClient() {
           </div>
         </div>
 
-        {/* Footer Actions: Save Previous Tasks, History, Clear & Reset New Day */}
+        {/* Footer Actions: Clear Completed & Reset New Day */}
         <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 border-t border-[#ede7d8]">
           <div className="flex items-center gap-2 text-xs text-[#527060] font-medium">
             <span>Saved on your device automatically.</span>
           </div>
 
           <div className="flex flex-wrap items-center justify-end gap-2">
-            {/* Save Previous Tasks / Current Day */}
-            <button
-              type="button"
-              onClick={() => saveCurrentDayToHistory(false)}
-              className="px-3 py-1.5 rounded-xl border border-[#ded5c0] bg-white hover:bg-[#faf7ee] text-xs font-semibold text-[#143323] transition-all cursor-pointer shadow-2xs active:scale-95 flex items-center gap-1.5"
-              title="Save current tasks data to past history"
-            >
-              <span>💾</span>
-              <span>Save Previous Tasks</span>
-            </button>
-
-            {/* View History Button */}
-            <button
-              type="button"
-              onClick={() => setShowHistoryModal(true)}
-              className="px-3 py-1.5 rounded-xl border border-[#ded5c0] bg-[#faf8f3] hover:bg-[#ede7d8] text-xs font-semibold text-[#143323] transition-all cursor-pointer shadow-2xs active:scale-95 flex items-center gap-1.5"
-            >
-              <span>📜</span>
-              <span>Task History ({history.length})</span>
-            </button>
-
             {/* Clear Completed */}
             <button
               onClick={handleClearCompleted}
               disabled={completedCount === 0}
-              className="px-3 py-1.5 rounded-xl border border-[#ded5c0] bg-white hover:bg-[#faf7ee] text-xs font-semibold text-[#527060] disabled:opacity-40 transition-all cursor-pointer shadow-2xs"
+              className="px-3.5 py-1.5 rounded-xl border border-[#ded5c0] bg-white hover:bg-[#faf7ee] text-xs font-semibold text-[#527060] disabled:opacity-40 transition-all cursor-pointer shadow-2xs"
             >
               Clear Completed
             </button>
 
-            {/* Start New Day (with auto archive) */}
+            {/* Start New Day */}
             <button
               onClick={handleResetNewDay}
               className="px-4 py-1.5 rounded-xl bg-emerald-800 hover:bg-emerald-900 text-white text-xs font-bold shadow-xs active:scale-95 transition-all cursor-pointer"
-              title="Save previous tasks to history and reset for new day"
+              title="Reset tasks for a new day"
             >
               Start New Day ↺
             </button>
@@ -786,112 +585,6 @@ export function TodoListClient() {
         </div>
 
       </div>
-
-      {/* PREVIOUS TASKS HISTORY MODAL */}
-      {showHistoryModal && (
-        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4">
-          <div className="bg-white border border-[#ded5c0] rounded-2xl max-w-xl w-full max-h-[85vh] flex flex-col shadow-2xl overflow-hidden animate-in fade-in zoom-in-95">
-            {/* Modal Header */}
-            <div className="bg-[#143323] text-white px-4 py-3 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <span className="text-base">📜</span>
-                <h3 className="font-bold text-sm sm:text-base">Previous Tasks & Day History</h3>
-              </div>
-              <button
-                type="button"
-                onClick={() => setShowHistoryModal(false)}
-                className="text-emerald-200 hover:text-white p-1 rounded-lg text-sm cursor-pointer"
-              >
-                ✕
-              </button>
-            </div>
-
-            {/* History Content */}
-            <div className="p-4 overflow-y-auto space-y-3 flex-1 scrollbar-thin">
-              {history.length === 0 ? (
-                <div className="text-center py-10 space-y-2">
-                  <p className="text-sm font-semibold text-[#143323]">No past history saved yet.</p>
-                  <p className="text-xs text-[#8e8574]">
-                    When you click "Save Previous Tasks" or "Start New Day ↺", your daily tasks will be safely archived here.
-                  </p>
-                </div>
-              ) : (
-                history.map((entry) => (
-                  <div
-                    key={entry.id}
-                    className="p-3 rounded-xl border border-[#ded5c0] bg-[#faf8f3] space-y-2 text-xs"
-                  >
-                    <div className="flex items-center justify-between border-b border-[#ede7d8] pb-1.5">
-                      <div>
-                        <span className="font-bold text-[#143323] text-sm">{entry.date}</span>
-                        {entry.userName && (
-                          <span className="text-[#8e8574] text-[11px] ml-2">({entry.userName})</span>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-bold text-[11px]">
-                          {entry.completedCount}/{entry.totalCount} Done
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => handleDeleteHistoryEntry(entry.id)}
-                          className="text-[#8e8574] hover:text-rose-600 text-xs px-1 py-0.5"
-                          title="Delete this history entry"
-                        >
-                          ✕
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* Task list summary */}
-                    <div className="space-y-1">
-                      <span className="text-[10px] uppercase font-bold text-[#527060] tracking-wider block">
-                        Tasks:
-                      </span>
-                      <ul className="space-y-1 pl-1">
-                        {entry.tasks.map((t) => (
-                          <li key={t.id} className="flex items-center gap-2 text-[#112a1d]">
-                            <span
-                              className={`w-3.5 h-3.5 rounded flex items-center justify-center text-[9px] font-bold shrink-0 ${
-                                t.completed
-                                  ? "bg-emerald-600 text-white"
-                                  : "bg-neutral-200 text-neutral-600"
-                              }`}
-                            >
-                              {t.completed ? "✓" : "–"}
-                            </span>
-                            <span className={t.completed ? "line-through text-neutral-400" : ""}>
-                              {t.text}
-                            </span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-
-                    {/* Notes if any */}
-                    {entry.notes && (
-                      <div className="pt-1 text-[11px] text-[#527060] italic border-t border-[#ede7d8]">
-                        <span className="font-bold not-italic">Notes:</span> {entry.notes}
-                      </div>
-                    )}
-                  </div>
-                ))
-              )}
-            </div>
-
-            {/* Modal Footer */}
-            <div className="p-3 bg-[#faf8f3] border-t border-[#ded5c0] flex justify-end">
-              <button
-                type="button"
-                onClick={() => setShowHistoryModal(false)}
-                className="px-4 py-1.5 rounded-xl bg-[#143323] hover:bg-[#1a442f] text-white text-xs font-bold cursor-pointer"
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
