@@ -113,3 +113,12 @@ class TilawatDB extends Dexie {
 }
 
 export const db = new TilawatDB();
+
+if (typeof window !== "undefined") {
+  db.on("versionchange", () => {
+    try {
+      db.close();
+    } catch {}
+    return false;
+  });
+}

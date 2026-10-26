@@ -26,14 +26,59 @@ interface Stats {
   lastActive: SurahProgress | null;
 }
 
+function withTimeout<T>(promise: Promise<T>, ms: number, fallback: T): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<T>((resolve) => setTimeout(() => resolve(fallback), ms)),
+  ]);
+}
+
+function getInitialActive(): SurahProgress {
+  if (typeof window !== "undefined") {
+    try {
+      const raw = localStorage.getItem("tilawat_last_recitation");
+      if (raw) {
+        const p = JSON.parse(raw);
+        if (p?.surahNumber && !p.completed) {
+          return {
+            surahNumber: p.surahNumber,
+            revealedWords: p.revealedWords || 0,
+            totalWords: p.totalWords || 0,
+            completed: false,
+            lastPracticedAt: p.timestamp || Date.now(),
+            lastAyahNumber: p.lastAyahNumber || 1,
+          };
+        }
+      }
+    } catch {}
+  }
+  return {
+    surahNumber: 1,
+    revealedWords: 0,
+    totalWords: 29,
+    completed: false,
+    lastPracticedAt: Date.now(),
+    lastAyahNumber: 1,
+  };
+}
+
 export function DashboardClient() {
-  const [stats, setStats] = useState<Stats | null>(null);
-  const [lastAyah, setLastAyah] = useState<number | null>(null);
+  const [stats, setStats] = useState<Stats>(() => ({
+    streak: 0,
+    longestStreak: 0,
+    rollingDays: getRolling7Days(new Map()),
+    accuracy: null,
+    inProgress: [],
+    completedCount: 0,
+    completedList: [],
+    lastActive: getInitialActive(),
+  }));
+  const [lastAyah, setLastAyah] = useState<number>(1);
 
   const loadStats = async () => {
     try {
-      const activity = await db.activity.toArray();
-      const progress = await db.progress.toArray();
+      const activity = await withTimeout(db.activity.toArray(), 1500, []);
+      const progress = await withTimeout(db.progress.toArray(), 1500, []);
       const totalWords = activity.reduce((s, a) => s + a.wordsRevealed, 0);
       const totalMistakes = activity.reduce((s, a) => s + a.mistakes, 0);
 

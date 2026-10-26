@@ -7,6 +7,13 @@ import { db, type SurahProgress, type DailyActivity } from "@/lib/storage/db";
 import { getSurahMeta } from "@/lib/quran/data";
 import { ProgressBar } from "@/components/common/ProgressBar";
 
+function withTimeout<T>(promise: Promise<T>, ms: number, fallback: T): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<T>((resolve) => setTimeout(() => resolve(fallback), ms)),
+  ]);
+}
+
 // Progress & Stats Client — IndexedDB verified recitation progress
 export function StatsClient() {
   const router = useRouter();
@@ -17,11 +24,11 @@ export function StatsClient() {
 
   const loadData = async () => {
     try {
-      const p = await db.progress.toArray();
+      const p = await withTimeout(db.progress.toArray(), 1500, []);
       setProgress(p.sort((a, b) => (b.lastPracticedAt || 0) - (a.lastPracticedAt || 0)));
-      const w = await db.wrongWords.toArray();
+      const w = await withTimeout(db.wrongWords.toArray(), 1500, []);
       setWrong(w.sort((a, b) => b.count - a.count).slice(0, 20));
-      const act = await db.activity.toArray();
+      const act = await withTimeout(db.activity.toArray(), 1500, []);
       setActivity(act.sort((a, b) => (a.date < b.date ? 1 : -1)).slice(0, 7));
       setLoaded(true);
     } catch (err) {
