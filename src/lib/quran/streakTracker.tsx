@@ -243,25 +243,12 @@ export function useStreakTracker({
       if (res.streakAchievedToday) {
         setStreakUnlocked(true);
       }
-      if (res.isNewlyAchieved && !alreadyCelebrated.current) {
-        alreadyCelebrated.current = true;
-        setShowToast(true);
-        setTimeout(() => setShowToast(false), 4500);
-      }
     };
 
     const timer = setInterval(() => {
       if (typeof document !== "undefined" && document.visibilityState === "visible") {
         bufferRef.current += 1;
-        setSecondsOnPage((s) => {
-          const next = s + 1;
-          if (next >= threshold && !alreadyCelebrated.current) {
-            alreadyCelebrated.current = true;
-            setShowToast(true);
-            setTimeout(() => setShowToast(false), 4500);
-          }
-          return next;
-        });
+        setSecondsOnPage((s) => s + 1);
 
         // Flush to storage every 4-5 seconds
         if (bufferRef.current >= 4) {
@@ -286,50 +273,18 @@ export function useStreakTracker({
     secondsOnPage,
     threshold,
     streakUnlocked,
-    showToast,
-    dismissToast: () => setShowToast(false),
+    showToast: false,
+    dismissToast: () => {},
   };
 }
 
 /**
- * Toast banner that pops up smoothly when the daily streak is unlocked.
+ * Streak Notification Toast is disabled per user preference — streak is credited silently.
  */
-export function StreakNotificationToast({
-  show,
-  mode,
-  onClose,
-}: {
-  show: boolean;
-  mode: StreakMode;
+export function StreakNotificationToast(_props: {
+  show?: boolean;
+  mode?: StreakMode;
   onClose?: () => void;
 }) {
-  if (!show) return null;
-  const label = STREAK_LABELS[mode];
-  return (
-    <div className="fixed top-4 right-4 z-50 animate-in fade-in slide-in-from-top-4 duration-300">
-      <div className="bg-gradient-to-r from-[#143323] via-[#1a442f] to-[#143323] border border-amber-400/40 text-white px-4 py-3 rounded-2xl shadow-xl flex items-center gap-3 max-w-sm backdrop-blur-md">
-        <div className="w-9 h-9 rounded-xl bg-amber-400/20 border border-amber-400/30 flex items-center justify-center text-xl shrink-0">
-          🔥
-        </div>
-        <div className="flex-1 min-w-0">
-          <div className="text-xs font-bold text-amber-300 flex items-center gap-1">
-            <span>1 Day Streak Credited!</span>
-            <span>✓</span>
-          </div>
-          <div className="text-[11px] text-emerald-100/90 leading-tight">
-            ما شاء اللہ! {label} پر وقت گزارنے پر آج کی سٹریک شمار ہو گئی ہے۔
-          </div>
-        </div>
-        <button
-          type="button"
-          onClick={onClose}
-          className="w-7 h-7 rounded-full bg-white/15 hover:bg-white/30 active:scale-90 text-white flex items-center justify-center text-sm font-bold cursor-pointer transition-all shrink-0 border border-white/20 shadow-xs"
-          title="Dismiss (ہٹا دیں)"
-          aria-label="Close notification"
-        >
-          ✕
-        </button>
-      </div>
-    </div>
-  );
+  return null;
 }
