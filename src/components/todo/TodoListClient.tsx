@@ -202,57 +202,40 @@ export function TodoListClient() {
   return (
     <div className="max-w-3xl mx-auto space-y-4 pb-16 px-2 sm:px-0">
       {/* Top Header & Navigation Bar */}
-      <div className="flex items-center justify-between border-b border-[#ede7d8] pb-3">
+      <div className="flex items-center justify-between border-b border-[#ede7d8] pb-3 px-1">
         <button
           onClick={handleBack}
-          className="inline-flex items-center justify-center px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-semibold text-[#193d2b] bg-white hover:bg-[#efe9d8] border border-[#d6cbaf] shadow-xs active:scale-95 transition-all cursor-pointer"
+          className="inline-flex items-center justify-center px-4 py-1.5 rounded-xl text-xs sm:text-sm font-semibold tracking-wide text-[#193d2b] bg-white hover:bg-[#efe9d8] active:bg-[#e4dcce] border border-[#d6cbaf] shadow-xs active:scale-95 transition-all duration-200 cursor-pointer min-w-[72px]"
         >
-          <span>←</span>
-          <span className="ml-1">Back</span>
+          Back
         </button>
 
-        <div className="flex items-center gap-1.5">
-          <span className="text-xs sm:text-sm font-bold text-[#112a1d]">Daily Task Planner</span>
-          <span className="text-[10px] sm:text-xs font-semibold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-900 border border-emerald-300">
-            {completedCount}/{totalCount} Done ({completionPct}%)
-          </span>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <Link
-            href="/streak"
-            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-semibold text-emerald-900 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 shadow-2xs active:scale-95 transition-all"
-          >
-            <span>🔥</span>
-            <span className="hidden sm:inline">Streak</span>
-          </Link>
-          <Link
-            href="/"
-            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-semibold text-[#193d2b] bg-[#f0ebd9] hover:bg-[#e4dcce] border border-[#ded5c0] shadow-2xs active:scale-95 transition-all"
-          >
-            <span>Dashboard</span>
-          </Link>
-        </div>
+        <Link
+          href="/"
+          className="inline-flex items-center justify-center px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-semibold text-[#193d2b] bg-white hover:bg-[#efe9d8] active:bg-[#e4dcce] border border-[#d6cbaf] shadow-xs active:scale-95 transition-all duration-200 cursor-pointer min-w-[72px]"
+        >
+          Dashboard
+        </Link>
       </div>
 
       {/* Main Printable / Planner Sheet Card */}
-      <div className="bg-[#fffefb] border-2 border-[#202020] rounded-2xl sm:rounded-3xl p-4 sm:p-7 shadow-[0_8px_30px_rgba(0,0,0,0.06)] space-y-5">
+      <div className="bg-white border border-[#ded5c0] rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-sm space-y-5">
         
-        {/* Planner Header: TO-DO LIST and Name/Date Box */}
-        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 border-b-2 border-[#202020] pb-4">
-          <div>
-            <h1 className="font-display text-3xl sm:text-4xl md:text-5xl font-black text-[#151515] tracking-tight uppercase">
-              TO-DO LIST
+        {/* Planner Header: Title & Name/Date Box */}
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 border-b border-[#ede7d8] pb-4">
+          <div className="space-y-1">
+            <h1 className="font-display text-2xl sm:text-3xl font-bold text-[#112a1d] tracking-tight">
+              Daily Quran & Tilawat Planner
             </h1>
-            <p className="text-xs sm:text-sm text-[#455048] font-medium mt-0.5">
-              Daily Quran, Tilawat & Islamic Habit Tracker
+            <p className="text-xs sm:text-sm text-[#527060] font-medium">
+              Daily Tilawat checklist, priorities, reminders & reflection notes
             </p>
           </div>
 
           {/* Name & Date Table Box */}
-          <div className="w-full sm:w-64 border-2 border-[#202020] rounded-lg overflow-hidden bg-white text-xs divide-y-2 divide-[#202020]">
-            <div className="flex items-center px-2.5 py-1 gap-2">
-              <span className="font-bold text-[#151515] uppercase w-12 shrink-0 text-[11px]">Name:</span>
+          <div className="w-full sm:w-64 border border-[#ded5c0] rounded-xl overflow-hidden bg-[#faf8f3] text-xs divide-y divide-[#ded5c0] shadow-2xs">
+            <div className="flex items-center px-3 py-1.5 gap-2">
+              <span className="font-bold text-[#143323] uppercase w-12 shrink-0 text-[11px]">Name:</span>
               <input
                 type="text"
                 placeholder="Enter name..."
@@ -261,8 +244,8 @@ export function TodoListClient() {
                 className="w-full bg-transparent font-medium text-[#112a1d] focus:outline-none placeholder:text-gray-400 text-xs py-0.5"
               />
             </div>
-            <div className="flex items-center px-2.5 py-1 gap-2">
-              <span className="font-bold text-[#151515] uppercase w-12 shrink-0 text-[11px]">Date:</span>
+            <div className="flex items-center px-3 py-1.5 gap-2">
+              <span className="font-bold text-[#143323] uppercase w-12 shrink-0 text-[11px]">Date:</span>
               <input
                 type="text"
                 value={data.date}
@@ -278,89 +261,95 @@ export function TodoListClient() {
           
           {/* LEFT COLUMN: TASK LIST (Span 7 on desktop) */}
           <div className="md:col-span-7 flex flex-col space-y-3">
-            {/* Header Banner */}
-            <div className="bg-[#112a1d] text-white px-3 py-2 rounded-t-lg flex items-center justify-between">
-              <span className="font-black text-xs sm:text-sm uppercase tracking-wider">
-                TASK LIST
-              </span>
-              <span className="text-[11px] font-semibold opacity-90 text-emerald-200">
-                {data.tasks.filter((t) => t.completed).length}/{data.tasks.length}
-              </span>
-            </div>
-
             {/* Tasks Container */}
-            <div className="border-2 border-[#202020] rounded-b-lg -mt-3 bg-white p-2 sm:p-3 divide-y divide-gray-200 min-h-[360px] flex flex-col justify-between">
-              <div className="space-y-0.5 divide-y divide-gray-150">
-                {data.tasks.length === 0 ? (
-                  <div className="py-8 text-center text-xs text-gray-400 italic">
-                    No tasks yet. Add your daily tasks below.
-                  </div>
-                ) : (
-                  data.tasks.map((task) => (
-                    <div
-                      key={task.id}
-                      onClick={() => toggleItem("tasks", task.id)}
-                      className={`group flex items-center justify-between py-2 px-1.5 rounded-md hover:bg-emerald-50/50 cursor-pointer transition-colors ${
-                        task.completed ? "bg-gray-50/80" : ""
-                      }`}
-                    >
-                      <div className="flex items-center gap-2.5 min-w-0 pr-2">
-                        {/* Clean Square Checkbox */}
-                        <div
-                          className={`w-4 h-4 sm:w-4.5 sm:h-4.5 rounded-sm border-2 flex items-center justify-center shrink-0 transition-all ${
-                            task.completed
-                              ? "bg-emerald-700 border-emerald-700 text-white"
-                              : "border-[#202020] bg-white group-hover:border-emerald-700"
-                          }`}
-                        >
-                          {task.completed && (
-                            <svg className="w-3 h-3 text-white stroke-current" fill="none" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3.5" d="M5 13l4 4L19 7" />
-                            </svg>
-                          )}
+            <div className="border border-[#ded5c0] rounded-2xl overflow-hidden bg-white shadow-2xs flex flex-col justify-between min-h-[420px]">
+              <div>
+                {/* Header Banner */}
+                <div className="bg-gradient-to-r from-[#143323] via-[#1a442f] to-[#143323] text-white px-4 py-2.5 flex items-center justify-between">
+                  <span className="font-bold text-xs sm:text-sm uppercase tracking-wider flex items-center gap-1.5">
+                    <svg className="w-4 h-4 text-emerald-300" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                    </svg>
+                    <span>Today's Checklist</span>
+                  </span>
+                  <span className="text-[11px] font-semibold text-emerald-100 bg-white/10 border border-white/10 px-2 py-0.5 rounded-full">
+                    {data.tasks.filter((t) => t.completed).length}/{data.tasks.length} Completed
+                  </span>
+                </div>
+
+                {/* Tasks List */}
+                <div className="p-2 sm:p-3 space-y-1">
+                  {data.tasks.length === 0 ? (
+                    <div className="py-12 text-center text-xs text-[#8e8574] italic">
+                      No tasks yet. Add your daily recitation tasks below.
+                    </div>
+                  ) : (
+                    data.tasks.map((task) => (
+                      <div
+                        key={task.id}
+                        onClick={() => toggleItem("tasks", task.id)}
+                        className={`group flex items-center justify-between py-2 px-2.5 rounded-xl hover:bg-[#fbf9f4] border border-transparent hover:border-[#ede7d8] cursor-pointer transition-all ${
+                          task.completed ? "bg-[#f5f8f5]/80" : ""
+                        }`}
+                      >
+                        <div className="flex items-center gap-2.5 min-w-0 pr-2">
+                          {/* Smooth Rounded Checkbox */}
+                          <div
+                            className={`w-4 h-4 sm:w-4.5 sm:h-4.5 rounded-md border flex items-center justify-center shrink-0 transition-all ${
+                              task.completed
+                                ? "bg-emerald-700 border-emerald-700 text-white shadow-2xs"
+                                : "border-[#c4ba9f] bg-white group-hover:border-emerald-700"
+                            }`}
+                          >
+                            {task.completed && (
+                              <svg className="w-3 h-3 text-white stroke-current" fill="none" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
+                              </svg>
+                            )}
+                          </div>
+
+                          {/* Task Text */}
+                          <span
+                            className={`text-xs sm:text-sm font-medium transition-all select-none break-words ${
+                              task.completed
+                                ? "line-through text-neutral-400 font-normal"
+                                : "text-[#112a1d]"
+                            }`}
+                          >
+                            {task.text}
+                          </span>
                         </div>
 
-                        {/* Task Text */}
-                        <span
-                          className={`text-xs sm:text-sm font-medium transition-all select-none break-words ${
-                            task.completed
-                              ? "line-through text-gray-400 font-normal"
-                              : "text-[#151515]"
-                          }`}
+                        {/* Delete Button on Hover */}
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            deleteItem("tasks", task.id);
+                          }}
+                          className="opacity-0 group-hover:opacity-100 text-[#8e8574] hover:text-rose-600 p-1 text-xs transition-opacity rounded-md hover:bg-rose-50"
+                          title="Delete task"
                         >
-                          {task.text}
-                        </span>
+                          ✕
+                        </button>
                       </div>
-
-                      {/* Delete Button on Hover */}
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          deleteItem("tasks", task.id);
-                        }}
-                        className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-rose-600 p-1 text-xs transition-opacity"
-                        title="Delete task"
-                      >
-                        ✕
-                      </button>
-                    </div>
-                  ))
-                )}
+                    ))
+                  )}
+                </div>
               </div>
 
               {/* Add Task Input Form */}
-              <form onSubmit={handleAddTask} className="pt-3 mt-2 border-t-2 border-dashed border-gray-200">
+              <form onSubmit={handleAddTask} className="p-3 border-t border-[#ede7d8] bg-[#faf8f3]">
                 <div className="flex items-center gap-2">
                   <input
                     type="text"
-                    placeholder="+ Add new task..."
+                    placeholder="+ Add new task (e.g. Surah Mulk before sleep)..."
                     value={newTaskInput}
                     onChange={(e) => setNewTaskInput(e.target.value)}
-                    className="flex-1 bg-gray-50 border border-gray-300 rounded-lg px-2.5 py-1.5 text-xs sm:text-sm text-[#112a1d] focus:outline-none focus:border-emerald-600 focus:bg-white"
+                    className="flex-1 bg-white border border-[#ded5c0] rounded-xl px-3 py-1.5 text-xs sm:text-sm text-[#112a1d] focus:outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 placeholder:text-[#8e8574]"
                   />
                   <button
                     type="submit"
-                    className="px-3 py-1.5 rounded-lg bg-[#112a1d] hover:bg-emerald-900 text-white text-xs font-bold transition-all shrink-0 cursor-pointer"
+                    className="px-3.5 py-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 active:scale-95 text-white text-xs font-bold transition-all shrink-0 cursor-pointer shadow-2xs"
                   >
                     Add
                   </button>
@@ -370,7 +359,7 @@ export function TodoListClient() {
 
             {/* Quick Suggestion Chips */}
             <div className="pt-1">
-              <span className="text-[11px] font-bold text-[#55695c] uppercase tracking-wider block mb-1.5">
+              <span className="text-[11px] font-bold text-[#527060] uppercase tracking-wider block mb-1.5">
                 Suggested Quran & Islamic Habits:
               </span>
               <div className="flex flex-wrap gap-1.5">
@@ -387,7 +376,7 @@ export function TodoListClient() {
                     key={sug}
                     type="button"
                     onClick={() => addSuggestedTask(sug)}
-                    className="text-[10px] sm:text-[11px] font-medium px-2 py-0.5 rounded-md bg-[#faf7ee] hover:bg-emerald-100 text-[#193d2b] border border-[#d6cbaf] hover:border-emerald-400 transition-all cursor-pointer"
+                    className="text-[11px] font-medium px-2.5 py-1 rounded-lg bg-white hover:bg-emerald-50 text-[#143323] border border-[#ded5c0] hover:border-emerald-400 active:scale-95 transition-all cursor-pointer shadow-2xs"
                   >
                     + {sug}
                   </button>
@@ -400,40 +389,43 @@ export function TodoListClient() {
           <div className="md:col-span-5 flex flex-col space-y-4">
             
             {/* 1. TOP PRIORITIES */}
-            <div className="flex flex-col">
-              <div className="bg-[#112a1d] text-white px-3 py-2 rounded-t-lg flex items-center justify-between">
-                <span className="font-black text-xs sm:text-sm uppercase tracking-wider">
-                  TOP PRIORITIES
+            <div className="border border-[#ded5c0] rounded-2xl overflow-hidden bg-white shadow-2xs">
+              <div className="bg-gradient-to-r from-[#143323] to-[#1c4731] text-white px-3.5 py-2 flex items-center justify-between">
+                <span className="font-bold text-xs uppercase tracking-wider flex items-center gap-1.5">
+                  <span className="text-amber-300">★</span>
+                  <span>Top Priorities</span>
                 </span>
-                <span className="text-[11px] font-semibold opacity-90 text-amber-300">★ High Focus</span>
+                <span className="text-[10px] font-bold text-amber-300 bg-amber-400/20 border border-amber-300/30 px-2 py-0.5 rounded-full">
+                  High Focus
+                </span>
               </div>
-              <div className="border-2 border-[#202020] rounded-b-lg -mt-3 bg-white p-2.5 divide-y divide-gray-150">
-                <div className="space-y-0.5 min-h-[90px]">
+              <div className="p-2.5 sm:p-3 divide-y divide-[#f0ede6]">
+                <div className="space-y-1 min-h-[80px]">
                   {data.priorities.map((item) => (
                     <div
                       key={item.id}
                       onClick={() => toggleItem("priorities", item.id)}
-                      className={`group flex items-center justify-between py-1.5 px-1 rounded-md hover:bg-amber-50/50 cursor-pointer transition-colors ${
-                        item.completed ? "bg-gray-50" : ""
+                      className={`group flex items-center justify-between py-1.5 px-2 rounded-lg hover:bg-amber-50/50 cursor-pointer transition-colors ${
+                        item.completed ? "bg-gray-50/80" : ""
                       }`}
                     >
                       <div className="flex items-center gap-2 min-w-0 pr-2">
                         <div
-                          className={`w-4 h-4 rounded-sm border-2 flex items-center justify-center shrink-0 ${
+                          className={`w-4 h-4 rounded-md border flex items-center justify-center shrink-0 transition-all ${
                             item.completed
                               ? "bg-amber-600 border-amber-600 text-white"
-                              : "border-[#202020] bg-white group-hover:border-amber-600"
+                              : "border-[#c4ba9f] bg-white group-hover:border-amber-600"
                           }`}
                         >
                           {item.completed && (
                             <svg className="w-2.5 h-2.5 text-white stroke-current" fill="none" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3.5" d="M5 13l4 4L19 7" />
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
                             </svg>
                           )}
                         </div>
                         <span
-                          className={`text-xs font-semibold truncate ${
-                            item.completed ? "line-through text-gray-400" : "text-[#151515]"
+                          className={`text-xs font-medium truncate ${
+                            item.completed ? "line-through text-neutral-400 font-normal" : "text-[#112a1d]"
                           }`}
                         >
                           {item.text}
@@ -444,7 +436,7 @@ export function TodoListClient() {
                           e.stopPropagation();
                           deleteItem("priorities", item.id);
                         }}
-                        className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-rose-600 p-0.5 text-xs"
+                        className="opacity-0 group-hover:opacity-100 text-[#8e8574] hover:text-rose-600 p-0.5 text-xs transition-opacity rounded"
                       >
                         ✕
                       </button>
@@ -458,47 +450,50 @@ export function TodoListClient() {
                     placeholder="+ Add priority..."
                     value={newPriorityInput}
                     onChange={(e) => setNewPriorityInput(e.target.value)}
-                    className="w-full bg-gray-50 border border-gray-300 rounded px-2 py-1 text-xs text-[#112a1d] focus:outline-none focus:border-amber-600"
+                    className="w-full bg-[#faf8f3] border border-[#ded5c0] rounded-lg px-2.5 py-1.5 text-xs text-[#112a1d] focus:outline-none focus:border-amber-600 focus:bg-white placeholder:text-[#8e8574]"
                   />
                 </form>
               </div>
             </div>
 
             {/* 2. REMINDER */}
-            <div className="flex flex-col">
-              <div className="bg-[#112a1d] text-white px-3 py-2 rounded-t-lg flex items-center justify-between">
-                <span className="font-black text-xs sm:text-sm uppercase tracking-wider">
-                  REMINDER
+            <div className="border border-[#ded5c0] rounded-2xl overflow-hidden bg-white shadow-2xs">
+              <div className="bg-gradient-to-r from-[#143323] to-[#1c4731] text-white px-3.5 py-2 flex items-center justify-between">
+                <span className="font-bold text-xs uppercase tracking-wider flex items-center gap-1.5">
+                  <span>⏰</span>
+                  <span>Reminders</span>
                 </span>
-                <span className="text-[11px] font-semibold opacity-90 text-sky-300">⏰ Daily</span>
+                <span className="text-[10px] font-bold text-sky-200 bg-sky-400/20 border border-sky-300/30 px-2 py-0.5 rounded-full">
+                  Daily
+                </span>
               </div>
-              <div className="border-2 border-[#202020] rounded-b-lg -mt-3 bg-white p-2.5 divide-y divide-gray-150">
-                <div className="space-y-0.5 min-h-[90px]">
+              <div className="p-2.5 sm:p-3 divide-y divide-[#f0ede6]">
+                <div className="space-y-1 min-h-[80px]">
                   {data.reminders.map((item) => (
                     <div
                       key={item.id}
                       onClick={() => toggleItem("reminders", item.id)}
-                      className={`group flex items-center justify-between py-1.5 px-1 rounded-md hover:bg-sky-50/50 cursor-pointer transition-colors ${
-                        item.completed ? "bg-gray-50" : ""
+                      className={`group flex items-center justify-between py-1.5 px-2 rounded-lg hover:bg-sky-50/50 cursor-pointer transition-colors ${
+                        item.completed ? "bg-gray-50/80" : ""
                       }`}
                     >
                       <div className="flex items-center gap-2 min-w-0 pr-2">
                         <div
-                          className={`w-4 h-4 rounded-sm border-2 flex items-center justify-center shrink-0 ${
+                          className={`w-4 h-4 rounded-md border flex items-center justify-center shrink-0 transition-all ${
                             item.completed
-                              ? "bg-sky-600 border-sky-600 text-white"
-                              : "border-[#202020] bg-white group-hover:border-sky-600"
+                              ? "bg-sky-700 border-sky-700 text-white"
+                              : "border-[#c4ba9f] bg-white group-hover:border-sky-600"
                           }`}
                         >
                           {item.completed && (
                             <svg className="w-2.5 h-2.5 text-white stroke-current" fill="none" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3.5" d="M5 13l4 4L19 7" />
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
                             </svg>
                           )}
                         </div>
                         <span
                           className={`text-xs font-medium truncate ${
-                            item.completed ? "line-through text-gray-400" : "text-[#151515]"
+                            item.completed ? "line-through text-neutral-400 font-normal" : "text-[#112a1d]"
                           }`}
                         >
                           {item.text}
@@ -509,7 +504,7 @@ export function TodoListClient() {
                           e.stopPropagation();
                           deleteItem("reminders", item.id);
                         }}
-                        className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-rose-600 p-0.5 text-xs"
+                        className="opacity-0 group-hover:opacity-100 text-[#8e8574] hover:text-rose-600 p-0.5 text-xs transition-opacity rounded"
                       >
                         ✕
                       </button>
@@ -523,27 +518,28 @@ export function TodoListClient() {
                     placeholder="+ Add reminder..."
                     value={newReminderInput}
                     onChange={(e) => setNewReminderInput(e.target.value)}
-                    className="w-full bg-gray-50 border border-gray-300 rounded px-2 py-1 text-xs text-[#112a1d] focus:outline-none focus:border-sky-600"
+                    className="w-full bg-[#faf8f3] border border-[#ded5c0] rounded-lg px-2.5 py-1.5 text-xs text-[#112a1d] focus:outline-none focus:border-sky-600 focus:bg-white placeholder:text-[#8e8574]"
                   />
                 </form>
               </div>
             </div>
 
-            {/* 3. NOTES */}
-            <div className="flex flex-col">
-              <div className="bg-[#112a1d] text-white px-3 py-2 rounded-t-lg flex items-center justify-between">
-                <span className="font-black text-xs sm:text-sm uppercase tracking-wider">
-                  NOTES / REFLECTIONS
+            {/* 3. NOTES / REFLECTIONS */}
+            <div className="border border-[#ded5c0] rounded-2xl overflow-hidden bg-white shadow-2xs">
+              <div className="bg-gradient-to-r from-[#143323] to-[#1c4731] text-white px-3.5 py-2 flex items-center justify-between">
+                <span className="font-bold text-xs uppercase tracking-wider flex items-center gap-1.5">
+                  <span>📝</span>
+                  <span>Notes & Reflections</span>
                 </span>
-                <span className="text-[10px] text-gray-300 font-normal">Autosaves</span>
+                <span className="text-[10px] text-emerald-200/90 font-medium">Autosaves</span>
               </div>
-              <div className="border-2 border-[#202020] rounded-b-lg -mt-3 bg-white p-2.5">
+              <div className="p-2.5 sm:p-3">
                 <textarea
                   rows={4}
                   placeholder="Jot down Tadabbur thoughts, Ayah notes, or daily reflections here..."
                   value={data.notes}
                   onChange={(e) => setData({ ...data, notes: e.target.value })}
-                  className="w-full bg-[#fdfaf3] border border-gray-200 rounded-lg p-2 text-xs text-[#112a1d] leading-relaxed focus:outline-none focus:border-emerald-600 focus:bg-white resize-y"
+                  className="w-full bg-[#faf8f2] border border-[#ded5c0] rounded-xl p-2.5 text-xs text-[#112a1d] leading-relaxed focus:outline-none focus:border-emerald-600 focus:bg-white focus:ring-1 focus:ring-emerald-600 resize-y transition-all placeholder:text-[#8e8574]"
                 />
               </div>
             </div>
@@ -552,8 +548,8 @@ export function TodoListClient() {
         </div>
 
         {/* Footer Actions: Clear & Reset */}
-        <div className="flex flex-wrap items-center justify-between gap-2.5 pt-3 border-t-2 border-[#202020]">
-          <div className="text-xs text-gray-500 font-medium">
+        <div className="flex flex-wrap items-center justify-between gap-2.5 pt-3 border-t border-[#ede7d8]">
+          <div className="text-xs text-[#527060] font-medium">
             Saved on your device automatically.
           </div>
 
@@ -561,13 +557,13 @@ export function TodoListClient() {
             <button
               onClick={handleClearCompleted}
               disabled={completedCount === 0}
-              className="px-3 py-1.5 rounded-lg border border-gray-300 hover:bg-gray-100 text-xs font-semibold text-gray-700 disabled:opacity-40 transition-all cursor-pointer"
+              className="px-3.5 py-1.5 rounded-xl border border-[#ded5c0] bg-white hover:bg-[#faf7ee] text-xs font-semibold text-[#527060] disabled:opacity-40 transition-all cursor-pointer shadow-2xs"
             >
               Clear Completed
             </button>
             <button
               onClick={handleResetNewDay}
-              className="px-3 py-1.5 rounded-lg bg-[#112a1d] hover:bg-emerald-900 text-white text-xs font-bold shadow-xs transition-all cursor-pointer"
+              className="px-4 py-1.5 rounded-xl bg-emerald-800 hover:bg-emerald-900 text-white text-xs font-bold shadow-xs active:scale-95 transition-all cursor-pointer"
             >
               Start New Day ↺
             </button>
