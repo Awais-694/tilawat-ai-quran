@@ -15,7 +15,7 @@ interface PlannerData {
   date: string;
   tasks: TodoItem[];
   priorities: TodoItem[];
-  notes: string;
+  notes?: string;
 }
 
 interface DayPerformance {
@@ -63,7 +63,6 @@ const DEFAULT_PLANNER: PlannerData = {
     { id: "p1", text: "Keep recitation streak alive today", completed: false },
     { id: "p2", text: "Practice Tajweed pronunciation with AI mic", completed: false },
   ],
-  notes: "رَبِّ زِدْنِي عِلْمًا — O my Lord, increase me in knowledge.",
 };
 
 const QUICK_SUGGESTIONS = [
@@ -90,7 +89,6 @@ export function TodoListClient() {
   // New item inputs
   const [newTaskInput, setNewTaskInput] = useState("");
   const [newPriorityInput, setNewPriorityInput] = useState("");
-  const [noteSavedFeedback, setNoteSavedFeedback] = useState(false);
 
   const showToast = (msg: string) => {
     setStatusFeedback(msg);
@@ -149,7 +147,6 @@ export function TodoListClient() {
           date: getTodayFormatted(),
           tasks: [], // tasks cleared for the new day as requested
           priorities: [],
-          notes: parsedData?.notes || "",
         };
 
         setData(freshDayPlanner);
@@ -164,7 +161,6 @@ export function TodoListClient() {
             date: parsedData.date || getTodayFormatted(),
             tasks: Array.isArray(parsedData.tasks) ? parsedData.tasks : DEFAULT_PLANNER.tasks,
             priorities: Array.isArray(parsedData.priorities) ? parsedData.priorities : DEFAULT_PLANNER.priorities,
-            notes: typeof parsedData.notes === "string" ? parsedData.notes : DEFAULT_PLANNER.notes,
           });
         } else {
           setData({
@@ -233,7 +229,6 @@ export function TodoListClient() {
             date: getTodayFormatted(),
             tasks: [], // cleared for new day
             priorities: [],
-            notes: current.notes,
           };
 
           try {
@@ -338,15 +333,6 @@ export function TodoListClient() {
     setNewPriorityInput("");
   };
 
-  // Save Note button
-  const handleSaveNote = () => {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-      setNoteSavedFeedback(true);
-      setTimeout(() => setNoteSavedFeedback(false), 2500);
-      showToast("Note saved successfully!");
-    } catch {}
-  };
 
   // Clear completed
   const handleClearCompleted = () => {
@@ -674,7 +660,7 @@ export function TodoListClient() {
               Daily Tasks
             </h1>
             <p className="text-xs sm:text-sm text-[#527060] font-medium">
-              Daily Tilawat checklist, priorities & reflection notes
+              Daily Tilawat checklist & high-focus priorities
             </p>
           </div>
 
@@ -895,7 +881,7 @@ export function TodoListClient() {
             </div>
           </div>
 
-          {/* RIGHT COLUMN: PRIORITIES & NOTES (Span 5 on desktop) */}
+          {/* RIGHT COLUMN: TOP PRIORITIES (Span 5 on desktop) */}
           <div className="md:col-span-5 flex flex-col space-y-4">
             
             {/* 1. TOP PRIORITIES */}
@@ -977,38 +963,6 @@ export function TodoListClient() {
                 </form>
               </div>
             </div>
-
-            {/* 2. NOTES & REFLECTIONS */}
-            <div className="border border-[#ded5c0] rounded-2xl overflow-hidden bg-white shadow-xs">
-              <div className="bg-gradient-to-r from-[#143323] to-[#1c4731] text-white px-3.5 py-2.5 flex items-center justify-between">
-                <span className="font-bold text-xs uppercase tracking-wider">
-                  Notes & Reflections
-                </span>
-                <span className="text-[10px] text-emerald-200/90 font-medium">Autosaves</span>
-              </div>
-              <div className="p-2.5 sm:p-3 space-y-2">
-                <textarea
-                  rows={4}
-                  placeholder="Jot down Tadabbur thoughts, Ayah notes, or daily reflections here..."
-                  value={data.notes}
-                  onChange={(e) => setData({ ...data, notes: e.target.value })}
-                  className="w-full bg-[#faf8f2] border border-[#ded5c0] rounded-xl p-2.5 text-xs text-[#112a1d] leading-relaxed focus:outline-none focus:border-emerald-600 focus:bg-white focus:ring-1 focus:ring-emerald-600 resize-y transition-all placeholder:text-[#8e8574]"
-                />
-                <div className="flex items-center justify-between">
-                  <span className="text-[11px] text-[#527060]">
-                    {noteSavedFeedback ? "✓ Note saved!" : "Click Add Note to confirm"}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={handleSaveNote}
-                    className="px-3 py-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 active:scale-95 text-white text-xs font-bold transition-all cursor-pointer shadow-2xs"
-                  >
-                    Add Note
-                  </button>
-                </div>
-              </div>
-            </div>
-
           </div>
         </div>
 

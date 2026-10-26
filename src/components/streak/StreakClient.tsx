@@ -240,7 +240,7 @@ export function StreakClient() {
               Daily Tasks & Quran Planner
             </h3>
             <p className="text-[11px] sm:text-xs text-[#527060] truncate">
-              Daily Tilawat checklist, priorities, reminders & reflection notes
+              Daily Tilawat checklist & daily goal tracking
             </p>
           </div>
         </div>
