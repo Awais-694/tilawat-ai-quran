@@ -456,14 +456,6 @@ export function TodoListClient() {
     return list;
   }, [performanceHistory, todayPercentage, completedCount, totalCount]);
 
-  // Weekly Average Percentage calculation
-  const weeklyPercentage = useMemo(() => {
-    const daysWithData = last7Days.filter((d) => d.hasData);
-    if (daysWithData.length === 0) return todayPercentage;
-    const sum = daysWithData.reduce((acc, d) => acc + d.percentage, 0);
-    return Math.round(sum / daysWithData.length);
-  }, [last7Days, todayPercentage]);
-
   return (
     <div className="max-w-3xl mx-auto space-y-4 pb-16 px-2 sm:px-0">
       {/* Toast feedback */}
@@ -502,76 +494,44 @@ export function TodoListClient() {
           </span>
         </div>
 
-        {/* 2 Compact Metric Overview Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-          {/* 1. Today's Percentage Card */}
-          <div className="bg-[#faf8f3] border border-[#ded5c0] rounded-xl p-3 space-y-2 shadow-2xs">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-[#143323] uppercase tracking-wider">
-                Today
-              </span>
-              <span
-                className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                  todayPercentage === 100
-                    ? "bg-emerald-100 text-emerald-800 border border-emerald-300"
-                    : todayPercentage >= 50
-                    ? "bg-amber-100 text-amber-800 border border-amber-300"
-                    : "bg-[#ede7d8] text-[#527060]"
-                }`}
-              >
-                {todayPercentage === 100
-                  ? "100%"
-                  : todayPercentage > 0
-                  ? "In Progress"
-                  : "Not Started"}
-              </span>
-            </div>
-
-            <div className="flex items-baseline justify-between">
-              <span className="text-2xl sm:text-3xl font-extrabold text-[#112a1d] tracking-tight">
-                {todayPercentage}%
-              </span>
-              <span className="text-[11px] text-[#527060] font-medium">
-                {completedCount} of {totalCount} completed
-              </span>
-            </div>
-
-            {/* Sleek Progress Bar */}
-            <div className="w-full bg-[#e8e0cc] h-1.5 rounded-full overflow-hidden">
-              <div
-                className="bg-emerald-600 h-full rounded-full transition-all duration-500"
-                style={{ width: `${Math.max(todayPercentage, 0)}%` }}
-              />
-            </div>
+        {/* Today's Percentage Card */}
+        <div className="bg-[#faf8f3] border border-[#ded5c0] rounded-xl p-3 space-y-2 shadow-2xs">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-[#143323] uppercase tracking-wider">
+              Today's Performance
+            </span>
+            <span
+              className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                todayPercentage === 100
+                  ? "bg-emerald-100 text-emerald-800 border border-emerald-300"
+                  : todayPercentage >= 50
+                  ? "bg-amber-100 text-amber-800 border border-amber-300"
+                  : "bg-[#ede7d8] text-[#527060]"
+              }`}
+            >
+              {todayPercentage === 100
+                ? "100%"
+                : todayPercentage > 0
+                ? "In Progress"
+                : "Not Started"}
+            </span>
           </div>
 
-          {/* 2. Weekly Percentage Card */}
-          <div className="bg-[#faf8f3] border border-[#ded5c0] rounded-xl p-3 space-y-2 shadow-2xs">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-[#143323] uppercase tracking-wider">
-                Weekly Average
-              </span>
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-900 border border-emerald-200">
-                7 Days
-              </span>
-            </div>
+          <div className="flex items-baseline justify-between">
+            <span className="text-2xl sm:text-3xl font-extrabold text-[#112a1d] tracking-tight">
+              {todayPercentage}%
+            </span>
+            <span className="text-[11px] text-[#527060] font-medium">
+              {completedCount} of {totalCount} completed
+            </span>
+          </div>
 
-            <div className="flex items-baseline justify-between">
-              <span className="text-2xl sm:text-3xl font-extrabold text-emerald-900 tracking-tight">
-                {weeklyPercentage}%
-              </span>
-              <span className="text-[11px] text-[#527060] font-medium">
-                7-day average
-              </span>
-            </div>
-
-            {/* Sleek Progress Bar */}
-            <div className="w-full bg-[#e8e0cc] h-1.5 rounded-full overflow-hidden">
-              <div
-                className="bg-emerald-700 h-full rounded-full transition-all duration-500"
-                style={{ width: `${Math.max(weeklyPercentage, 0)}%` }}
-              />
-            </div>
+          {/* Sleek Progress Bar */}
+          <div className="w-full bg-[#e8e0cc] h-1.5 rounded-full overflow-hidden">
+            <div
+              className="bg-emerald-600 h-full rounded-full transition-all duration-500"
+              style={{ width: `${Math.max(todayPercentage, 0)}%` }}
+            />
           </div>
         </div>
 
