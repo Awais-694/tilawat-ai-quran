@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect, Suspense } from "react";
+import { useState, useMemo, useEffect, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import surahsMeta from "@/data/surahs-meta.json";
 import {
@@ -9,6 +9,8 @@ import {
 } from "@/lib/storage/tarjamaStorage";
 import { PdfCanvasViewer } from "@/components/common/PdfCanvasViewer";
 import { TarjamaIndexClient } from "./TarjamaIndexClient";
+import { db } from "@/lib/storage/db";
+import { getLocalDateString } from "@/lib/quran/streak";
 
 interface TarjamaViewerProps {
   initialSurah: number;
@@ -27,6 +29,108 @@ function TarjamaViewer({ initialSurah }: TarjamaViewerProps) {
   const [, setPdfSize] = useState<number | null>(null);
   const [isDownloading, setIsDownloading] = useState(false);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
+  const [isCompleted, setIsCompleted] = useState(false);
+
+  // Check if completed in IndexedDB
+  useEffect(() => {
+    let active = true;
+    db.progress.get(selectedSurahNumber).then((p) => {
+      if (active && p) {
+        setIsCompleted(Boolean(p.completed || (p.completedTimes ?? 0) > 0));
+      } else if (active) {
+        setIsCompleted(false);
+      }
+    });
+    return () => {
+      active = false;
+    };
+  }, [selectedSurahNumber]);
+
+  // Active reading live timer
+  const readingSecondsBuffer = useRef(0);
+  useEffect(() => {
+    const flushReadingTime = async () => {
+      if (readingSecondsBuffer.current <= 0) return;
+      const toAdd = readingSecondsBuffer.current;
+      readingSecondsBuffer.current = 0;
+      const today = getLocalDateString();
+      try {
+        const row = await db.activity.get(today);
+        const current = row ?? {
+          date: today,
+          wordsRevealed: 0,
+          mistakes: 0,
+          sessions: 1,
+          timeSpentSeconds: 0,
+          surahsPracticed: [selectedSurahNumber],
+        };
+        await db.activity.put({
+          ...current,
+          timeSpentSeconds: (current.timeSpentSeconds ?? 0) + toAdd,
+          surahsPracticed: Array.from(new Set([...(current.surahsPracticed ?? []), selectedSurahNumber])),
+        });
+      } catch (e) {
+        console.error("Failed to update tarjama reading time:", e);
+      }
+    };
+
+    const interval = setInterval(() => {
+      if (typeof document !== "undefined" && document.visibilityState === "visible") {
+        readingSecondsBuffer.current += 1;
+        if (readingSecondsBuffer.current >= 6) {
+          void flushReadingTime();
+        }
+      }
+    }, 1000);
+
+    return () => {
+      clearInterval(interval);
+      void flushReadingTime();
+    };
+  }, [selectedSurahNumber]);
+
+  // Toggle Completed status
+  const handleToggleCompleted = async () => {
+    const nextState = !isCompleted;
+    setIsCompleted(nextState);
+    const today = getLocalDateString();
+    try {
+      const ex = await db.progress.get(selectedSurahNumber);
+      const sMeta = surahsMeta.find((s) => s.number === selectedSurahNumber) ?? surahsMeta[0];
+      const approxWords = sMeta.numberOfAyahs * 12;
+      await db.progress.put({
+        surahNumber: selectedSurahNumber,
+        revealedWords: nextState ? approxWords : (ex?.revealedWords ?? 0),
+        totalWords: approxWords,
+        completed: nextState,
+        completedAt: nextState ? Date.now() : ex?.completedAt,
+        completedTimes: nextState ? (ex?.completedTimes ?? 0) + 1 : (ex?.completedTimes ?? 0),
+        lastPracticedAt: Date.now(),
+        lastAyahNumber: sMeta.numberOfAyahs,
+      });
+
+      const row = await db.activity.get(today);
+      const current = row ?? {
+        date: today,
+        wordsRevealed: 0,
+        mistakes: 0,
+        sessions: 1,
+        timeSpentSeconds: 60,
+        surahsPracticed: [selectedSurahNumber],
+      };
+      await db.activity.put({
+        ...current,
+        sessions: (current.sessions ?? 0) + (nextState ? 1 : 0),
+        wordsRevealed: (current.wordsRevealed ?? 0) + (nextState ? approxWords : 0),
+        surahsPracticed: Array.from(new Set([...(current.surahsPracticed ?? []), selectedSurahNumber])),
+      });
+
+      setStatusMessage(nextState ? "ما شاء اللہ! سورت مکمل درج ہو گئی ہے ✓" : "سورت مکمل اسٹیٹس ہٹا دیا گیا");
+      setTimeout(() => setStatusMessage(null), 3000);
+    } catch (err) {
+      console.error("Failed to toggle tarjama completion:", err);
+    }
+  };
 
   // One-time cache migration: clear legacy misaligned / mismatched offline PDFs
   useEffect(() => {
@@ -237,8 +341,22 @@ function TarjamaViewer({ initialSurah }: TarjamaViewerProps) {
             </div>
           </div>
 
-          {/* Action buttons (Open Tab, Download) */}
+          {/* Action buttons (Completed, Open Tab, Download) */}
           <div className="flex items-center gap-1.5 shrink-0">
+            {/* Mark Surah Completed Button */}
+            <button
+              onClick={handleToggleCompleted}
+              className={`p-1.5 sm:px-2.5 sm:py-1.5 rounded-xl border text-xs font-semibold shadow-2xs transition-all flex items-center gap-1 active:scale-95 cursor-pointer ${
+                isCompleted
+                  ? "bg-emerald-100 hover:bg-emerald-200 border-emerald-400 text-emerald-950 font-bold"
+                  : "bg-white hover:bg-[#efe9d8] border-[#ded5c0] text-[#112a1d]"
+              }`}
+              title={isCompleted ? "Surah completed (tap to toggle)" : "Mark Surah translation as completed"}
+            >
+              <span className={isCompleted ? "text-emerald-700 font-bold" : "text-[#527060]"}>✓</span>
+              <span className="hidden sm:inline">{isCompleted ? "Completed" : "Mark Done"}</span>
+            </button>
+
             {/* Open in New Tab Button */}
             <a
               href={currentPdfUrl}

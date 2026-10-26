@@ -52,7 +52,9 @@ export function StreakClient() {
   }, [activities]);
 
   const activeDates = useMemo(() => {
-    return activities.filter((a) => a.wordsRevealed > 0).map((a) => a.date);
+    return activities
+      .filter((a) => (a.wordsRevealed || 0) > 0 || (a.timeSpentSeconds || 0) > 0 || ((a.surahsPracticed?.length || 0) > 0))
+      .map((a) => a.date);
   }, [activities]);
 
   const currentStreak = useMemo(() => calcCurrentStreak(activeDates), [activeDates]);
@@ -84,6 +86,8 @@ export function StreakClient() {
     const accuracy =
       totalWords + totalMistakes > 0
         ? Math.round((totalWords / (totalWords + totalMistakes)) * 100)
+        : totalWords > 0
+        ? 100
         : null;
 
     return {

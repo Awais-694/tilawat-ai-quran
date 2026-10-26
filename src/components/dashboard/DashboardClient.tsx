@@ -79,8 +79,11 @@ export function DashboardClient() {
     try {
       const activity = await withTimeout(db.activity.toArray(), 1500, []);
       const progress = await withTimeout(db.progress.toArray(), 1500, []);
-      const totalWords = activity.reduce((s, a) => s + a.wordsRevealed, 0);
-      const totalMistakes = activity.reduce((s, a) => s + a.mistakes, 0);
+      const wordsFromActivity = activity.reduce((s, a) => s + (a.wordsRevealed || 0), 0);
+      const mistakesFromActivity = activity.reduce((s, a) => s + (a.mistakes || 0), 0);
+      const wordsFromProgress = progress.reduce((s, p) => s + (p.revealedWords || 0), 0);
+      const totalWords = wordsFromActivity > 0 ? wordsFromActivity : wordsFromProgress;
+      const totalMistakes = mistakesFromActivity;
 
       // 1. Completed Surahs: Surahs that are finished
       // Unique by surahNumber (Map ensures exactly one entry per surah)
@@ -146,7 +149,9 @@ export function DashboardClient() {
       for (const a of activity) {
         actMap.set(a.date, a);
       }
-      const activeDates = activity.filter((a) => a.wordsRevealed > 0).map((a) => a.date);
+      const activeDates = activity
+        .filter((a) => (a.wordsRevealed || 0) > 0 || (a.timeSpentSeconds || 0) > 0 || ((a.surahsPracticed?.length || 0) > 0))
+        .map((a) => a.date);
       const streak = calcCurrentStreak(activeDates);
       const longestStreak = calcLongestStreak(activeDates);
       const rollingDays = getRolling7Days(actMap);
@@ -158,6 +163,8 @@ export function DashboardClient() {
         accuracy:
           totalWords + totalMistakes > 0
             ? Math.round((totalWords / (totalWords + totalMistakes)) * 100)
+            : totalWords > 0
+            ? 100
             : null,
         inProgress: inProgressList.slice(0, 4),
         completedCount: completedList.length,

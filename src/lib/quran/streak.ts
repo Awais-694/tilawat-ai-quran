@@ -94,11 +94,12 @@ export function getRolling7Days(
 
     const act = activityMap.get(dateStr);
     const words = act?.wordsRevealed ?? 0;
-    const hasRecited = words > 0;
-    // Ensure realistic time floor (average recitation is ~45-50 words/min = 1.3s/word)
-    const minEstimatedTime = hasRecited ? Math.max(60, Math.round(words * 1.3)) : 0;
-    const timeSpent = Math.max(act?.timeSpentSeconds ?? 0, minEstimatedTime);
+    const timeInSec = act?.timeSpentSeconds ?? 0;
     const surahNumbers = act?.surahsPracticed ?? [];
+    const hasRecited = words > 0 || timeInSec > 0 || surahNumbers.length > 0;
+    // Ensure realistic time floor (average recitation is ~45-50 words/min = 1.3s/word)
+    const minEstimatedTime = words > 0 ? Math.max(60, Math.round(words * 1.3)) : 0;
+    const timeSpent = Math.max(timeInSec, minEstimatedTime);
     const surahs = surahNumbers
       .map((num) => {
         const meta = getSurahMeta(num);
@@ -156,10 +157,11 @@ export function getWeekDays(
 
     const act = activityMap.get(dateStr);
     const words = act?.wordsRevealed ?? 0;
-    const hasRecited = words > 0;
-    const minEstimatedTime = hasRecited ? Math.max(60, Math.round(words * 1.3)) : 0;
-    const timeSpent = Math.max(act?.timeSpentSeconds ?? 0, minEstimatedTime);
+    const timeInSec = act?.timeSpentSeconds ?? 0;
     const surahNumbers = act?.surahsPracticed ?? [];
+    const hasRecited = words > 0 || timeInSec > 0 || surahNumbers.length > 0;
+    const minEstimatedTime = words > 0 ? Math.max(60, Math.round(words * 1.3)) : 0;
+    const timeSpent = Math.max(timeInSec, minEstimatedTime);
     const surahs = surahNumbers
       .map((num) => {
         const meta = getSurahMeta(num);

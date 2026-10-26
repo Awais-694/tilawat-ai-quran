@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { SURAHS_META } from "@/lib/quran/data";
@@ -9,6 +9,8 @@ import {
   saveMushaf16Pdf,
 } from "@/lib/storage/mushaf16Storage";
 import { PdfCanvasViewer } from "@/components/common/PdfCanvasViewer";
+import { db } from "@/lib/storage/db";
+import { getLocalDateString } from "@/lib/quran/streak";
 
 export function ReadClient({
   surahNumber,
@@ -25,10 +27,109 @@ export function ReadClient({
   const [cachedBlob, setCachedBlob] = useState<Blob | null>(null);
   const [isDownloading, setIsDownloading] = useState(false);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
+  const [isCompleted, setIsCompleted] = useState(false);
 
   // Reliable API routes
   const serverPdfUrl = `/api/pdf/mushaf16/${surahNumber}`;
   const directDownloadUrl = `/api/pdf/mushaf16/${surahNumber}?download=1`;
+
+  // Check if completed in IndexedDB
+  useEffect(() => {
+    let active = true;
+    db.progress.get(surahNumber).then((p) => {
+      if (active && p) {
+        setIsCompleted(Boolean(p.completed || (p.completedTimes ?? 0) > 0));
+      }
+    });
+    return () => {
+      active = false;
+    };
+  }, [surahNumber]);
+
+  // Active reading live timer: accumulates reading time while tab is visible
+  const readingSecondsBuffer = useRef(0);
+  useEffect(() => {
+    const flushReadingTime = async () => {
+      if (readingSecondsBuffer.current <= 0) return;
+      const toAdd = readingSecondsBuffer.current;
+      readingSecondsBuffer.current = 0;
+      const today = getLocalDateString();
+      try {
+        const row = await db.activity.get(today);
+        const current = row ?? {
+          date: today,
+          wordsRevealed: 0,
+          mistakes: 0,
+          sessions: 1,
+          timeSpentSeconds: 0,
+          surahsPracticed: [surahNumber],
+        };
+        await db.activity.put({
+          ...current,
+          timeSpentSeconds: (current.timeSpentSeconds ?? 0) + toAdd,
+          surahsPracticed: Array.from(new Set([...(current.surahsPracticed ?? []), surahNumber])),
+        });
+      } catch (e) {
+        console.error("Failed to update reading time:", e);
+      }
+    };
+
+    const interval = setInterval(() => {
+      if (typeof document !== "undefined" && document.visibilityState === "visible") {
+        readingSecondsBuffer.current += 1;
+        if (readingSecondsBuffer.current >= 6) {
+          void flushReadingTime();
+        }
+      }
+    }, 1000);
+
+    return () => {
+      clearInterval(interval);
+      void flushReadingTime();
+    };
+  }, [surahNumber]);
+
+  // Toggle Completed status
+  const handleToggleCompleted = async () => {
+    const nextState = !isCompleted;
+    setIsCompleted(nextState);
+    const today = getLocalDateString();
+    try {
+      const ex = await db.progress.get(surahNumber);
+      const approxWords = meta.numberOfAyahs * 12; // Realistic standard words per ayah
+      await db.progress.put({
+        surahNumber,
+        revealedWords: nextState ? approxWords : (ex?.revealedWords ?? 0),
+        totalWords: approxWords,
+        completed: nextState,
+        completedAt: nextState ? Date.now() : ex?.completedAt,
+        completedTimes: nextState ? (ex?.completedTimes ?? 0) + 1 : (ex?.completedTimes ?? 0),
+        lastPracticedAt: Date.now(),
+        lastAyahNumber: meta.numberOfAyahs,
+      });
+
+      const row = await db.activity.get(today);
+      const current = row ?? {
+        date: today,
+        wordsRevealed: 0,
+        mistakes: 0,
+        sessions: 1,
+        timeSpentSeconds: 60,
+        surahsPracticed: [surahNumber],
+      };
+      await db.activity.put({
+        ...current,
+        sessions: (current.sessions ?? 0) + (nextState ? 1 : 0),
+        wordsRevealed: (current.wordsRevealed ?? 0) + (nextState ? approxWords : 0),
+        surahsPracticed: Array.from(new Set([...(current.surahsPracticed ?? []), surahNumber])),
+      });
+
+      setStatusMessage(nextState ? "ما شاء اللہ! سورت مکمل درج ہو گئی ہے ✓" : "سورت مکمل اسٹیٹس ہٹا دیا گیا");
+      setTimeout(() => setStatusMessage(null), 3000);
+    } catch (err) {
+      console.error("Failed to toggle completion:", err);
+    }
+  };
 
   // Check if saved offline in IndexedDB
   useEffect(() => {
@@ -171,6 +272,20 @@ export function ReadClient({
               <span>→</span>
             </button>
           </div>
+
+          {/* Mark Surah Completed Button */}
+          <button
+            onClick={handleToggleCompleted}
+            className={`px-2.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all active:scale-95 shadow-2xs cursor-pointer ${
+              isCompleted
+                ? "bg-emerald-100 hover:bg-emerald-200 border border-emerald-400 text-emerald-900"
+                : "bg-white hover:bg-[#faf7ee] border border-[#ded5c0] text-[#112a1d]"
+            }`}
+            title={isCompleted ? "Surah marked as completed (tap to toggle)" : "Mark Surah as completed"}
+          >
+            <span className={isCompleted ? "text-emerald-700 font-bold" : "text-[#527060]"}>✓</span>
+            <span className="hidden sm:inline">{isCompleted ? "Completed" : "Mark Done"}</span>
+          </button>
 
           {/* Download PDF button */}
           <button

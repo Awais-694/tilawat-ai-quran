@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { loadSurah, getSurahMeta, type LoadedSurah } from "@/lib/quran/data";
 import { normalizeArabic, MUQATTA_AT_FORMS, WORD_ALIASES } from "@/lib/quran/normalize";
@@ -16,6 +17,7 @@ import { MicButton } from "@/components/recitation/MicButton";
 import { playAyah } from "@/lib/audio/player";
 import { playMicStartSound, playMicStopSound, playCompletionSound } from "@/lib/audio/soundEffects";
 import { db } from "@/lib/storage/db";
+import { getLocalDateString } from "@/lib/quran/streak";
 import {
   getEnginePref,
   getFontSize,
@@ -172,8 +174,10 @@ export function ReciteClient({
 
   const router = useRouter();
 
-  const handleBack = () => {
-    void saveRef.current();
+  const handleBack = async () => {
+    try {
+      await saveRef.current();
+    } catch {}
     if (typeof window !== "undefined" && window.history.length > 1) {
       router.back();
     } else {
@@ -228,7 +232,7 @@ export function ReciteClient({
     if (!loaded) return;
     const effectiveRevealed = Math.max(revealed, displayRevealed);
     if (effectiveRevealed === 0 && mistakes === 0) return;
-    const today = new Date().toISOString().slice(0, 10);
+    const today = getLocalDateString();
     const rDelta = Math.max(0, effectiveRevealed - savedRevealed.current);
     const mDelta = Math.max(0, mistakes - savedMistakes.current);
     const ex = await db.progress.get(surahNumber);
@@ -276,24 +280,37 @@ export function ReciteClient({
     const timeDeltaSec = Math.max(1, Math.round((now - lastSavedTime.current) / 1000));
     lastSavedTime.current = now;
 
-    if (rDelta || mDelta || sessionCounted.current) {
-      const row = await db.activity.get(today);
-      const prevSurahs = row?.surahsPracticed ?? [];
-      const updatedSurahs = Array.from(new Set([...prevSurahs, surahNumber]));
-      const totalWords = (row?.wordsRevealed ?? 0) + rDelta;
-      const minEstimated = totalWords > 0 ? Math.round(totalWords * 1.3) : 0;
-      // Calculate realistic active time (at least 1.3s per revealed word)
-      const timeCredit = Math.max(timeDeltaSec <= 600 ? timeDeltaSec : 0, Math.round(rDelta * 1.3));
-      const newSec = Math.max((row?.timeSpentSeconds ?? 0) + timeCredit, minEstimated);
-      await db.activity.put({
-        date: today,
-        wordsRevealed: totalWords,
-        mistakes: (row?.mistakes ?? 0) + mDelta,
-        sessions: (row?.sessions ?? 0) + (sessionCounted.current ? 1 : 0),
-        timeSpentSeconds: newSec,
-        surahsPracticed: updatedSurahs,
-      });
-      sessionCounted.current = false;
+    if (rDelta > 0 || mDelta > 0 || sessionCounted.current || isDone || (timeDeltaSec > 0 && effectiveRevealed > 0)) {
+      try {
+        const row = await db.activity.get(today);
+        const current = row ?? {
+          date: today,
+          wordsRevealed: 0,
+          mistakes: 0,
+          sessions: 0,
+          timeSpentSeconds: 0,
+          surahsPracticed: [],
+        };
+        const prevSurahs = current.surahsPracticed ?? [];
+        const updatedSurahs = Array.from(new Set([...prevSurahs, surahNumber]));
+        const totalWords = (current.wordsRevealed ?? 0) + rDelta;
+        const totalMistakes = (current.mistakes ?? 0) + mDelta;
+        const minEstimated = totalWords > 0 ? Math.round(totalWords * 1.3) : 0;
+        // Calculate realistic active time (at least 1.3s per revealed word)
+        const timeCredit = Math.max(timeDeltaSec <= 600 ? timeDeltaSec : 0, Math.round(rDelta * 1.3));
+        const newSec = Math.max((current.timeSpentSeconds ?? 0) + timeCredit, minEstimated);
+        await db.activity.put({
+          date: today,
+          wordsRevealed: totalWords,
+          mistakes: totalMistakes,
+          sessions: (current.sessions ?? 0) + (sessionCounted.current ? 1 : 0),
+          timeSpentSeconds: newSec,
+          surahsPracticed: updatedSurahs,
+        });
+        sessionCounted.current = false;
+      } catch (err) {
+        console.error("Failed to update db.activity in saveProgress:", err);
+      }
     }
     savedRevealed.current = effectiveRevealed;
     savedMistakes.current = mistakes;
@@ -304,13 +321,17 @@ export function ReciteClient({
   useEffect(() => {
     if (completed) {
       void saveRef.current();
+      try {
+        playCompletionSound();
+      } catch {}
+      setShowToast(true);
     }
   }, [completed]);
 
   useEffect(() => {
     const effectiveRevealed = Math.max(revealed, displayRevealed);
     if (!loaded || (effectiveRevealed === 0 && mistakes === 0)) return;
-    const t = setTimeout(() => void saveRef.current(), 800);
+    const t = setTimeout(() => void saveRef.current(), 600);
     return () => clearTimeout(t);
   }, [revealed, displayRevealed, mistakes, loaded]);
 
@@ -331,18 +352,30 @@ export function ReciteClient({
     if (!listening) return;
     const interval = setInterval(() => {
       activeSecondsBuffer.current += 1;
-      if (activeSecondsBuffer.current >= 10) {
+      if (activeSecondsBuffer.current >= 4) {
         const toAdd = activeSecondsBuffer.current;
         activeSecondsBuffer.current = 0;
-        const today = new Date().toISOString().slice(0, 10);
-        void db.activity.get(today).then((row) => {
-          if (row) {
-            void db.activity.put({
-              ...row,
-              timeSpentSeconds: (row.timeSpentSeconds ?? 0) + toAdd,
+        const today = getLocalDateString();
+        void (async () => {
+          try {
+            const row = await db.activity.get(today);
+            const current = row ?? {
+              date: today,
+              wordsRevealed: 0,
+              mistakes: 0,
+              sessions: 1,
+              timeSpentSeconds: 0,
+              surahsPracticed: [surahNumber],
+            };
+            await db.activity.put({
+              ...current,
+              timeSpentSeconds: (current.timeSpentSeconds ?? 0) + toAdd,
+              surahsPracticed: Array.from(new Set([...(current.surahsPracticed ?? []), surahNumber])),
             });
+          } catch (e) {
+            console.error("Failed to update live activity time:", e);
           }
-        });
+        })();
       }
     }, 1000);
     return () => {
@@ -350,18 +383,30 @@ export function ReciteClient({
       if (activeSecondsBuffer.current > 0) {
         const toAdd = activeSecondsBuffer.current;
         activeSecondsBuffer.current = 0;
-        const today = new Date().toISOString().slice(0, 10);
-        void db.activity.get(today).then((row) => {
-          if (row) {
-            void db.activity.put({
-              ...row,
-              timeSpentSeconds: (row.timeSpentSeconds ?? 0) + toAdd,
+        const today = getLocalDateString();
+        void (async () => {
+          try {
+            const row = await db.activity.get(today);
+            const current = row ?? {
+              date: today,
+              wordsRevealed: 0,
+              mistakes: 0,
+              sessions: 1,
+              timeSpentSeconds: 0,
+              surahsPracticed: [surahNumber],
+            };
+            await db.activity.put({
+              ...current,
+              timeSpentSeconds: (current.timeSpentSeconds ?? 0) + toAdd,
+              surahsPracticed: Array.from(new Set([...(current.surahsPracticed ?? []), surahNumber])),
             });
+          } catch (e) {
+            console.error("Failed to flush live activity time:", e);
           }
-        });
+        })();
       }
     };
-  }, [listening]);
+  }, [listening, surahNumber]);
 
   // ---- galat lafz par red flash + kamzor lafz record ----
   const [flash, setFlash] = useState(false);
@@ -702,6 +747,46 @@ export function ReciteClient({
           >
             مَا شَاءَ اللّٰهُ
           </span>
+        </div>
+      )}
+
+      {/* Surah Completion Banner */}
+      {(completed || (total > 0 && displayRevealed >= total)) && (
+        <div className="bg-gradient-to-r from-[#143323] via-[#1a442f] to-[#143323] text-white rounded-2xl sm:rounded-3xl p-4 sm:p-5 shadow-lg border border-emerald-500/30 text-center space-y-2.5 my-3 animate-in fade-in slide-in-from-bottom-3 duration-500">
+          <div className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-emerald-500/20 border border-emerald-400 text-emerald-300 text-xl font-bold">
+            ✓
+          </div>
+          <div className="space-y-1">
+            <h3 className="font-quran text-2xl sm:text-3xl text-emerald-200" dir="rtl">
+              مَا شَاءَ اللّٰهُ تَبَارَكَ اللّٰهُ
+            </h3>
+            <p className="text-xs sm:text-sm font-semibold text-emerald-100">
+              Surah {loaded.meta.name} ({loaded.meta.arabicName}) successfully completed!
+            </p>
+            <p className="text-[11px] sm:text-xs text-emerald-200/80">
+              {total} words recited • Progress, active time & accuracy saved to your account.
+            </p>
+          </div>
+          <div className="flex items-center justify-center gap-2 pt-1 flex-wrap">
+            <Link
+              href="/stats"
+              className="px-4 py-2 rounded-xl bg-white text-emerald-950 hover:bg-emerald-50 font-bold text-xs sm:text-sm shadow-sm active:scale-95 transition-all"
+            >
+              View Progress & Stats →
+            </Link>
+            <Link
+              href="/"
+              className="px-4 py-2 rounded-xl bg-emerald-950/60 hover:bg-emerald-950 text-emerald-200 border border-emerald-700/60 font-semibold text-xs sm:text-sm active:scale-95 transition-all"
+            >
+              Dashboard
+            </Link>
+            <button
+              onClick={handleReset}
+              className="px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white font-medium text-xs sm:text-sm active:scale-95 transition-all cursor-pointer"
+            >
+              Recite Again
+            </button>
+          </div>
         </div>
       )}
 

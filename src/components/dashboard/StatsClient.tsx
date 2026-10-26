@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { db, type SurahProgress, type DailyActivity } from "@/lib/storage/db";
 import { getSurahMeta } from "@/lib/quran/data";
+import { formatTimeSpent } from "@/lib/quran/streak";
 import { ProgressBar } from "@/components/common/ProgressBar";
 
 function withTimeout<T>(promise: Promise<T>, ms: number, fallback: T): Promise<T> {
@@ -104,6 +105,14 @@ export function StatsClient() {
   const totalWordsCount =
     activity.reduce((sum, a) => sum + (a.wordsRevealed || 0), 0) ||
     progress.reduce((sum, p) => sum + (p.revealedWords || 0), 0);
+  const totalSeconds = activity.reduce((sum, a) => sum + (a.timeSpentSeconds || 0), 0);
+  const totalMistakes = activity.reduce((sum, a) => sum + (a.mistakes || 0), 0);
+  const accuracyScore =
+    totalWordsCount + totalMistakes > 0
+      ? Math.round((totalWordsCount / (totalWordsCount + totalMistakes)) * 100)
+      : totalWordsCount > 0
+      ? 100
+      : null;
 
   return (
     <div className="max-w-2xl mx-auto space-y-6 pb-12">
@@ -131,8 +140,8 @@ export function StatsClient() {
         </Link>
       </div>
 
-      {/* Quick Summary Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 sm:gap-3">
+      {/* Quick Summary Cards (4 Essential Metrics) */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3">
         <div className="bg-white border border-[#ded5c0] rounded-2xl p-3.5 sm:p-4 shadow-sm text-center">
           <div className="text-[11px] sm:text-xs font-semibold text-[#527060]">Completed Surahs</div>
           <div className="text-xl sm:text-2xl font-bold text-emerald-800 mt-1">
@@ -147,10 +156,17 @@ export function StatsClient() {
           </div>
         </div>
 
-        <div className="bg-white border border-[#ded5c0] rounded-2xl p-3.5 sm:p-4 shadow-sm text-center col-span-2 sm:col-span-1">
-          <div className="text-[11px] sm:text-xs font-semibold text-[#527060]">Words Recited</div>
+        <div className="bg-white border border-[#ded5c0] rounded-2xl p-3.5 sm:p-4 shadow-sm text-center">
+          <div className="text-[11px] sm:text-xs font-semibold text-[#527060]">Active Time</div>
           <div className="text-xl sm:text-2xl font-bold text-[#112a1d] mt-1">
-            {loaded ? totalWordsCount.toLocaleString() : "…"}
+            {loaded ? (formatTimeSpent(totalSeconds) || "0m") : "…"}
+          </div>
+        </div>
+
+        <div className="bg-white border border-[#ded5c0] rounded-2xl p-3.5 sm:p-4 shadow-sm text-center">
+          <div className="text-[11px] sm:text-xs font-semibold text-[#527060]">Speech Accuracy</div>
+          <div className="text-xl sm:text-2xl font-bold text-emerald-800 mt-1">
+            {loaded ? (accuracyScore !== null ? `${accuracyScore}%` : "—") : "…"}
           </div>
         </div>
       </div>
