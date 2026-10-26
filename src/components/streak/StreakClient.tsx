@@ -10,6 +10,7 @@ import {
   getWeekDays,
   formatTimeSpent,
 } from "@/lib/quran/streak";
+import { getAllDailyActivities } from "@/lib/quran/streakTracker";
 
 function formatReadableDate(dateStr: string): string {
   if (!dateStr) return "";
@@ -36,11 +37,20 @@ export function StreakClient() {
   const [weekOffset, setWeekOffset] = useState<number>(0); // 0 = current week, -1 = last week
 
   useEffect(() => {
-    (async () => {
-      const allActs = await db.activity.toArray();
+    const load = async () => {
+      const allActs = await getAllDailyActivities();
       setActivities(allActs);
       setLoaded(true);
-    })();
+    };
+    void load();
+
+    const handleStreakEvent = () => {
+      void load();
+    };
+    window.addEventListener("tilawat_streak_achieved", handleStreakEvent);
+    return () => {
+      window.removeEventListener("tilawat_streak_achieved", handleStreakEvent);
+    };
   }, []);
 
   const activityMap = useMemo(() => {

@@ -11,6 +11,7 @@ import {
 import { PdfCanvasViewer } from "@/components/common/PdfCanvasViewer";
 import { db } from "@/lib/storage/db";
 import { getLocalDateString } from "@/lib/quran/streak";
+import { useStreakTracker, StreakNotificationToast } from "@/lib/quran/streakTracker";
 
 export function ReadClient({
   surahNumber,
@@ -47,47 +48,11 @@ export function ReadClient({
   }, [surahNumber]);
 
   // Active reading live timer: accumulates reading time while tab is visible
-  const readingSecondsBuffer = useRef(0);
-  useEffect(() => {
-    const flushReadingTime = async () => {
-      if (readingSecondsBuffer.current <= 0) return;
-      const toAdd = readingSecondsBuffer.current;
-      readingSecondsBuffer.current = 0;
-      const today = getLocalDateString();
-      try {
-        const row = await db.activity.get(today);
-        const current = row ?? {
-          date: today,
-          wordsRevealed: 0,
-          mistakes: 0,
-          sessions: 1,
-          timeSpentSeconds: 0,
-          surahsPracticed: [surahNumber],
-        };
-        await db.activity.put({
-          ...current,
-          timeSpentSeconds: (current.timeSpentSeconds ?? 0) + toAdd,
-          surahsPracticed: Array.from(new Set([...(current.surahsPracticed ?? []), surahNumber])),
-        });
-      } catch (e) {
-        console.error("Failed to update reading time:", e);
-      }
-    };
-
-    const interval = setInterval(() => {
-      if (typeof document !== "undefined" && document.visibilityState === "visible") {
-        readingSecondsBuffer.current += 1;
-        if (readingSecondsBuffer.current >= 6) {
-          void flushReadingTime();
-        }
-      }
-    }, 1000);
-
-    return () => {
-      clearInterval(interval);
-      void flushReadingTime();
-    };
-  }, [surahNumber]);
+  // Streak & Active reading timer (30 seconds threshold for 1-day streak)
+  const { showToast, dismissToast } = useStreakTracker({
+    mode: "read16",
+    surahNumber,
+  });
 
   // Toggle Completed status
   const handleToggleCompleted = async () => {
@@ -209,6 +174,9 @@ export function ReadClient({
 
   return (
     <div className="max-w-3xl mx-auto space-y-3 pb-12 w-full px-2 sm:px-0">
+      {/* 1 Day Streak Notification Toast */}
+      <StreakNotificationToast show={showToast} mode="read16" onClose={dismissToast} />
+
       {/* Status Toast */}
       {statusMessage && (
         <div className="bg-emerald-800 text-white text-xs sm:text-sm font-semibold px-4 py-2.5 rounded-xl shadow-md text-center transition-all flex items-center justify-center gap-2">

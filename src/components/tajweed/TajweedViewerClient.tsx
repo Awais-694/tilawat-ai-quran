@@ -7,6 +7,7 @@ import { SURAHS_META, getSurahMeta } from "@/lib/quran/data";
 import { PdfCanvasViewer } from "@/components/common/PdfCanvasViewer";
 import { getTajweedPdf, saveTajweedPdf } from "@/lib/storage/tajweedStorage";
 import { TajweedIndexClient } from "./TajweedIndexClient";
+import { useStreakTracker, StreakNotificationToast } from "@/lib/quran/streakTracker";
 
 interface TajweedViewerProps {
   initialSurah: number;
@@ -22,6 +23,12 @@ function TajweedViewer({ initialSurah }: TajweedViewerProps) {
   const [cachedBlob, setCachedBlob] = useState<Blob | null>(null);
   const [isSavedOffline, setIsSavedOffline] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
+
+  // Streak & Active reading timer (30 seconds threshold for 1-day streak)
+  const { showToast, dismissToast } = useStreakTracker({
+    mode: "tajweed",
+    surahNumber: selectedSurah,
+  });
 
   useEffect(() => {
     let active = true;
@@ -99,6 +106,9 @@ function TajweedViewer({ initialSurah }: TajweedViewerProps) {
 
   return (
     <div className="max-w-5xl mx-auto space-y-4 pb-16 px-2 sm:px-0">
+      {/* 1 Day Streak Notification Toast */}
+      <StreakNotificationToast show={showToast} mode="tajweed" onClose={dismissToast} />
+
       {/* Top Navigation & Controls Bar */}
       <div className="flex flex-col gap-2.5 border-b border-[#ede7d8] pb-3 shrink-0">
         <div className="flex items-center justify-between gap-2 bg-white border border-[#ded5c0] rounded-2xl px-2.5 py-1.5 sm:px-3 sm:py-2 shadow-xs">

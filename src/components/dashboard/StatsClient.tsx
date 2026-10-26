@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { db, type SurahProgress, type DailyActivity } from "@/lib/storage/db";
 import { getSurahMeta } from "@/lib/quran/data";
 import { formatTimeSpent } from "@/lib/quran/streak";
+import { getAllDailyActivities } from "@/lib/quran/streakTracker";
 import { ProgressBar } from "@/components/common/ProgressBar";
 
 function withTimeout<T>(promise: Promise<T>, ms: number, fallback: T): Promise<T> {
@@ -29,7 +30,7 @@ export function StatsClient() {
       setProgress(p.sort((a, b) => (b.lastPracticedAt || 0) - (a.lastPracticedAt || 0)));
       const w = await withTimeout(db.wrongWords.toArray(), 1500, []);
       setWrong(w.sort((a, b) => b.count - a.count).slice(0, 20));
-      const act = await withTimeout(db.activity.toArray(), 1500, []);
+      const act = await withTimeout(getAllDailyActivities(), 1500, []);
       setActivity(act.sort((a, b) => (a.date < b.date ? 1 : -1)).slice(0, 7));
       setLoaded(true);
     } catch (err) {

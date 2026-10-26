@@ -6,6 +6,7 @@ import { SURAHS_META } from "@/lib/quran/data";
 import { SurahListItem } from "@/components/common/SurahListItem";
 import { normalizeArabic } from "@/lib/quran/normalize";
 import { getAllSavedTajweedPdfs } from "@/lib/storage/tajweedStorage";
+import { useStreakTracker, StreakNotificationToast } from "@/lib/quran/streakTracker";
 
 function normalizeEnglishSearch(str: string): string {
   return str
@@ -22,6 +23,11 @@ function normalizeEnglishSearch(str: string): string {
 export function TajweedIndexClient() {
   const [query, setQuery] = useState("");
   const [savedSurahNumbers, setSavedSurahNumbers] = useState<Set<number>>(new Set());
+
+  // 30 seconds spent in Tajweed unlocks 1-day streak
+  const { showToast, dismissToast } = useStreakTracker({
+    mode: "tajweed",
+  });
 
   // Load list of offline saved Tajweed Surahs from IndexedDB
   useEffect(() => {
@@ -78,6 +84,9 @@ export function TajweedIndexClient() {
 
   return (
     <div className="max-w-2xl mx-auto space-y-4 sm:space-y-5 px-1 sm:px-0 pb-16">
+      {/* 1 Day Streak Notification Toast */}
+      <StreakNotificationToast show={showToast} mode="tajweed" onClose={dismissToast} />
+
       {/* Top Header with Back button and Title */}
       <div className="relative flex items-center justify-between min-h-[42px] px-1">
         <Link

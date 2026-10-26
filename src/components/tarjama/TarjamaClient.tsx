@@ -11,6 +11,7 @@ import { PdfCanvasViewer } from "@/components/common/PdfCanvasViewer";
 import { TarjamaIndexClient } from "./TarjamaIndexClient";
 import { db } from "@/lib/storage/db";
 import { getLocalDateString } from "@/lib/quran/streak";
+import { useStreakTracker, StreakNotificationToast } from "@/lib/quran/streakTracker";
 
 interface TarjamaViewerProps {
   initialSurah: number;
@@ -47,47 +48,11 @@ function TarjamaViewer({ initialSurah }: TarjamaViewerProps) {
   }, [selectedSurahNumber]);
 
   // Active reading live timer
-  const readingSecondsBuffer = useRef(0);
-  useEffect(() => {
-    const flushReadingTime = async () => {
-      if (readingSecondsBuffer.current <= 0) return;
-      const toAdd = readingSecondsBuffer.current;
-      readingSecondsBuffer.current = 0;
-      const today = getLocalDateString();
-      try {
-        const row = await db.activity.get(today);
-        const current = row ?? {
-          date: today,
-          wordsRevealed: 0,
-          mistakes: 0,
-          sessions: 1,
-          timeSpentSeconds: 0,
-          surahsPracticed: [selectedSurahNumber],
-        };
-        await db.activity.put({
-          ...current,
-          timeSpentSeconds: (current.timeSpentSeconds ?? 0) + toAdd,
-          surahsPracticed: Array.from(new Set([...(current.surahsPracticed ?? []), selectedSurahNumber])),
-        });
-      } catch (e) {
-        console.error("Failed to update tarjama reading time:", e);
-      }
-    };
-
-    const interval = setInterval(() => {
-      if (typeof document !== "undefined" && document.visibilityState === "visible") {
-        readingSecondsBuffer.current += 1;
-        if (readingSecondsBuffer.current >= 6) {
-          void flushReadingTime();
-        }
-      }
-    }, 1000);
-
-    return () => {
-      clearInterval(interval);
-      void flushReadingTime();
-    };
-  }, [selectedSurahNumber]);
+  // Streak & Active reading timer (30 seconds threshold for 1-day streak)
+  const { showToast, dismissToast } = useStreakTracker({
+    mode: "translation",
+    surahNumber: selectedSurahNumber,
+  });
 
   // Toggle Completed status
   const handleToggleCompleted = async () => {
@@ -272,6 +237,9 @@ function TarjamaViewer({ initialSurah }: TarjamaViewerProps) {
 
   return (
     <div className="max-w-5xl mx-auto space-y-3 pb-16 px-2 sm:px-0">
+      {/* 1 Day Streak Notification Toast */}
+      <StreakNotificationToast show={showToast} mode="translation" onClose={dismissToast} />
+
       {/* Floating Status Notification Toast */}
       {statusMessage && (
         <div className="bg-emerald-800 text-white text-xs sm:text-sm font-semibold px-4 py-2.5 rounded-xl shadow-md text-center transition-all animate-fade-in flex items-center justify-center gap-2">

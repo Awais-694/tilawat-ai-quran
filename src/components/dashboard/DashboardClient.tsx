@@ -13,6 +13,7 @@ import {
   getRolling7Days,
   type DayStreakItem,
 } from "@/lib/quran/streak";
+import { getAllDailyActivities } from "@/lib/quran/streakTracker";
 import type { DailyActivity } from "@/lib/storage/db";
 
 interface Stats {
@@ -77,7 +78,7 @@ export function DashboardClient() {
 
   const loadStats = async () => {
     try {
-      const activity = await withTimeout(db.activity.toArray(), 1500, []);
+      const activity = await withTimeout(getAllDailyActivities(), 1500, []);
       const progress = await withTimeout(db.progress.toArray(), 1500, []);
       const wordsFromActivity = activity.reduce((s, a) => s + (a.wordsRevealed || 0), 0);
       const mistakesFromActivity = activity.reduce((s, a) => s + (a.mistakes || 0), 0);
@@ -211,6 +212,13 @@ export function DashboardClient() {
 
   useEffect(() => {
     void loadStats();
+    const handleStreakUpdate = () => {
+      void loadStats();
+    };
+    window.addEventListener("tilawat_streak_achieved", handleStreakUpdate);
+    return () => {
+      window.removeEventListener("tilawat_streak_achieved", handleStreakUpdate);
+    };
   }, []);
 
   const handleResetSurah = async (surahNum: number, e: React.MouseEvent) => {

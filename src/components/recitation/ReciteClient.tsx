@@ -18,6 +18,7 @@ import { playAyah } from "@/lib/audio/player";
 import { playMicStartSound, playMicStopSound, playCompletionSound } from "@/lib/audio/soundEffects";
 import { db } from "@/lib/storage/db";
 import { getLocalDateString } from "@/lib/quran/streak";
+import { useStreakTracker, StreakNotificationToast } from "@/lib/quran/streakTracker";
 import {
   getEnginePref,
   getFontSize,
@@ -56,6 +57,12 @@ export function ReciteClient({
       on = false;
     };
   }, [surahNumber, initialSurah]);
+
+  // Streak tracker (60 seconds / 1 minute threshold for 1-day streak)
+  const { showToast: showStreakToast, dismissToast: dismissStreakToast } = useStreakTracker({
+    mode: "recite",
+    surahNumber,
+  });
 
   const recTokens = useMemo<WordToken[]>(
     () =>
@@ -551,6 +558,9 @@ export function ReciteClient({
 
   return (
     <div className="space-y-4">
+      {/* 1 Day Streak Notification Toast */}
+      <StreakNotificationToast show={showStreakToast} mode="recite" onClose={dismissStreakToast} />
+
       {/* Top Header Card: Ultra-Professional Surah Metadata & Progress */}
       <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-white border border-[#ded5c0] p-3.5 sm:p-5 shadow-sm">
         {/* Top Utility Bar: Back button & Ayah Jump Selector */}
