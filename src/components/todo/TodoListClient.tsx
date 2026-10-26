@@ -404,7 +404,7 @@ export function TodoListClient() {
     const list: Array<{
       date: string;
       dayLabel: string;
-      displayDate: string;
+      dayNum: number;
       percentage: number;
       completed: number;
       total: number;
@@ -423,9 +423,7 @@ export function TodoListClient() {
       const iso = `${y}-${m}-${dayStr}`;
 
       const dayLabel = d.toLocaleDateString("en-US", { weekday: "short" });
-      const monthShort = d.toLocaleDateString("en-US", { month: "short" });
       const dayNum = d.getDate();
-      const displayDate = `${monthShort} ${dayNum}`;
       const isToday = iso === todayIso;
 
       if (isToday) {
@@ -433,7 +431,7 @@ export function TodoListClient() {
         list.push({
           date: iso,
           dayLabel,
-          displayDate,
+          dayNum,
           percentage: todayPercentage,
           completed: completedCount,
           total: totalCount,
@@ -445,7 +443,7 @@ export function TodoListClient() {
         list.push({
           date: iso,
           dayLabel,
-          displayDate,
+          dayNum,
           percentage: histItem ? histItem.percentage : 0,
           completed: histItem ? histItem.completed : 0,
           total: histItem ? histItem.total : 0,
@@ -492,95 +490,85 @@ export function TodoListClient() {
         </Link>
       </div>
 
-      {/* PERFORMANCE PERCENTAGE SECTION: CLEAN ENGLISH UI */}
-      <div className="bg-white border border-[#ded5c0] rounded-2xl sm:rounded-3xl p-4 sm:p-5 shadow-xs space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#ede7d8] pb-3">
-          <div className="flex items-center gap-2">
-            <span className="text-xl">📊</span>
-            <div>
-              <h2 className="font-bold text-sm sm:text-base text-[#112a1d]">
-                Task Performance & Completion
-              </h2>
-              <p className="text-[11px] text-[#527060]">
-                Automatic 12:00 AM midnight reset • Real-time daily & weekly tracking
-              </p>
-            </div>
-          </div>
-          <span className="self-start sm:self-auto text-[10px] font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-full flex items-center gap-1">
-            <span>⏱️</span>
-            <span>Resets at 12:00 AM Daily</span>
+      {/* PERFORMANCE PERCENTAGE SECTION: COMPACT & MODERN */}
+      <div className="bg-white border border-[#ded5c0] rounded-2xl sm:rounded-3xl p-3.5 sm:p-4 shadow-xs space-y-3">
+        {/* Header: Compact, No icons */}
+        <div className="flex items-center justify-between gap-2 border-b border-[#ede7d8] pb-2">
+          <h2 className="font-bold text-xs sm:text-sm text-[#112a1d] tracking-tight uppercase">
+            Performance
+          </h2>
+          <span className="text-[10px] font-semibold text-emerald-800 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
+            12:00 AM Reset
           </span>
         </div>
 
-        {/* 2-Card Metric Overview: Today vs This Week */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+        {/* 2 Compact Metric Overview Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
           {/* 1. Today's Percentage Card */}
-          <div className="bg-gradient-to-br from-[#faf8f3] to-[#f4ede0] border border-[#ded5c0] rounded-2xl p-3.5 space-y-2.5 shadow-2xs">
+          <div className="bg-[#faf8f3] border border-[#ded5c0] rounded-xl p-3 space-y-2 shadow-2xs">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-[#143323] uppercase tracking-wider flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-emerald-600 animate-pulse" />
-                <span>Today's Performance</span>
+              <span className="text-xs font-bold text-[#143323] uppercase tracking-wider">
+                Today
               </span>
               <span
-                className={`text-xs font-bold px-2 py-0.5 rounded-full ${
+                className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
                   todayPercentage === 100
                     ? "bg-emerald-100 text-emerald-800 border border-emerald-300"
                     : todayPercentage >= 50
                     ? "bg-amber-100 text-amber-800 border border-amber-300"
-                    : "bg-neutral-100 text-neutral-700"
+                    : "bg-[#ede7d8] text-[#527060]"
                 }`}
               >
                 {todayPercentage === 100
-                  ? "100% Completed"
+                  ? "100%"
                   : todayPercentage > 0
                   ? "In Progress"
                   : "Not Started"}
               </span>
             </div>
 
-            <div className="flex items-baseline gap-2">
-              <span className="text-3xl sm:text-4xl font-extrabold text-[#112a1d] tracking-tight">
+            <div className="flex items-baseline justify-between">
+              <span className="text-2xl sm:text-3xl font-extrabold text-[#112a1d] tracking-tight">
                 {todayPercentage}%
               </span>
-              <span className="text-xs text-[#527060] font-medium">
-                ({completedCount} of {totalCount} tasks completed)
+              <span className="text-[11px] text-[#527060] font-medium">
+                {completedCount} of {totalCount} completed
               </span>
             </div>
 
-            {/* Linear Progress Bar */}
-            <div className="w-full bg-[#e8e0cc] h-2.5 rounded-full overflow-hidden p-0.5 border border-[#ded5c0]">
+            {/* Sleek Progress Bar */}
+            <div className="w-full bg-[#e8e0cc] h-1.5 rounded-full overflow-hidden">
               <div
-                className="bg-gradient-to-r from-emerald-600 to-teal-500 h-full rounded-full transition-all duration-500 shadow-2xs"
+                className="bg-emerald-600 h-full rounded-full transition-all duration-500"
                 style={{ width: `${Math.max(todayPercentage, 0)}%` }}
               />
             </div>
           </div>
 
           {/* 2. Weekly Percentage Card */}
-          <div className="bg-gradient-to-br from-[#faf8f3] to-[#f4ede0] border border-[#ded5c0] rounded-2xl p-3.5 space-y-2.5 shadow-2xs">
+          <div className="bg-[#faf8f3] border border-[#ded5c0] rounded-xl p-3 space-y-2 shadow-2xs">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-[#143323] uppercase tracking-wider flex items-center gap-1.5">
-                <span>📅</span>
-                <span>Weekly Average</span>
+              <span className="text-xs font-bold text-[#143323] uppercase tracking-wider">
+                Weekly Average
               </span>
-              <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-900 border border-emerald-200">
-                Last 7 Days
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-900 border border-emerald-200">
+                7 Days
               </span>
             </div>
 
-            <div className="flex items-baseline gap-2">
-              <span className="text-3xl sm:text-4xl font-extrabold text-emerald-900 tracking-tight">
+            <div className="flex items-baseline justify-between">
+              <span className="text-2xl sm:text-3xl font-extrabold text-emerald-900 tracking-tight">
                 {weeklyPercentage}%
               </span>
-              <span className="text-xs text-[#527060] font-medium">
-                7-day average score
+              <span className="text-[11px] text-[#527060] font-medium">
+                7-day average
               </span>
             </div>
 
-            {/* Linear Progress Bar */}
-            <div className="w-full bg-[#e8e0cc] h-2.5 rounded-full overflow-hidden p-0.5 border border-[#ded5c0]">
+            {/* Sleek Progress Bar */}
+            <div className="w-full bg-[#e8e0cc] h-1.5 rounded-full overflow-hidden">
               <div
-                className="bg-gradient-to-r from-emerald-800 to-emerald-600 h-full rounded-full transition-all duration-500 shadow-2xs"
+                className="bg-emerald-700 h-full rounded-full transition-all duration-500"
                 style={{ width: `${Math.max(weeklyPercentage, 0)}%` }}
               />
             </div>
@@ -589,38 +577,35 @@ export function TodoListClient() {
 
         {/* 7-Day Day-by-Day Mini Performance Breakdown */}
         <div className="pt-1">
-          <div className="flex items-center justify-between mb-2 px-1">
+          <div className="flex items-center justify-between mb-1.5 px-0.5">
             <span className="text-[11px] font-bold text-[#527060] uppercase tracking-wider">
-              Weekly Breakdown (Last 7 Days):
-            </span>
-            <span className="text-[10px] text-[#8e8574]">
-              Daily scores & status
+              Last 7 Days
             </span>
           </div>
 
-          <div className="grid grid-cols-7 gap-1.5 sm:gap-2 text-center">
+          <div className="grid grid-cols-7 gap-1 sm:gap-1.5 text-center">
             {last7Days.map((d) => (
               <div
                 key={d.date}
-                className={`p-2 rounded-xl border transition-all ${
+                className={`py-1.5 px-0.5 rounded-xl border flex flex-col items-center justify-between transition-all ${
                   d.isToday
                     ? "bg-emerald-50/90 border-emerald-400 ring-1 ring-emerald-300 shadow-2xs"
                     : d.hasData
                     ? "bg-[#faf8f3] border-[#ded5c0]"
-                    : "bg-[#f5f1e6]/60 border-[#eae3d2]"
+                    : "bg-[#fbf9f4] border-[#ede7d8]"
                 }`}
               >
-                <div className="text-[11px] font-bold text-[#143323] truncate">
+                <span className="text-[11px] font-bold text-[#143323] leading-tight">
                   {d.dayLabel}
-                </div>
-                <div className="text-[9px] text-[#8e8574] truncate mb-1">
-                  {d.displayDate}
-                </div>
+                </span>
+                <span className="text-[9px] text-[#8e8574] font-medium leading-none mt-0.5">
+                  {d.dayNum}
+                </span>
 
-                {/* Vertical mini bar */}
-                <div className="w-full bg-[#ede5d1] h-10 rounded-lg overflow-hidden flex flex-col justify-end p-0.5 border border-[#ded5c0]/60 my-1">
+                {/* Vertical mini capsule bar */}
+                <div className="w-2.5 sm:w-3 bg-[#ede5d1] h-7 rounded-full overflow-hidden flex flex-col justify-end p-0.5 my-1.5">
                   <div
-                    className={`w-full rounded transition-all duration-500 ${
+                    className={`w-full rounded-full transition-all duration-500 ${
                       d.isToday
                         ? "bg-emerald-600"
                         : d.percentage >= 70
@@ -633,8 +618,8 @@ export function TodoListClient() {
                   />
                 </div>
 
-                <div
-                  className={`text-[10px] font-bold ${
+                <span
+                  className={`text-[10px] font-bold leading-none ${
                     d.isToday
                       ? "text-emerald-900"
                       : d.hasData
@@ -643,7 +628,7 @@ export function TodoListClient() {
                   }`}
                 >
                   {d.hasData ? `${d.percentage}%` : "–"}
-                </div>
+                </span>
               </div>
             ))}
           </div>
@@ -653,9 +638,9 @@ export function TodoListClient() {
       {/* Main Printable / Planner Sheet Card */}
       <div className="bg-white border border-[#ded5c0] rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-sm space-y-5">
         
-        {/* Planner Header: Title & Clean Date Badge (NAME Removed as requested) */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#ede7d8] pb-4">
-          <div className="space-y-1">
+        {/* Planner Header: Title & Clean Date Badge (No useless icons) */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#ede7d8] pb-3">
+          <div className="space-y-0.5">
             <h1 className="font-display text-2xl sm:text-3xl font-bold text-[#112a1d] tracking-tight">
               Daily Tasks
             </h1>
@@ -664,13 +649,10 @@ export function TodoListClient() {
             </p>
           </div>
 
-          {/* Clean Modern Date Display (Name Removed) */}
-          <div className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-[#faf8f3] border border-[#ded5c0] shadow-2xs self-start sm:self-auto">
-            <span className="text-base text-emerald-800">📅</span>
-            <div className="flex flex-col">
-              <span className="text-[10px] font-bold text-[#8e8574] uppercase tracking-wider">Date</span>
-              <span className="text-xs font-bold text-[#143323]">{data.date || getTodayFormatted()}</span>
-            </div>
+          {/* Clean Modern Date Display (No useless icons) */}
+          <div className="px-3 py-1.5 rounded-xl bg-[#faf8f3] border border-[#ded5c0] shadow-2xs self-start sm:self-auto flex items-center gap-2">
+            <span className="text-[10px] font-bold text-[#8e8574] uppercase tracking-wider">Date</span>
+            <span className="text-xs font-bold text-[#143323]">{data.date || getTodayFormatted()}</span>
           </div>
         </div>
 
@@ -968,8 +950,8 @@ export function TodoListClient() {
 
         {/* Footer Actions: Clear Completed & Reset New Day */}
         <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 border-t border-[#ede7d8]">
-          <div className="flex items-center gap-2 text-xs text-[#527060] font-medium">
-            <span>Saved on your device automatically. Tasks auto-clear at 12:00 AM midnight.</span>
+          <div className="text-xs text-[#527060] font-medium">
+            <span>Tasks auto-clear daily at 12:00 AM.</span>
           </div>
 
           <div className="flex flex-wrap items-center justify-end gap-2">
@@ -988,7 +970,7 @@ export function TodoListClient() {
               className="px-4 py-1.5 rounded-xl bg-emerald-800 hover:bg-emerald-900 text-white text-xs font-bold shadow-xs active:scale-95 transition-all cursor-pointer"
               title="Reset tasks for a new day"
             >
-              Start New Day ↺
+              Start New Day
             </button>
           </div>
         </div>
