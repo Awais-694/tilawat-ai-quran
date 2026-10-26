@@ -126,16 +126,26 @@ export function StreakClient() {
           Streak & Activity
         </h1>
 
-        {/* Improved Dashboard Button */}
-        <Link
-          href="/"
-          className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold text-[#1e402e] bg-[#f0ebd9] hover:bg-[#e4dcce] border border-[#ded5c0] active:scale-95 transition-all shadow-sm"
-        >
-          <svg className="w-3.5 h-3.5 text-emerald-800" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-          </svg>
-          <span>Dashboard</span>
-        </Link>
+        {/* Action Buttons: Daily Tasks + Dashboard */}
+        <div className="flex items-center gap-1.5">
+          <Link
+            href="/todo"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-white bg-emerald-700 hover:bg-emerald-800 active:scale-95 transition-all shadow-xs"
+            title="Open Daily Quran To-Do List"
+          >
+            <svg className="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+            </svg>
+            <span>Daily Tasks</span>
+          </Link>
+
+          <Link
+            href="/"
+            className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-semibold text-[#1e402e] bg-[#f0ebd9] hover:bg-[#e4dcce] border border-[#ded5c0] active:scale-95 transition-all shadow-2xs"
+          >
+            <span>Dashboard</span>
+          </Link>
+        </div>
       </div>
 
       {/* Main Hero Streak Banner Card */}
@@ -212,6 +222,38 @@ export function StreakClient() {
           </div>
         </div>
       </div>
+
+      {/* Daily Tasks / Quran To-Do Banner Card */}
+      <Link
+        href="/todo"
+        className="group relative overflow-hidden rounded-2xl bg-gradient-to-r from-white via-[#fcfbf7] to-[#f4f9f5] border border-emerald-300/80 p-3 sm:p-4 shadow-xs hover:shadow-md hover:border-emerald-600 transition-all flex items-center justify-between gap-3 active:scale-[0.99] cursor-pointer"
+      >
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="w-10 h-10 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 flex items-center justify-center shrink-0 group-hover:bg-emerald-700 group-hover:text-white transition-all shadow-2xs">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+            </svg>
+          </div>
+          <div className="min-w-0">
+            <div className="flex items-center gap-2">
+              <span className="font-bold text-xs sm:text-sm text-[#112a1d] group-hover:text-emerald-950">
+                Daily Tasks & Planner
+              </span>
+              <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-800 bg-emerald-50 border border-emerald-200 px-1.5 py-0.2 rounded">
+                To-Do List
+              </span>
+            </div>
+            <p className="text-[11px] sm:text-xs text-[#527060] truncate">
+              Daily Tilawat checklist, priorities, reminders & reflection notes
+            </p>
+          </div>
+        </div>
+
+        <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-emerald-700 group-hover:bg-emerald-800 text-white text-xs font-bold shrink-0 shadow-2xs transition-all">
+          <span>Daily Task</span>
+          <span className="group-hover:translate-x-0.5 transition-transform">→</span>
+        </span>
+      </Link>
 
       {/* Week Navigation Selector */}
       <div className="flex items-center justify-between bg-white border border-[#ded5c0] rounded-2xl px-3 py-2 shadow-sm">

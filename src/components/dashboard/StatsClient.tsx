@@ -119,7 +119,16 @@ export function StatsClient() {
         <h1 className="text-xl sm:text-2xl font-bold text-[#112a1d] tracking-wide text-center">
           Progress & Stats
         </h1>
-        <div className="w-14" />
+        <Link
+          href="/todo"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-white bg-emerald-700 hover:bg-emerald-800 active:scale-95 transition-all shadow-xs"
+          title="Open Daily Quran To-Do List"
+        >
+          <svg className="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+          </svg>
+          <span>Daily Tasks</span>
+        </Link>
       </div>
 
       {/* Quick Summary Cards */}
