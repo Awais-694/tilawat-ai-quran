@@ -179,9 +179,19 @@ export function ReadClient({
 
       {/* Status Toast */}
       {statusMessage && (
-        <div className="bg-emerald-800 text-white text-xs sm:text-sm font-semibold px-4 py-2.5 rounded-xl shadow-md text-center transition-all flex items-center justify-center gap-2">
-          <span>✓</span>
-          <span>{statusMessage}</span>
+        <div className="bg-emerald-800 text-white text-xs sm:text-sm font-semibold px-4 py-2.5 rounded-xl shadow-md text-center transition-all flex items-center justify-between gap-2 max-w-xl mx-auto">
+          <div className="flex items-center gap-2 flex-1 justify-center">
+            <span>✓</span>
+            <span>{statusMessage}</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setStatusMessage(null)}
+            className="w-6 h-6 rounded-full hover:bg-white/20 active:scale-95 flex items-center justify-center text-xs text-white/90 font-bold cursor-pointer shrink-0"
+            title="Dismiss"
+          >
+            ✕
+          </button>
         </div>
       )}
 

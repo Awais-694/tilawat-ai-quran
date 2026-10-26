@@ -320,14 +320,15 @@ export function StreakNotificationToast({
             ما شاء اللہ! {label} پر وقت گزارنے پر آج کی سٹریک شمار ہو گئی ہے۔
           </div>
         </div>
-        {onClose && (
-          <button
-            onClick={onClose}
-            className="text-emerald-200/70 hover:text-white text-xs p-1 cursor-pointer"
-          >
-            ✕
-          </button>
-        )}
+        <button
+          type="button"
+          onClick={onClose}
+          className="w-7 h-7 rounded-full bg-white/15 hover:bg-white/30 active:scale-90 text-white flex items-center justify-center text-sm font-bold cursor-pointer transition-all shrink-0 border border-white/20 shadow-xs"
+          title="Dismiss (ہٹا دیں)"
+          aria-label="Close notification"
+        >
+          ✕
+        </button>
       </div>
     </div>
   );

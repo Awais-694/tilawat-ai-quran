@@ -546,33 +546,6 @@ export function TodoListClient() {
                 </div>
               </form>
             </div>
-
-            {/* Quick Suggestion Chips */}
-            <div className="pt-1">
-              <span className="text-[11px] font-bold text-[#527060] uppercase tracking-wider block mb-1.5">
-                Suggested Quran & Islamic Habits:
-              </span>
-              <div className="flex flex-wrap gap-1.5">
-                {[
-                  "Tilawat 1 Juz",
-                  "Surah Al-Kahf (جمعة)",
-                  "Read Urdu Translation",
-                  "Morning Adhkar",
-                  "Evening Adhkar",
-                  "Surah Yaseen",
-                  "Tadabbur on 5 Ayahs",
-                ].map((sug) => (
-                  <button
-                    key={sug}
-                    type="button"
-                    onClick={() => addSuggestedTask(sug)}
-                    className="text-[11px] font-medium px-2.5 py-1 rounded-lg bg-white hover:bg-emerald-50 text-[#143323] border border-[#ded5c0] hover:border-emerald-400 active:scale-95 transition-all cursor-pointer shadow-2xs"
-                  >
-                    + {sug}
-                  </button>
-                ))}
-              </div>
-            </div>
           </div>
 
           {/* RIGHT COLUMN: PRIORITIES, REMINDERS, NOTES (Span 5 on desktop) */}
@@ -763,35 +736,6 @@ export function TodoListClient() {
 
           </div>
         </div>
-
-        {/* Completion Celebration Banner (when all tasks done) */}
-        {allTasksCompleted && (
-          <div className="p-3.5 rounded-2xl bg-gradient-to-r from-emerald-50 via-teal-50 to-emerald-50 border border-emerald-200 flex flex-col sm:flex-row items-center justify-between gap-3 text-emerald-950">
-            <div className="flex items-center gap-2.5 text-xs sm:text-sm">
-              <span className="text-xl">🎉</span>
-              <div>
-                <span className="font-bold block">Masha'Allah! All checklist tasks completed!</span>
-                <span className="text-[11px] text-emerald-800">You can save your previous tasks data to history and start a fresh day.</span>
-              </div>
-            </div>
-            <div className="flex items-center gap-2 shrink-0">
-              <button
-                type="button"
-                onClick={() => saveCurrentDayToHistory(false)}
-                className="px-3.5 py-1.5 rounded-xl bg-white hover:bg-emerald-100 text-emerald-900 border border-emerald-300 text-xs font-bold shadow-2xs cursor-pointer active:scale-95 transition-all"
-              >
-                Save to History ✓
-              </button>
-              <button
-                type="button"
-                onClick={handleResetNewDay}
-                className="px-3.5 py-1.5 rounded-xl bg-emerald-800 hover:bg-emerald-900 text-white text-xs font-bold shadow-xs cursor-pointer active:scale-95 transition-all"
-              >
-                Start New Day ↺
-              </button>
-            </div>
-          </div>
-        )}
 
         {/* Footer Actions: Save Previous Tasks, History, Clear & Reset New Day */}
         <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 border-t border-[#ede7d8]">
