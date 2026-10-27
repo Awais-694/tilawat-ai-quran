@@ -23,6 +23,7 @@ interface LastReadBookmark {
   surahName: string;
   arabicName: string;
   pageNumber: number;
+  totalPages?: number;
   timestamp: number;
 }
 
@@ -119,16 +120,33 @@ export default function ReadIndexPage() {
                     {lastRead.arabicName}
                   </span>
                 </div>
-                <span className="text-xs text-[#527060]">Page {lastRead.pageNumber}</span>
+                <span className="text-xs text-[#527060]">Page {lastRead.pageNumber}{lastRead.totalPages ? ` of ${lastRead.totalPages}` : ""}</span>
               </div>
             </div>
 
-            <Link
-              href={`/read/${lastRead.surahNumber}`}
-              className="px-3.5 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs sm:text-sm shadow-sm active:scale-95 transition-all shrink-0"
-            >
-              Resume
-            </Link>
+            <div className="flex items-center gap-2 shrink-0">
+              <Link
+                href={`/read/${lastRead.surahNumber}${lastRead.pageNumber > 1 ? `?page=${lastRead.pageNumber}` : ""}`}
+                className="px-3.5 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs sm:text-sm shadow-sm active:scale-95 transition-all shrink-0 cursor-pointer"
+              >
+                Resume
+              </Link>
+              <button
+                type="button"
+                onClick={() => {
+                  try {
+                    localStorage.removeItem("tilawat_last_read");
+                    setLastRead(null);
+                  } catch {}
+                }}
+                className="w-8 h-8 rounded-xl bg-white hover:bg-rose-50 border border-[#ded5c0] hover:border-rose-200 text-stone-400 hover:text-rose-600 flex items-center justify-center transition-colors active:scale-95 cursor-pointer"
+                title="Dismiss Bookmark"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
           </div>
         </div>
       )}

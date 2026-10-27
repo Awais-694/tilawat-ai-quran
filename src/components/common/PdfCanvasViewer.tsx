@@ -7,6 +7,8 @@ interface PdfCanvasViewerProps {
   pdfBlob?: Blob | null;
   onSaveOffline?: (blob: Blob) => void;
   title: string;
+  initialPage?: number;
+  onPageChange?: (page: number, totalPages: number) => void;
 }
 
 export function PdfCanvasViewer({
@@ -14,12 +16,14 @@ export function PdfCanvasViewer({
   pdfBlob,
   onSaveOffline,
   title,
+  initialPage = 1,
+  onPageChange,
 }: PdfCanvasViewerProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
   const [pdfDoc, setPdfDoc] = useState<any>(null);
-  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [currentPage, setCurrentPage] = useState<number>(initialPage && initialPage > 0 ? initialPage : 1);
   const [totalPages, setTotalPages] = useState<number>(1);
   const [scale, setScale] = useState<number>(1.2);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -88,6 +92,8 @@ export function PdfCanvasViewer({
 
   const onSaveOfflineRef = useRef(onSaveOffline);
   onSaveOfflineRef.current = onSaveOffline;
+  const onPageChangeRef = useRef(onPageChange);
+  onPageChangeRef.current = onPageChange;
   const loadedKeyRef = useRef<string | null>(null);
 
   // Load PDF document
@@ -161,6 +167,8 @@ export function PdfCanvasViewer({
         loadedKeyRef.current = pdfUrl;
         setPdfDoc(doc);
         setTotalPages(doc.numPages);
+        const startPage = initialPage && initialPage >= 1 && initialPage <= doc.numPages ? initialPage : 1;
+        setCurrentPage(startPage);
         setIsLoading(false);
       } catch (err: any) {
         console.error("PDF loading error:", err);
@@ -236,6 +244,13 @@ export function PdfCanvasViewer({
   useEffect(() => {
     void renderCurrentPage();
   }, [renderCurrentPage]);
+
+  // Notify parent on page changes
+  useEffect(() => {
+    if (pdfDoc && totalPages > 0) {
+      onPageChangeRef.current?.(currentPage, totalPages);
+    }
+  }, [currentPage, totalPages, pdfDoc]);
 
   // Window resize handler to maintain sharp responsive canvas
   useEffect(() => {

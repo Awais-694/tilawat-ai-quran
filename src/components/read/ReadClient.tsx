@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { SURAHS_META } from "@/lib/quran/data";
@@ -15,9 +15,12 @@ import { useStreakTracker, StreakNotificationToast } from "@/lib/quran/streakTra
 
 export function ReadClient({
   surahNumber,
+  initialSurah,
+  initialPage,
 }: {
   surahNumber: number;
   initialSurah?: any;
+  initialPage?: number;
 }) {
   const router = useRouter();
   const meta = useMemo(() => {
@@ -28,6 +31,59 @@ export function ReadClient({
   const [cachedBlob, setCachedBlob] = useState<Blob | null>(null);
   const [isDownloading, setIsDownloading] = useState(false);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
+
+  // Compute starting page from prop or existing bookmark for this surah
+  const startPage = useMemo(() => {
+    if (initialPage && initialPage > 0) return initialPage;
+    if (typeof window !== "undefined") {
+      try {
+        const raw = localStorage.getItem("tilawat_last_read");
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (parsed?.surahNumber === surahNumber && parsed?.pageNumber > 0) {
+            return parsed.pageNumber;
+          }
+        }
+      } catch {}
+    }
+    return 1;
+  }, [initialPage, surahNumber]);
+
+  // Immediately save/update last read bookmark when this surah is opened
+  useEffect(() => {
+    try {
+      const bookmark = {
+        surahNumber,
+        surahName: meta.name,
+        arabicName: meta.arabicName,
+        pageNumber: startPage,
+        timestamp: Date.now(),
+      };
+      localStorage.setItem("tilawat_last_read", JSON.stringify(bookmark));
+    } catch (e) {
+      console.warn("Failed to save tilawat_last_read on mount:", e);
+    }
+  }, [surahNumber, meta, startPage]);
+
+  // Update last read bookmark whenever page flips in the viewer
+  const handlePageChange = useCallback(
+    (page: number, totalPages: number) => {
+      try {
+        const bookmark = {
+          surahNumber,
+          surahName: meta.name,
+          arabicName: meta.arabicName,
+          pageNumber: page,
+          totalPages,
+          timestamp: Date.now(),
+        };
+        localStorage.setItem("tilawat_last_read", JSON.stringify(bookmark));
+      } catch (e) {
+        console.warn("Failed to update tilawat_last_read:", e);
+      }
+    },
+    [surahNumber, meta]
+  );
 
   // Reliable API routes
   const serverPdfUrl = `/api/pdf/mushaf16/${surahNumber}`;
@@ -218,6 +274,8 @@ export function ReadClient({
         key={`surah-canvas-${surahNumber}`}
         pdfUrl={serverPdfUrl}
         pdfBlob={cachedBlob}
+        initialPage={startPage}
+        onPageChange={handlePageChange}
         onSaveOffline={async (blob) => {
           try {
             await saveMushaf16Pdf(surahNumber, blob, meta.name);

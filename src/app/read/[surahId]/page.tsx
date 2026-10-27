@@ -18,14 +18,27 @@ export async function generateMetadata({
 
 export default async function ReadSurahPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ surahId: string }>;
+  searchParams?: Promise<{ page?: string }>;
 }) {
   const { surahId } = await params;
+  const sp = searchParams ? await searchParams : undefined;
+  const pageParam = sp?.page ? parseInt(sp.page, 10) : undefined;
+  const initialPage = pageParam && !isNaN(pageParam) && pageParam > 0 ? pageParam : undefined;
+
   const meta = getSurahMeta(Number(surahId));
   if (!meta) {
     return <p className="text-center py-12 text-rose-700 font-semibold">Surah not found.</p>;
   }
   const initialSurah = await loadSurah(meta.number);
-  return <ReadClient key={meta.number} surahNumber={meta.number} initialSurah={initialSurah} />;
+  return (
+    <ReadClient
+      key={meta.number}
+      surahNumber={meta.number}
+      initialSurah={initialSurah}
+      initialPage={initialPage}
+    />
+  );
 }
