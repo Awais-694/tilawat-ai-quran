@@ -44,13 +44,20 @@ const DEFAULT_NOTES: string[] = [
   'Stay hydrated and start day with Bismillah.'
 ];
 
+const INITIAL_DEFAULT_HABITS: HabitItem[] = DEFAULT_HABITS.map((title, i) => ({
+  id: 'def_' + i,
+  title,
+  checks: {},
+}));
+
 export default function HabitTracker() {
+  const [mounted, setMounted] = useState(false);
   const today = new Date();
   const [selectedYear, setSelectedYear] = useState<number>(today.getFullYear());
   const [selectedMonth, setSelectedMonth] = useState<number>(today.getMonth()); // 0-11
   const [goals, setGoals] = useState<string[]>(DEFAULT_GOALS);
   const [notes, setNotes] = useState<string[]>(DEFAULT_NOTES);
-  const [habits, setHabits] = useState<HabitItem[]>([]);
+  const [habits, setHabits] = useState<HabitItem[]>(INITIAL_DEFAULT_HABITS);
   const [newHabitTitle, setNewHabitTitle] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
   const [activeTab, setActiveTab] = useState<'grid' | 'today'>('grid');
@@ -76,6 +83,7 @@ export default function HabitTracker() {
 
   // Load from localStorage on month/year change
   useEffect(() => {
+    setMounted(true);
     try {
       const saved = localStorage.getItem(storageKey);
       if (saved) {

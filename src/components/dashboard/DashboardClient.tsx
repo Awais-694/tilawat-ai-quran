@@ -34,46 +34,20 @@ function withTimeout<T>(promise: Promise<T>, ms: number, fallback: T): Promise<T
   ]);
 }
 
-function getInitialActive(): SurahProgress {
-  if (typeof window !== "undefined") {
-    try {
-      const raw = localStorage.getItem("tilawat_last_recitation");
-      if (raw) {
-        const p = JSON.parse(raw);
-        if (p?.surahNumber && !p.completed) {
-          return {
-            surahNumber: p.surahNumber,
-            revealedWords: p.revealedWords || 0,
-            totalWords: p.totalWords || 0,
-            completed: false,
-            lastPracticedAt: p.timestamp || Date.now(),
-            lastAyahNumber: p.lastAyahNumber || 1,
-          };
-        }
-      }
-    } catch {}
-  }
-  return {
-    surahNumber: 1,
-    revealedWords: 0,
-    totalWords: 29,
-    completed: false,
-    lastPracticedAt: Date.now(),
-    lastAyahNumber: 1,
-  };
-}
+const initialStats: Stats = {
+  streak: 0,
+  longestStreak: 0,
+  rollingDays: getRolling7Days(new Map()),
+  accuracy: null,
+  inProgress: [],
+  completedCount: 0,
+  completedList: [],
+  lastActive: null,
+};
 
 export function DashboardClient() {
-  const [stats, setStats] = useState<Stats>(() => ({
-    streak: 0,
-    longestStreak: 0,
-    rollingDays: getRolling7Days(new Map()),
-    accuracy: null,
-    inProgress: [],
-    completedCount: 0,
-    completedList: [],
-    lastActive: getInitialActive(),
-  }));
+  const [mounted, setMounted] = useState(false);
+  const [stats, setStats] = useState<Stats>(initialStats);
   const [lastAyah, setLastAyah] = useState<number>(1);
 
   const loadStats = async () => {
@@ -211,6 +185,7 @@ export function DashboardClient() {
   };
 
   useEffect(() => {
+    setMounted(true);
     void loadStats();
     const handleStreakUpdate = () => {
       void loadStats();
@@ -379,7 +354,7 @@ export function DashboardClient() {
       </div>
 
       {/* Quick Resume Card (Ayah Progress & Resume Prompt) */}
-      {stats?.lastActive && lastActiveMeta && (
+      {mounted && stats?.lastActive && lastActiveMeta && (
         <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-white border border-[#ded5c0] p-4 sm:p-5 shadow-[0_4px_16px_rgba(20,50,30,0.06)]">
           <div className="space-y-3 relative z-10">
             {/* Header Badge & Question */}
@@ -485,6 +460,39 @@ export function DashboardClient() {
           days={stats.rollingDays}
         />
       )}
+
+      {/* Daily Planner & Monthly Habit Tracker Banner */}
+      <Link
+        href="/todo"
+        className="group relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-r from-[#173e2a] via-[#103020] to-[#0c2418] border border-[#2e6044] p-4 sm:p-5 shadow-[0_4px_16px_rgba(10,40,25,0.12)] hover:shadow-[0_6px_22px_rgba(10,40,25,0.22)] active:scale-[0.99] transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3.5 text-white cursor-pointer"
+        title="Open Daily Quran Planner & Monthly Habit Tracker"
+      >
+        <div className="flex items-center gap-3.5">
+          <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-white/10 border border-white/15 flex items-center justify-center shrink-0 shadow-inner group-hover:scale-105 transition-transform text-2xl">
+            📋
+          </div>
+          <div>
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="font-bold text-base sm:text-lg text-white tracking-tight">
+                Daily Planner & Habit Tracker
+              </span>
+              <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-[#fadfd4] text-[#74351a] border border-[#f0c2b2]">
+                New
+              </span>
+            </div>
+            <p className="text-xs text-emerald-200/80 mt-0.5 font-medium">
+              Daily tasks, priority checklist & 31-day Islamic habit tracker.
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center justify-end shrink-0">
+          <span className="inline-flex items-center gap-1.5 px-3.5 sm:px-4 py-2 rounded-xl bg-emerald-600 group-hover:bg-emerald-500 text-white font-bold text-xs shadow-sm transition-all">
+            <span>Open Planner</span>
+            <span className="group-hover:translate-x-1 transition-transform">→</span>
+          </span>
+        </div>
+      </Link>
 
       {/* Recitation Overview Secondary Stats: Accuracy & Completed Surahs */}
       <div className="grid grid-cols-2 gap-2 sm:gap-3">

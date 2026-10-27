@@ -262,6 +262,30 @@ export function StreakClient() {
         </span>
       </Link>
 
+      {/* Habit Tracker Banner Card (Matching exactly as requested) */}
+      <Link
+        href="/habits"
+        className="group relative overflow-hidden rounded-2xl bg-white hover:bg-[#fbf9f4] border border-[#ded5c0] hover:border-emerald-600/80 p-3.5 sm:p-4 shadow-sm hover:shadow-md transition-all flex items-center justify-between gap-3 active:scale-[0.99] cursor-pointer"
+      >
+        <div className="flex items-center gap-3 sm:gap-3.5 min-w-0">
+          <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 flex items-center justify-center shrink-0 group-hover:bg-emerald-700 group-hover:text-white group-hover:border-emerald-700 transition-all shadow-xs">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.253M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5m-9-6h.008v.008H12v-.008zM12 15h.008v.008H12V15zm0 2.25h.008v.008H12v-.008zM9.75 15h.008v.008H9.75V15zm0 2.25h.008v.008H9.75v-.008zM7.5 15h.008v.008H7.5V15zm0 2.25h.008v.008H7.5v-.008zm6.75-4.5h.008v.008h-.008v-.008zm0 2.25h.008v.008h-.008V15zm0 2.25h.008v.008h-.008v-.008zm2.25-4.5h.008v.008H16.5v-.008zm0 2.25h.008v.008H16.5V15z" />
+            </svg>
+          </div>
+          <div className="min-w-0">
+            <h3 className="font-bold text-sm sm:text-base text-[#112a1d] group-hover:text-emerald-950 transition-colors">
+              Habit Tracker
+            </h3>
+          </div>
+        </div>
+
+        <span className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-700 group-hover:bg-emerald-800 text-white text-xs font-bold shrink-0 shadow-xs transition-all">
+          <span>Open Tracker</span>
+          <span className="group-hover:translate-x-0.5 transition-transform text-emerald-200">→</span>
+        </span>
+      </Link>
+
       {/* Week Navigation Selector */}
       <div className="flex items-center justify-between bg-white border border-[#ded5c0] rounded-2xl px-3 py-2 shadow-sm">
         <button
