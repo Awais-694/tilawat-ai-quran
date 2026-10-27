@@ -132,38 +132,42 @@ export function TajweedIndexClient() {
 
       {/* Last Read Tajweed Bookmark Banner */}
       {lastRead && (
-        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-[#ffffff] via-[#f0fdf9] to-[#ffffff] border border-teal-200/90 p-3.5 sm:p-4 shadow-xs">
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-teal-100 border border-teal-300 text-teal-800 flex items-center justify-center shrink-0">
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-white via-[#f0fdf9] to-white border border-teal-200/90 p-3 sm:p-4 shadow-sm hover:shadow-md transition-shadow">
+          <div className="flex items-center justify-between gap-2.5 sm:gap-4">
+            <div className="flex items-center gap-2.5 sm:gap-3.5 min-w-0 flex-1">
+              <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-teal-500/10 border border-teal-500/25 text-teal-800 flex items-center justify-center shrink-0">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
                 </svg>
               </div>
-              <div>
-                <span className="text-[11px] font-bold uppercase tracking-wider text-teal-800">
-                  Continue Tajweed (تجوید القرآن)
-                </span>
-                <div className="flex items-center gap-2">
-                  <span className="font-bold text-sm sm:text-base text-[#112a1d]">
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-1.5 mb-0.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-teal-600 animate-pulse shrink-0" />
+                  <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-teal-850 truncate">
+                    Continue Tajweed
+                  </span>
+                </div>
+                <div className="flex items-baseline gap-1.5 sm:gap-2 truncate">
+                  <span className="font-bold text-xs sm:text-sm text-[#112a1d] truncate">
                     {lastRead.surahNumber}. {lastRead.surahName}
                   </span>
-                  <span className="font-quran text-base text-[#143323]" dir="rtl">
+                  <span className="font-quran text-xs sm:text-sm text-teal-950 font-semibold shrink-0" dir="rtl">
                     {lastRead.arabicName}
                   </span>
                 </div>
-                <span className="text-xs text-[#527060]">
-                  Page {lastRead.pageNumber}{lastRead.totalPages ? ` of ${lastRead.totalPages}` : ""}
-                </span>
+                <div className="text-[11px] text-[#527060] font-medium flex items-center gap-1 mt-0.5">
+                  <span>Page {lastRead.pageNumber}{lastRead.totalPages ? ` of ${lastRead.totalPages}` : ""}</span>
+                </div>
               </div>
             </div>
 
-            <div className="flex items-center gap-2 shrink-0">
+            <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
               <Link
                 href={`/tajweed?surah=${lastRead.surahNumber}${lastRead.pageNumber > 1 ? `&page=${lastRead.pageNumber}` : ""}`}
-                className="px-3.5 py-2 rounded-xl bg-teal-700 hover:bg-teal-800 text-white font-bold text-xs sm:text-sm shadow-xs active:scale-95 transition-all shrink-0 cursor-pointer"
+                className="inline-flex items-center gap-1 px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl bg-teal-700 hover:bg-teal-800 text-white font-bold text-xs sm:text-sm shadow-xs active:scale-95 transition-all shrink-0 cursor-pointer"
               >
-                Resume
+                <span>Resume</span>
+                <span className="text-[11px] sm:text-xs">→</span>
               </Link>
               <button
                 type="button"
@@ -173,10 +177,10 @@ export function TajweedIndexClient() {
                     setLastRead(null);
                   } catch {}
                 }}
-                className="w-8 h-8 rounded-xl bg-white hover:bg-rose-50 border border-teal-200 hover:border-rose-200 text-stone-400 hover:text-rose-600 flex items-center justify-center transition-colors active:scale-95 cursor-pointer"
+                className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-stone-100 hover:bg-rose-50 border border-stone-200/80 hover:border-rose-200 text-stone-400 hover:text-rose-600 flex items-center justify-center transition-colors active:scale-95 cursor-pointer"
                 title="Dismiss Bookmark"
               >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>

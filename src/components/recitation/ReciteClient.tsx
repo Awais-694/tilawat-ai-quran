@@ -251,7 +251,7 @@ export function ReciteClient({
       revealedWords: effectiveRevealed,
       totalWords: loaded.tokens.length,
       completed: isDone,
-      completedAt: isDone ? (ex?.completedAt ?? Date.now()) : ex?.completedAt,
+      completedAt: isDone ? Date.now() : ex?.completedAt,
       completedTimes: isDone
         ? (ex?.completedTimes ?? 0) + (ex?.completed ? 0 : 1)
         : (ex?.completedTimes ?? 0),

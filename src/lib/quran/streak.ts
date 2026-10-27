@@ -104,28 +104,40 @@ export function getRolling7Days(
 
     // ONLY include Surahs that were FULLY completed!
     const completedNums: number[] = [];
+
+    // A. Direct record from act.surahsCompleted
     if (act?.surahsCompleted && act.surahsCompleted.length > 0) {
       for (const n of act.surahsCompleted) {
         if (!completedNums.includes(n)) completedNums.push(n);
       }
     }
+
+    // B. Any surah that was recited on this date AND is marked completed in db.progress
+    if (surahNumbers && surahNumbers.length > 0 && completedProgressMap) {
+      for (const sNum of surahNumbers) {
+        const prog = completedProgressMap.get(sNum);
+        if (prog && prog.completed && !completedNums.includes(sNum)) {
+          completedNums.push(sNum);
+        }
+      }
+    }
+
+    // C. Any surah with completedAt falling on this exact date
     if (completedProgressMap) {
       for (const [sNum, prog] of completedProgressMap.entries()) {
-        if (prog.completed) {
-          if (prog.completedAt) {
-            if (getLocalDateString(new Date(prog.completedAt)) === dateStr && !completedNums.includes(sNum)) {
-              completedNums.push(sNum);
-            }
-          } else if (surahNumbers.includes(sNum) && !completedNums.includes(sNum)) {
+        if (prog.completed && prog.completedAt) {
+          const cDate = getLocalDateString(new Date(prog.completedAt));
+          if (cDate === dateStr && !completedNums.includes(sNum)) {
             completedNums.push(sNum);
           }
         }
       }
-      // Strictly remove any uncompleted surahs
-      for (let i = completedNums.length - 1; i >= 0; i--) {
-        const prog = completedProgressMap.get(completedNums[i]);
+
+      // D. Strictly filter OUT any surah that is NOT completed in db.progress
+      for (let j = completedNums.length - 1; j >= 0; j--) {
+        const prog = completedProgressMap.get(completedNums[j]);
         if (!prog || !prog.completed) {
-          completedNums.splice(i, 1);
+          completedNums.splice(j, 1);
         }
       }
     }
@@ -196,24 +208,36 @@ export function getWeekDays(
 
     // ONLY include Surahs that were FULLY completed!
     const completedNums: number[] = [];
+
+    // A. Direct record from act.surahsCompleted
     if (act?.surahsCompleted && act.surahsCompleted.length > 0) {
       for (const n of act.surahsCompleted) {
         if (!completedNums.includes(n)) completedNums.push(n);
       }
     }
+
+    // B. Any surah that was recited on this date AND is marked completed in db.progress
+    if (surahNumbers && surahNumbers.length > 0 && completedProgressMap) {
+      for (const sNum of surahNumbers) {
+        const prog = completedProgressMap.get(sNum);
+        if (prog && prog.completed && !completedNums.includes(sNum)) {
+          completedNums.push(sNum);
+        }
+      }
+    }
+
+    // C. Any surah with completedAt falling on this exact date
     if (completedProgressMap) {
       for (const [sNum, prog] of completedProgressMap.entries()) {
-        if (prog.completed) {
-          if (prog.completedAt) {
-            if (getLocalDateString(new Date(prog.completedAt)) === dateStr && !completedNums.includes(sNum)) {
-              completedNums.push(sNum);
-            }
-          } else if (surahNumbers.includes(sNum) && !completedNums.includes(sNum)) {
+        if (prog.completed && prog.completedAt) {
+          const cDate = getLocalDateString(new Date(prog.completedAt));
+          if (cDate === dateStr && !completedNums.includes(sNum)) {
             completedNums.push(sNum);
           }
         }
       }
-      // Strictly remove any uncompleted surahs
+
+      // D. Strictly filter OUT any surah that is NOT completed in db.progress
       for (let j = completedNums.length - 1; j >= 0; j--) {
         const prog = completedProgressMap.get(completedNums[j]);
         if (!prog || !prog.completed) {
