@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect, useRef, Suspense } from "react";
+import { useState, useMemo, useEffect, useRef, Suspense, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import surahsMeta from "@/data/surahs-meta.json";
 import {
@@ -15,9 +15,10 @@ import { useStreakTracker, StreakNotificationToast } from "@/lib/quran/streakTra
 
 interface TarjamaViewerProps {
   initialSurah: number;
+  initialPage?: number;
 }
 
-function TarjamaViewer({ initialSurah }: TarjamaViewerProps) {
+function TarjamaViewer({ initialSurah, initialPage }: TarjamaViewerProps) {
   const router = useRouter();
   const [selectedSurahNumber, setSelectedSurahNumber] = useState<number>(
     initialSurah >= 1 && initialSurah <= 114 ? initialSurah : 1
@@ -30,6 +31,59 @@ function TarjamaViewer({ initialSurah }: TarjamaViewerProps) {
   const [, setPdfSize] = useState<number | null>(null);
   const [isDownloading, setIsDownloading] = useState(false);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
+
+  // Determine starting page from prop or saved bookmark
+  const startPage = useMemo(() => {
+    if (initialPage && initialPage > 0) return initialPage;
+    if (typeof window !== "undefined") {
+      try {
+        const raw = localStorage.getItem("tilawat_last_tarjama_read");
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (parsed?.surahNumber === selectedSurahNumber && parsed?.pageNumber > 0) {
+            return parsed.pageNumber;
+          }
+        }
+      } catch {}
+    }
+    return 1;
+  }, [initialPage, selectedSurahNumber]);
+
+  // Immediately save/update Tarjama bookmark on mount / surah change
+  useEffect(() => {
+    try {
+      const bookmark = {
+        surahNumber: selectedSurahNumber,
+        surahName: currentSurah.name,
+        arabicName: currentSurah.arabicName,
+        pageNumber: startPage,
+        timestamp: Date.now(),
+      };
+      localStorage.setItem("tilawat_last_tarjama_read", JSON.stringify(bookmark));
+    } catch (e) {
+      console.warn("Failed to save tarjama bookmark on mount:", e);
+    }
+  }, [selectedSurahNumber, currentSurah, startPage]);
+
+  // Handle page turn updates in Tarjama viewer
+  const handlePageChange = useCallback(
+    (page: number, totalPages: number) => {
+      try {
+        const bookmark = {
+          surahNumber: selectedSurahNumber,
+          surahName: currentSurah.name,
+          arabicName: currentSurah.arabicName,
+          pageNumber: page,
+          totalPages,
+          timestamp: Date.now(),
+        };
+        localStorage.setItem("tilawat_last_tarjama_read", JSON.stringify(bookmark));
+      } catch (e) {
+        console.warn("Failed to update tarjama bookmark:", e);
+      }
+    },
+    [selectedSurahNumber, currentSurah]
+  );
 
   // Active reading live timer
   // Streak & Active reading timer (30 seconds threshold for 1-day streak)
@@ -265,6 +319,8 @@ function TarjamaViewer({ initialSurah }: TarjamaViewerProps) {
         key={`tarjama-canvas-${selectedSurahNumber}`}
         pdfUrl={`/api/pdf/tarjama/${selectedSurahNumber}`}
         pdfBlob={cachedBlob}
+        initialPage={startPage}
+        onPageChange={handlePageChange}
         onSaveOffline={async (blob) => {
           try {
             await saveTarjamaPdf(selectedSurahNumber, blob, currentSurah.name);
@@ -282,6 +338,7 @@ function TarjamaViewer({ initialSurah }: TarjamaViewerProps) {
 function TarjamaContent() {
   const searchParams = useSearchParams();
   const surahParam = searchParams.get("surah");
+  const pageParam = searchParams.get("page");
 
   if (!surahParam) {
     return <TarjamaIndexClient />;
@@ -289,8 +346,10 @@ function TarjamaContent() {
 
   const sNum = parseInt(surahParam, 10);
   const validSurah = !isNaN(sNum) && sNum >= 1 && sNum <= 114 ? sNum : 1;
+  const pNum = pageParam ? parseInt(pageParam, 10) : undefined;
+  const validPage = pNum && !isNaN(pNum) && pNum > 0 ? pNum : undefined;
 
-  return <TarjamaViewer initialSurah={validSurah} />;
+  return <TarjamaViewer initialSurah={validSurah} initialPage={validPage} />;
 }
 
 export function TarjamaClient() {

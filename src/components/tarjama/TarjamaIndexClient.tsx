@@ -8,6 +8,15 @@ import { normalizeArabic } from "@/lib/quran/normalize";
 import { getAllSavedTarjamaPdfs } from "@/lib/storage/tarjamaStorage";
 import { useStreakTracker, StreakNotificationToast } from "@/lib/quran/streakTracker";
 
+interface LastReadBookmark {
+  surahNumber: number;
+  surahName: string;
+  arabicName: string;
+  pageNumber: number;
+  totalPages?: number;
+  timestamp: number;
+}
+
 function normalizeEnglishSearch(str: string): string {
   return str
     .toLowerCase()
@@ -23,6 +32,16 @@ function normalizeEnglishSearch(str: string): string {
 export function TarjamaIndexClient() {
   const [query, setQuery] = useState("");
   const [savedSurahNumbers, setSavedSurahNumbers] = useState<Set<number>>(new Set());
+  const [lastRead, setLastRead] = useState<LastReadBookmark | null>(null);
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem("tilawat_last_tarjama_read");
+      if (raw) {
+        setLastRead(JSON.parse(raw));
+      }
+    } catch {}
+  }, []);
 
   // 30 seconds spent in Translation unlocks 1-day streak
   const { showToast, dismissToast } = useStreakTracker({
@@ -110,6 +129,61 @@ export function TarjamaIndexClient() {
           {filteredSurahs.length} / 114
         </span>
       </div>
+
+      {/* Last Read Tarjama Bookmark Banner */}
+      {lastRead && (
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-[#ffffff] via-[#fbf8ee] to-[#ffffff] border border-[#d6cbaf] p-3.5 sm:p-4 shadow-sm">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-amber-100 border border-amber-300 text-amber-800 flex items-center justify-center shrink-0">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                </svg>
+              </div>
+              <div>
+                <span className="text-[11px] font-bold uppercase tracking-wider text-amber-800">
+                  Continue Tarjama & Tafseer (ترجمہ و تفسیر)
+                </span>
+                <div className="flex items-center gap-2">
+                  <span className="font-bold text-sm sm:text-base text-[#112a1d]">
+                    {lastRead.surahNumber}. {lastRead.surahName}
+                  </span>
+                  <span className="font-quran text-base text-[#143323]" dir="rtl">
+                    {lastRead.arabicName}
+                  </span>
+                </div>
+                <span className="text-xs text-[#527060]">
+                  Page {lastRead.pageNumber}{lastRead.totalPages ? ` of ${lastRead.totalPages}` : ""}
+                </span>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 shrink-0">
+              <Link
+                href={`/tarjama?surah=${lastRead.surahNumber}${lastRead.pageNumber > 1 ? `&page=${lastRead.pageNumber}` : ""}`}
+                className="px-3.5 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs sm:text-sm shadow-sm active:scale-95 transition-all shrink-0 cursor-pointer"
+              >
+                Resume
+              </Link>
+              <button
+                type="button"
+                onClick={() => {
+                  try {
+                    localStorage.removeItem("tilawat_last_tarjama_read");
+                    setLastRead(null);
+                  } catch {}
+                }}
+                className="w-8 h-8 rounded-xl bg-white hover:bg-rose-50 border border-[#ded5c0] hover:border-rose-200 text-stone-400 hover:text-rose-600 flex items-center justify-center transition-colors active:scale-95 cursor-pointer"
+                title="Dismiss Bookmark"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Search Input Box */}
       <div className="relative">

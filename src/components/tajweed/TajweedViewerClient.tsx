@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { SURAHS_META, getSurahMeta } from "@/lib/quran/data";
@@ -11,9 +11,10 @@ import { useStreakTracker, StreakNotificationToast } from "@/lib/quran/streakTra
 
 interface TajweedViewerProps {
   initialSurah: number;
+  initialPage?: number;
 }
 
-function TajweedViewer({ initialSurah }: TajweedViewerProps) {
+function TajweedViewer({ initialSurah, initialPage }: TajweedViewerProps) {
   const router = useRouter();
   const [selectedSurah, setSelectedSurah] = useState<number>(
     initialSurah >= 1 && initialSurah <= 114 ? initialSurah : 1
@@ -23,6 +24,59 @@ function TajweedViewer({ initialSurah }: TajweedViewerProps) {
   const [cachedBlob, setCachedBlob] = useState<Blob | null>(null);
   const [isSavedOffline, setIsSavedOffline] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
+
+  // Determine starting page from prop or saved bookmark
+  const startPage = useMemo(() => {
+    if (initialPage && initialPage > 0) return initialPage;
+    if (typeof window !== "undefined") {
+      try {
+        const raw = localStorage.getItem("tilawat_last_tajweed_read");
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (parsed?.surahNumber === selectedSurah && parsed?.pageNumber > 0) {
+            return parsed.pageNumber;
+          }
+        }
+      } catch {}
+    }
+    return 1;
+  }, [initialPage, selectedSurah]);
+
+  // Immediately save/update Tajweed bookmark on mount / surah change
+  useEffect(() => {
+    try {
+      const bookmark = {
+        surahNumber: selectedSurah,
+        surahName: currentMeta.name,
+        arabicName: currentMeta.arabicName,
+        pageNumber: startPage,
+        timestamp: Date.now(),
+      };
+      localStorage.setItem("tilawat_last_tajweed_read", JSON.stringify(bookmark));
+    } catch (e) {
+      console.warn("Failed to save tajweed bookmark on mount:", e);
+    }
+  }, [selectedSurah, currentMeta, startPage]);
+
+  // Handle page turn updates in Tajweed viewer
+  const handlePageChange = useCallback(
+    (page: number, totalPages: number) => {
+      try {
+        const bookmark = {
+          surahNumber: selectedSurah,
+          surahName: currentMeta.name,
+          arabicName: currentMeta.arabicName,
+          pageNumber: page,
+          totalPages,
+          timestamp: Date.now(),
+        };
+        localStorage.setItem("tilawat_last_tajweed_read", JSON.stringify(bookmark));
+      } catch (e) {
+        console.warn("Failed to update tajweed bookmark:", e);
+      }
+    },
+    [selectedSurah, currentMeta]
+  );
 
   // Streak & Active reading timer (30 seconds threshold for 1-day streak)
   const { showToast, dismissToast } = useStreakTracker({
@@ -196,6 +250,8 @@ function TajweedViewer({ initialSurah }: TajweedViewerProps) {
         key={`tajweed-canvas-${selectedSurah}`}
         pdfUrl={pdfUrl}
         pdfBlob={cachedBlob}
+        initialPage={startPage}
+        onPageChange={handlePageChange}
         onSaveOffline={async (blob) => {
           try {
             await saveTajweedPdf(selectedSurah, blob, currentMeta.name);
@@ -218,6 +274,7 @@ function TajweedViewer({ initialSurah }: TajweedViewerProps) {
 export function TajweedViewerClient() {
   const searchParams = useSearchParams();
   const surahParam = searchParams.get("surah");
+  const pageParam = searchParams.get("page");
 
   if (!surahParam) {
     return <TajweedIndexClient />;
@@ -225,6 +282,8 @@ export function TajweedViewerClient() {
 
   const sNum = parseInt(surahParam, 10);
   const validSurah = !isNaN(sNum) && sNum >= 1 && sNum <= 114 ? sNum : 1;
+  const pNum = pageParam ? parseInt(pageParam, 10) : undefined;
+  const validPage = pNum && !isNaN(pNum) && pNum > 0 ? pNum : undefined;
 
-  return <TajweedViewer initialSurah={validSurah} />;
+  return <TajweedViewer initialSurah={validSurah} initialPage={validPage} />;
 }
