@@ -36,10 +36,24 @@ export function StreakClient() {
   const [loaded, setLoaded] = useState(false);
   const [weekOffset, setWeekOffset] = useState<number>(0); // 0 = current week, -1 = last week
 
+  const [completedSurahsMap, setCompletedSurahsMap] = useState<Map<number, { completed: boolean; completedAt?: number }>>(new Map());
+
   useEffect(() => {
     const load = async () => {
       const allActs = await getAllDailyActivities();
       setActivities(allActs);
+      try {
+        const allProgress = await db.progress.toArray();
+        const cMap = new Map<number, { completed: boolean; completedAt?: number }>();
+        for (const p of allProgress) {
+          if (p.completed || (p.revealedWords >= p.totalWords && p.totalWords > 0)) {
+            cMap.set(p.surahNumber, { completed: true, completedAt: p.completedAt });
+          }
+        }
+        setCompletedSurahsMap(cMap);
+      } catch (err) {
+        console.error("Failed to load progress in StreakClient:", err);
+      }
       setLoaded(true);
     };
     void load();
@@ -72,8 +86,8 @@ export function StreakClient() {
 
   // Current week days (Monday to Sunday) based on weekOffset
   const weekDays = useMemo(() => {
-    return getWeekDays(activityMap, new Date(), weekOffset);
-  }, [activityMap, weekOffset]);
+    return getWeekDays(activityMap, new Date(), weekOffset, completedSurahsMap);
+  }, [activityMap, weekOffset, completedSurahsMap]);
 
   // Weekly aggregates
   const weekStats = useMemo(() => {
@@ -485,11 +499,14 @@ export function StreakClient() {
                   </div>
                 </div>
 
-                {/* Surahs Recited on that day */}
+                {/* Surahs Completed on that day */}
                 {d.hasRecited && d.surahs.length > 0 && (
                   <div className="mt-2.5 pt-2 border-t border-[#edf4ee] flex flex-wrap items-center gap-1.5">
-                    <span className="text-[10px] uppercase font-bold tracking-wider text-emerald-800 mr-1">
-                      Recited:
+                    <span className="text-[10px] uppercase font-bold tracking-wider text-emerald-800 mr-1 flex items-center gap-1">
+                      <svg className="w-3 h-3 text-emerald-700" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                      </svg>
+                      Completed:
                     </span>
                     {d.surahs.map((s) => (
                       <Link

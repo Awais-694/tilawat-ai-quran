@@ -300,6 +300,10 @@ export function ReciteClient({
         };
         const prevSurahs = current.surahsPracticed ?? [];
         const updatedSurahs = Array.from(new Set([...prevSurahs, surahNumber]));
+        const prevCompleted = current.surahsCompleted ?? [];
+        const updatedCompleted = isDone
+          ? Array.from(new Set([...prevCompleted, surahNumber]))
+          : prevCompleted;
         const totalWords = (current.wordsRevealed ?? 0) + rDelta;
         const totalMistakes = (current.mistakes ?? 0) + mDelta;
         const minEstimated = totalWords > 0 ? Math.round(totalWords * 1.3) : 0;

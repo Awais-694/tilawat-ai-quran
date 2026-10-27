@@ -79,7 +79,8 @@ export interface DayStreakItem {
  */
 export function getRolling7Days(
   activityMap: Map<string, DailyActivity>,
-  refDate: Date = new Date()
+  refDate: Date = new Date(),
+  completedProgressMap?: Map<number, { completed: boolean; completedAt?: number }>
 ): DayStreakItem[] {
   const todayStr = getLocalDateString(refDate);
   const items: DayStreakItem[] = [];
@@ -100,7 +101,36 @@ export function getRolling7Days(
     // Ensure realistic time floor (average recitation is ~45-50 words/min = 1.3s/word)
     const minEstimatedTime = words > 0 ? Math.max(60, Math.round(words * 1.3)) : 0;
     const timeSpent = Math.max(timeInSec, minEstimatedTime);
-    const surahs = surahNumbers
+
+    // ONLY include Surahs that were FULLY completed!
+    const completedNums: number[] = [];
+    if (act?.surahsCompleted && act.surahsCompleted.length > 0) {
+      for (const n of act.surahsCompleted) {
+        if (!completedNums.includes(n)) completedNums.push(n);
+      }
+    }
+    if (completedProgressMap) {
+      for (const [sNum, prog] of completedProgressMap.entries()) {
+        if (prog.completed) {
+          if (prog.completedAt) {
+            if (getLocalDateString(new Date(prog.completedAt)) === dateStr && !completedNums.includes(sNum)) {
+              completedNums.push(sNum);
+            }
+          } else if (surahNumbers.includes(sNum) && !completedNums.includes(sNum)) {
+            completedNums.push(sNum);
+          }
+        }
+      }
+      // Strictly remove any uncompleted surahs
+      for (let i = completedNums.length - 1; i >= 0; i--) {
+        const prog = completedProgressMap.get(completedNums[i]);
+        if (!prog || !prog.completed) {
+          completedNums.splice(i, 1);
+        }
+      }
+    }
+
+    const surahs = completedNums
       .map((num) => {
         const meta = getSurahMeta(num);
         return meta ? { number: num, name: meta.name, arabicName: meta.arabicName } : null;
@@ -135,7 +165,8 @@ export function getRolling7Days(
 export function getWeekDays(
   activityMap: Map<string, DailyActivity>,
   refDate: Date = new Date(),
-  weekOffset: number = 0
+  weekOffset: number = 0,
+  completedProgressMap?: Map<number, { completed: boolean; completedAt?: number }>
 ): DayStreakItem[] {
   const d = new Date(refDate);
   d.setDate(d.getDate() + weekOffset * 7);
@@ -162,7 +193,36 @@ export function getWeekDays(
     const hasRecited = words > 0 || timeInSec > 0 || surahNumbers.length > 0;
     const minEstimatedTime = words > 0 ? Math.max(60, Math.round(words * 1.3)) : 0;
     const timeSpent = Math.max(timeInSec, minEstimatedTime);
-    const surahs = surahNumbers
+
+    // ONLY include Surahs that were FULLY completed!
+    const completedNums: number[] = [];
+    if (act?.surahsCompleted && act.surahsCompleted.length > 0) {
+      for (const n of act.surahsCompleted) {
+        if (!completedNums.includes(n)) completedNums.push(n);
+      }
+    }
+    if (completedProgressMap) {
+      for (const [sNum, prog] of completedProgressMap.entries()) {
+        if (prog.completed) {
+          if (prog.completedAt) {
+            if (getLocalDateString(new Date(prog.completedAt)) === dateStr && !completedNums.includes(sNum)) {
+              completedNums.push(sNum);
+            }
+          } else if (surahNumbers.includes(sNum) && !completedNums.includes(sNum)) {
+            completedNums.push(sNum);
+          }
+        }
+      }
+      // Strictly remove any uncompleted surahs
+      for (let j = completedNums.length - 1; j >= 0; j--) {
+        const prog = completedProgressMap.get(completedNums[j]);
+        if (!prog || !prog.completed) {
+          completedNums.splice(j, 1);
+        }
+      }
+    }
+
+    const surahs = completedNums
       .map((num) => {
         const meta = getSurahMeta(num);
         return meta ? { number: num, name: meta.name, arabicName: meta.arabicName } : null;

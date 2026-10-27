@@ -22,6 +22,7 @@ export interface DailyActivity {
   sessions: number;
   timeSpentSeconds?: number; // total active recitation time in seconds
   surahsPracticed?: number[]; // list of surah numbers recited on this date
+  surahsCompleted?: number[]; // list of surah numbers FULLY COMPLETED on this date
 }
 
 export interface SavedTarjamaPdfRecord {
