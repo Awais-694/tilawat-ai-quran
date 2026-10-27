@@ -23,6 +23,11 @@ function TarjamaViewer({ initialSurah, initialPage }: TarjamaViewerProps) {
   const [selectedSurahNumber, setSelectedSurahNumber] = useState<number>(
     initialSurah >= 1 && initialSurah <= 114 ? initialSurah : 1
   );
+  const currentSurah = useMemo(() => {
+    return (
+      surahsMeta.find((s) => s.number === selectedSurahNumber) ?? surahsMeta[0]
+    );
+  }, [selectedSurahNumber]);
 
   // Offline PDF storage states
   const [isOfflineSaved, setIsOfflineSaved] = useState(false);
@@ -146,13 +151,6 @@ function TarjamaViewer({ initialSurah, initialPage }: TarjamaViewerProps) {
     return () => {
       active = false;
     };
-  }, [selectedSurahNumber]);
-
-  // Current active Surah metadata
-  const currentSurah = useMemo(() => {
-    return (
-      surahsMeta.find((s) => s.number === selectedSurahNumber) ?? surahsMeta[0]
-    );
   }, [selectedSurahNumber]);
 
   const handleSelectSurah = (surahNumber: number) => {

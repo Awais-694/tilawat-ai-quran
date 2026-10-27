@@ -19,6 +19,7 @@ function TajweedViewer({ initialSurah, initialPage }: TajweedViewerProps) {
   const [selectedSurah, setSelectedSurah] = useState<number>(
     initialSurah >= 1 && initialSurah <= 114 ? initialSurah : 1
   );
+  const currentMeta = useMemo(() => getSurahMeta(selectedSurah) || SURAHS_META[0], [selectedSurah]);
 
   // Offline caching states
   const [cachedBlob, setCachedBlob] = useState<Blob | null>(null);
@@ -126,7 +127,6 @@ function TajweedViewer({ initialSurah, initialPage }: TajweedViewerProps) {
     }
   };
 
-  const currentMeta = getSurahMeta(selectedSurah) || SURAHS_META[0];
   const pdfUrl = `/api/pdf/tajweed/${selectedSurah}`;
   const downloadUrl = `/api/pdf/tajweed/${selectedSurah}?download=1`;
 
