@@ -3,6 +3,7 @@
 import { useEffect, useState, useMemo } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import HabitTracker from "./HabitTracker";
 
 interface TodoItem {
   id: string;
@@ -931,6 +932,9 @@ export function TodoListClient() {
             </button>
           </div>
         </div>
+
+        {/* Monthly Habit Tracker (Under Daily Planner) */}
+        <HabitTracker />
 
       </div>
     </div>
