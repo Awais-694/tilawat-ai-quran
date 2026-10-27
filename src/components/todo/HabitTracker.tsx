@@ -30,6 +30,15 @@ const DEFAULT_HABITS: string[] = [
   'Sleep before 11:00 PM',
 ];
 
+const QUICK_HABIT_SUGGESTIONS = [
+  'Surah Al-Mulk before sleep',
+  'Tahajjud / Night Prayer',
+  'Daily Sadaqah / Charity',
+  'Ayat-ul-Kursi after Salah',
+  'Durood Sharif (100x)',
+  'Drink 8 glasses of water',
+];
+
 const DEFAULT_GOALS: string[] = [
   'Complete 1 full Quran recitation this month',
   'Never miss Fajr in congregation / on time',
@@ -73,12 +82,17 @@ export default function HabitTracker() {
     return new Date(selectedYear, selectedMonth + 1, 0).getDate();
   }, [selectedYear, selectedMonth]);
 
-  // Array of day numbers: [1, 2, ..., daysInMonth]
+  // Array of day details: [ { day: 1, weekday: 'M' }, ... ]
   const daysArray = useMemo(() => {
-    return Array.from({ length: daysInMonth }, (_, i) => i + 1);
-  }, [daysInMonth]);
+    return Array.from({ length: daysInMonth }, (_, i) => {
+      const d = i + 1;
+      const dateObj = new Date(selectedYear, selectedMonth, d);
+      const weekday = dateObj.toLocaleDateString('en-US', { weekday: 'narrow' });
+      return { day: d, weekday };
+    });
+  }, [daysInMonth, selectedYear, selectedMonth]);
 
-  const storageKey = `tilawat_habit_tracker_v3_${selectedYear}_${selectedMonth}`;
+  const storageKey = `tilawat_habit_tracker_v4_${selectedYear}_${selectedMonth}`;
 
   // Load from localStorage on month/year change
   useEffect(() => {
@@ -152,7 +166,7 @@ export default function HabitTracker() {
     const emptyGoals = ['', '', '', ''];
     setGoals(emptyGoals);
     saveData(habits, emptyGoals, notes);
-    showToast('Goals cleared');
+    showToast('All goals cleared');
   };
 
   // Update a single note line
@@ -168,17 +182,17 @@ export default function HabitTracker() {
     const emptyNotes = ['', '', '', ''];
     setNotes(emptyNotes);
     saveData(habits, goals, emptyNotes);
-    showToast('Notes cleared');
+    showToast('All notes cleared');
   };
 
   // Add new habit
-  const handleAddHabit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const trimmed = newHabitTitle.trim();
-    if (!trimmed) return;
+  const handleAddHabit = (e?: React.FormEvent, customTitle?: string) => {
+    if (e) e.preventDefault();
+    const titleToAdd = (customTitle || newHabitTitle).trim();
+    if (!titleToAdd) return;
     const newHabit: HabitItem = {
-      id: 'h_' + Date.now(),
-      title: trimmed,
+      id: 'h_' + Date.now() + Math.random().toString(36).substring(2, 5),
+      title: titleToAdd,
       checks: {}
     };
     const updated = [...habits, newHabit];
@@ -195,13 +209,13 @@ export default function HabitTracker() {
     const updated = habits.filter((h) => h.id !== habitId);
     setHabits(updated);
     saveData(updated, goals, notes);
-    showToast('Habit deleted');
+    showToast('Habit removed');
   };
 
   // Auto jump to today in horizontal grid
   const handleJumpToToday = () => {
     if (!gridContainerRef.current) return;
-    const dayWidth = 44;
+    const dayWidth = 46;
     const scrollTarget = Math.max(0, (currentDayNum - 3) * dayWidth);
     gridContainerRef.current.scrollTo({
       left: scrollTarget,
@@ -233,8 +247,8 @@ export default function HabitTracker() {
   const totalCompletedChecks = useMemo(() => {
     let count = 0;
     habits.forEach((h) => {
-      daysArray.forEach((d) => {
-        if (h.checks[d]) count++;
+      daysArray.forEach(({ day }) => {
+        if (h.checks[day]) count++;
       });
     });
     return count;
@@ -246,32 +260,33 @@ export default function HabitTracker() {
       : 0;
 
   return (
-    <section className="w-full space-y-6 select-none font-sans text-[#2b2621]">
-      {/* Toast feedback */}
+    <section className="w-full space-y-6 select-none font-sans text-[#221c17]">
+      {/* Toast notification */}
       {toastMessage && (
-        <div className="fixed bottom-6 right-6 z-50 bg-[#2b2621] text-white px-4 py-2.5 rounded-xl shadow-xl text-xs font-semibold animate-in fade-in slide-in-from-bottom-2">
+        <div className="fixed bottom-6 right-6 z-50 bg-[#1e1914] text-amber-100 px-4 py-2.5 rounded-2xl shadow-2xl text-xs font-semibold animate-in fade-in slide-in-from-bottom-3 border border-amber-500/30">
           {toastMessage}
         </div>
       )}
 
-      {/* Main Container */}
-      <div className="bg-white rounded-2xl sm:rounded-3xl border-2 border-[#2b2621] shadow-sm overflow-hidden p-4 sm:p-7 transition-all">
+      {/* Main Journal Card */}
+      <div className="bg-[#fffefe] rounded-3xl border-2 border-[#2b2621] shadow-[0_8px_30px_rgba(40,30,20,0.06)] overflow-hidden p-4 sm:p-8 transition-all">
         
-        {/* ================= HEADER SECTION (Centered Title & Centered Month Box) ================= */}
-        <div className="flex flex-col items-center justify-center text-center pb-6 border-b-2 border-[#2b2621] space-y-4">
-          {/* Main Title */}
-          <div>
+        {/* ================= HEADER SECTION (Centered Luxury Style) ================= */}
+        <div className="flex flex-col items-center justify-center text-center pb-6 sm:pb-7 border-b-2 border-[#2b2621] space-y-4 sm:space-y-5">
+          {/* Main Title with Elegant Underline Motif */}
+          <div className="space-y-1">
             <h2 className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tight text-[#2b2621] font-mono">
               Habit Tracker
             </h2>
+            <div className="w-16 h-1 bg-[#fadfd4] mx-auto rounded-full border border-[#2b2621]" />
           </div>
 
-          {/* Centered Month Navigation Box */}
-          <div className="w-full max-w-xs border-2 border-[#2b2621] rounded-2xl overflow-hidden bg-white shadow-sm">
+          {/* Centered Month Selector Widget */}
+          <div className="w-full max-w-[280px] sm:max-w-xs border-2 border-[#2b2621] rounded-2xl overflow-hidden bg-white shadow-sm">
             {/* Header: MONTH */}
             <div className="bg-[#fadfd4] text-[#2b2621] border-b-2 border-[#2b2621] px-4 py-1.5 flex items-center justify-between text-xs font-black tracking-widest uppercase">
               <span>MONTH:</span>
-              <span className="text-xs font-black text-[#74351a]">{selectedYear}</span>
+              <span className="text-xs font-black text-[#85341a]">{selectedYear}</span>
             </div>
             {/* Month Switcher Controls */}
             <div className="flex items-center justify-between px-3 py-2 bg-white">
@@ -279,18 +294,18 @@ export default function HabitTracker() {
                 type="button"
                 onClick={handlePrevMonth}
                 aria-label="Previous Month"
-                className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-[#f5eee8] active:scale-90 transition-all font-bold text-sm text-[#2b2621] cursor-pointer"
+                className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-[#f7ece8] active:scale-90 transition-all font-bold text-sm text-[#2b2621] cursor-pointer"
               >
                 ◀
               </button>
-              <div className="text-center font-extrabold text-base sm:text-lg text-[#2b2621] tracking-wide">
+              <div className="text-center font-black text-base sm:text-lg text-[#2b2621] tracking-wide">
                 {MONTH_NAMES[selectedMonth]}
               </div>
               <button
                 type="button"
                 onClick={handleNextMonth}
                 aria-label="Next Month"
-                className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-[#f5eee8] active:scale-90 transition-all font-bold text-sm text-[#2b2621] cursor-pointer"
+                className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-[#f7ece8] active:scale-90 transition-all font-bold text-sm text-[#2b2621] cursor-pointer"
               >
                 ▶
               </button>
@@ -308,7 +323,7 @@ export default function HabitTracker() {
               <button
                 type="button"
                 onClick={handleDeleteAllGoals}
-                className="text-xs font-extrabold text-[#872d12] hover:text-red-700 hover:underline cursor-pointer transition-all"
+                className="text-xs font-extrabold text-[#872d12] hover:text-red-700 hover:underline cursor-pointer transition-all active:scale-95"
                 title="Clear all goals"
               >
                 Delete All
@@ -316,14 +331,16 @@ export default function HabitTracker() {
             </div>
             <div className="divide-y-2 divide-[#2b2621] bg-white">
               {goals.map((goal, idx) => (
-                <div key={idx} className="flex items-center px-4 py-3 hover:bg-[#faf7f2] transition-colors">
-                  <span className="text-xs sm:text-sm font-black text-[#877868] mr-2.5 w-4">{idx + 1}.</span>
+                <div key={idx} className="flex items-center px-4 py-3 hover:bg-[#fdfaf7] transition-colors group">
+                  <span className="w-5 h-5 rounded-full bg-[#fcedea] border border-[#f0c2b2] text-[11px] font-black text-[#85341a] flex items-center justify-center mr-2.5 shrink-0">
+                    {idx + 1}
+                  </span>
                   <input
                     type="text"
                     value={goal}
                     onChange={(e) => handleGoalChange(idx, e.target.value)}
                     placeholder={`Goal ${idx + 1}...`}
-                    className="w-full text-xs sm:text-sm text-[#2b2621] font-medium bg-transparent focus:outline-none placeholder:text-[#a89c8d]"
+                    className="w-full text-xs sm:text-sm text-[#2b2621] font-semibold bg-transparent focus:outline-none placeholder:text-[#ab9f90]"
                   />
                 </div>
               ))}
@@ -337,7 +354,7 @@ export default function HabitTracker() {
               <button
                 type="button"
                 onClick={handleDeleteAllNotes}
-                className="text-xs font-extrabold text-[#872d12] hover:text-red-700 hover:underline cursor-pointer transition-all"
+                className="text-xs font-extrabold text-[#872d12] hover:text-red-700 hover:underline cursor-pointer transition-all active:scale-95"
                 title="Clear all notes"
               >
                 Delete All
@@ -345,14 +362,16 @@ export default function HabitTracker() {
             </div>
             <div className="divide-y-2 divide-[#2b2621] bg-white">
               {notes.map((note, idx) => (
-                <div key={idx} className="flex items-center px-4 py-3 hover:bg-[#faf7f2] transition-colors">
-                  <span className="text-xs sm:text-sm font-black text-[#877868] mr-2.5 w-4">•</span>
+                <div key={idx} className="flex items-center px-4 py-3 hover:bg-[#fdfaf7] transition-colors group">
+                  <span className="w-5 h-5 rounded-full bg-[#fcedea] border border-[#f0c2b2] text-xs font-black text-[#85341a] flex items-center justify-center mr-2.5 shrink-0">
+                    •
+                  </span>
                   <input
                     type="text"
                     value={note}
                     onChange={(e) => handleNoteChange(idx, e.target.value)}
                     placeholder={`Reminder / Note ${idx + 1}...`}
-                    className="w-full text-xs sm:text-sm text-[#2b2621] font-medium bg-transparent focus:outline-none placeholder:text-[#a89c8d]"
+                    className="w-full text-xs sm:text-sm text-[#2b2621] font-semibold bg-transparent focus:outline-none placeholder:text-[#ab9f90]"
                   />
                 </div>
               ))}
@@ -361,11 +380,17 @@ export default function HabitTracker() {
 
         </div>
 
-        {/* ================= CONTROLS & ACTIONS BAR (Clean, No tabs, Only Grid) ================= */}
+        {/* ================= CONTROLS & ACTIONS BAR ================= */}
         <div className="flex flex-wrap items-center justify-between gap-3 pb-4 mb-2 border-b border-[#e6ddd1]">
           {/* Section Indicator */}
-          <div className="text-xs sm:text-sm font-black text-[#2b2621] tracking-wide uppercase">
-            31-Day Habit Grid
+          <div className="flex items-center gap-2">
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-700" />
+            <span className="text-xs sm:text-sm font-black text-[#2b2621] tracking-wider uppercase">
+              31-Day Habit Grid
+            </span>
+            <span className="text-xs text-[#8e8070] font-semibold hidden xs:inline">
+              ({habits.length} habits)
+            </span>
           </div>
 
           <div className="flex items-center gap-2">
@@ -374,7 +399,7 @@ export default function HabitTracker() {
               <button
                 type="button"
                 onClick={handleJumpToToday}
-                className="px-3.5 py-2 rounded-xl bg-[#fadfd4] hover:bg-[#f6cdbe] active:scale-95 text-[#74351a] border border-[#f0c2b2] text-xs sm:text-sm font-extrabold transition-all cursor-pointer shadow-2xs"
+                className="px-3.5 py-2 rounded-xl bg-[#fadfd4] hover:bg-[#f6cdbe] active:scale-95 text-[#74351a] border-2 border-[#2b2621] text-xs sm:text-sm font-extrabold transition-all cursor-pointer shadow-xs"
                 title="Scroll directly to today's date"
               >
                 Today: Day {currentDayNum}
@@ -385,14 +410,15 @@ export default function HabitTracker() {
             <button
               type="button"
               onClick={() => setShowAddModal(true)}
-              className="px-4 py-2 rounded-xl bg-[#2b2621] hover:bg-[#3d362f] active:scale-95 text-white text-xs sm:text-sm font-bold transition-all cursor-pointer shadow-xs"
+              className="px-4 py-2 rounded-xl bg-[#2b2621] hover:bg-[#3d362f] active:scale-95 text-white text-xs sm:text-sm font-bold transition-all cursor-pointer shadow-xs flex items-center gap-1.5"
             >
-              + Add Habit
+              <span>+</span>
+              <span>Add Habit</span>
             </button>
           </div>
         </div>
 
-        {/* ================= 31-DAY MATRIX (Spacious, Clear Names, Immediate Delete) ================= */}
+        {/* ================= 31-DAY MATRIX (Spacious, Clear Names, Weekday Headers) ================= */}
         <div className="relative">
           
           {/* Mobile scroll hint */}
@@ -413,23 +439,26 @@ export default function HabitTracker() {
               <thead>
                 <tr className="bg-[#fadfd4] text-[#2b2621] border-b-2 border-[#2b2621]">
                   {/* Sticky 'HABITS' Column (Wider so full title is readable) */}
-                  <th className="sticky left-0 z-30 bg-[#fadfd4] border-r-2 border-[#2b2621] px-4 py-3 text-left text-xs sm:text-sm font-black tracking-wider uppercase w-[210px] sm:w-[280px] shadow-[2px_0_5px_rgba(0,0,0,0.06)]">
+                  <th className="sticky left-0 z-30 bg-[#fadfd4] border-r-2 border-[#2b2621] px-4 py-3 text-left text-xs sm:text-sm font-black tracking-wider uppercase w-[220px] sm:w-[300px] shadow-[4px_0_10px_rgba(0,0,0,0.06)]">
                     HABITS
                   </th>
-                  {/* Days 1 to daysInMonth */}
-                  {daysArray.map((d) => {
-                    const isTodayCell = isCurrentMonth && d === currentDayNum;
+                  {/* Days 1 to daysInMonth with Day Number & Weekday */}
+                  {daysArray.map(({ day, weekday }) => {
+                    const isTodayCell = isCurrentMonth && day === currentDayNum;
                     return (
                       <th
-                        key={d}
-                        className={`border-r border-[#2b2621] last:border-r-0 text-center font-black text-xs sm:text-sm w-[40px] sm:w-[46px] py-2.5 ${
+                        key={day}
+                        className={`border-r border-[#2b2621] last:border-r-0 text-center font-black text-xs sm:text-sm w-[42px] sm:w-[48px] py-2.5 ${
                           isTodayCell
-                            ? 'bg-[#fad2c3] text-[#74351a] ring-2 ring-inset ring-[#c75529]'
+                            ? 'bg-[#fac4b0] text-[#74351a] ring-2 ring-inset ring-[#c75529]'
                             : 'text-[#2b2621]'
                         }`}
                       >
                         <div className="flex flex-col items-center justify-center leading-tight">
-                          <span>{d}</span>
+                          <span className="text-[9px] sm:text-[10px] text-[#85341a] font-bold uppercase opacity-80">
+                            {weekday}
+                          </span>
+                          <span className="text-xs sm:text-sm font-black">{day}</span>
                           {isTodayCell && (
                             <span className="text-[7px] font-black uppercase text-[#c75529] tracking-tighter leading-none mt-0.5">
                               TODAY
@@ -440,7 +469,7 @@ export default function HabitTracker() {
                     );
                   })}
                   {/* Done Column */}
-                  <th className="border-l-2 border-[#2b2621] bg-[#fadfd4] text-center font-black text-xs sm:text-sm uppercase tracking-wider w-[64px] sm:w-[74px] px-2 py-2.5">
+                  <th className="border-l-2 border-[#2b2621] bg-[#fadfd4] text-center font-black text-xs sm:text-sm uppercase tracking-wider w-[66px] sm:w-[78px] px-2 py-2.5">
                     Done
                   </th>
                 </tr>
@@ -448,24 +477,24 @@ export default function HabitTracker() {
 
               <tbody className="divide-y-2 border-[#2b2621] divide-[#2b2621]">
                 {habits.map((habit) => {
-                  const doneDaysCount = daysArray.filter((d) => habit.checks[d]).length;
+                  const doneDaysCount = daysArray.filter(({ day }) => habit.checks[day]).length;
                   const habitPct = Math.round((doneDaysCount / daysInMonth) * 100);
 
                   return (
                     <tr
                       key={habit.id}
-                      className="hover:bg-[#fbf8f4] transition-colors group"
+                      className="hover:bg-[#fcfaf7] transition-colors group"
                     >
                       {/* Sticky Habit Name Column with immediate one-click delete */}
-                      <td className="sticky left-0 z-20 bg-white group-hover:bg-[#fbf8f4] border-r-2 border-[#2b2621] px-3.5 py-3 text-xs sm:text-sm font-bold text-[#2b2621] shadow-[2px_0_5px_rgba(0,0,0,0.06)]">
-                        <div className="flex items-center justify-between gap-2">
-                          <span className="truncate max-w-[170px] sm:max-w-[230px]" title={habit.title}>
+                      <td className="sticky left-0 z-20 bg-white group-hover:bg-[#fcfaf7] border-r-2 border-[#2b2621] px-4 py-3 text-xs sm:text-sm font-bold text-[#2b2621] shadow-[4px_0_10px_rgba(0,0,0,0.06)]">
+                        <div className="flex items-center justify-between gap-2.5">
+                          <span className="truncate max-w-[180px] sm:max-w-[250px] leading-snug" title={habit.title}>
                             {habit.title}
                           </span>
                           <button
                             type="button"
                             onClick={(e) => handleDeleteHabit(habit.id, e)}
-                            className="w-6 h-6 rounded-md flex items-center justify-center text-[#a89c8d] hover:text-red-700 hover:bg-red-50 transition-colors shrink-0 cursor-pointer"
+                            className="w-6 h-6 rounded-md flex items-center justify-center text-[#ab9f90] hover:text-red-700 hover:bg-red-50 transition-colors shrink-0 cursor-pointer"
                             title="Delete habit immediately"
                           >
                             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
@@ -476,27 +505,27 @@ export default function HabitTracker() {
                       </td>
 
                       {/* 1..31 Checkable Cells (Large & Satisfying) */}
-                      {daysArray.map((d) => {
-                        const isChecked = Boolean(habit.checks[d]);
-                        const isTodayCell = isCurrentMonth && d === currentDayNum;
+                      {daysArray.map(({ day }) => {
+                        const isChecked = Boolean(habit.checks[day]);
+                        const isTodayCell = isCurrentMonth && day === currentDayNum;
 
                         return (
                           <td
-                            key={d}
-                            onClick={() => handleToggleCell(habit.id, d)}
-                            className={`border-r border-[#2b2621] last:border-r-0 text-center cursor-pointer select-none transition-all p-0 h-[48px] sm:h-[52px] ${
-                              isTodayCell ? 'bg-amber-50/60' : ''
+                            key={day}
+                            onClick={() => handleToggleCell(habit.id, day)}
+                            className={`border-r border-[#2b2621] last:border-r-0 text-center cursor-pointer select-none transition-all p-0 h-[48px] sm:h-[54px] ${
+                              isTodayCell ? 'bg-amber-50/70' : ''
                             } hover:bg-[#fadfd4]/60`}
                           >
                             <div className="w-full h-full flex items-center justify-center">
                               {isChecked ? (
-                                <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-emerald-700 text-white flex items-center justify-center font-black text-sm sm:text-base shadow-xs transition-transform active:scale-90 animate-in zoom-in-75">
+                                <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-gradient-to-br from-emerald-600 to-teal-700 text-white flex items-center justify-center font-black text-sm sm:text-base shadow-xs transition-transform active:scale-90 animate-in zoom-in-75">
                                   ✓
                                 </div>
                               ) : (
                                 <div
-                                  className={`w-5 h-5 sm:w-6 sm:h-6 rounded-lg border-2 border-[#bfae9b] hover:border-[#74351a] transition-all ${
-                                    isTodayCell ? 'border-amber-500 ring-2 ring-amber-400 bg-amber-100/40' : ''
+                                  className={`w-6 h-6 sm:w-7 sm:h-7 rounded-xl border-2 border-[#c7b8a7] hover:border-[#74351a] hover:bg-white transition-all ${
+                                    isTodayCell ? 'border-amber-500 ring-2 ring-amber-400 bg-amber-100/40' : 'bg-transparent'
                                   }`}
                                 />
                               )}
@@ -505,11 +534,11 @@ export default function HabitTracker() {
                         );
                       })}
 
-                      {/* Total Count Column */}
-                      <td className="border-l-2 border-[#2b2621] text-center font-black text-xs sm:text-sm text-[#2b2621] bg-white group-hover:bg-[#fbf8f4]">
+                      {/* Total Count Column with Progress Pill */}
+                      <td className="border-l-2 border-[#2b2621] text-center font-black text-xs sm:text-sm text-[#2b2621] bg-white group-hover:bg-[#fcfaf7]">
                         <div className="flex flex-col items-center justify-center py-1">
-                          <span className="leading-tight">{doneDaysCount}</span>
-                          <span className="text-[10px] text-[#8e8070] leading-none font-bold">{habitPct}%</span>
+                          <span className="leading-tight text-xs sm:text-sm font-black text-[#143323]">{doneDaysCount}</span>
+                          <span className="text-[10px] text-[#8e8070] leading-none font-bold mt-0.5">{habitPct}%</span>
                         </div>
                       </td>
                     </tr>
@@ -520,35 +549,49 @@ export default function HabitTracker() {
           </div>
         </div>
 
-        {/* ================= CLEAN FOOTER STATS ================= */}
-        <div className="mt-6 pt-4 border-t border-[#ede7d8] flex flex-col sm:flex-row items-center justify-between text-xs text-[#877868] font-medium gap-2">
-          <div>
-            Month Progress: <strong className="text-[#2b2621]">{monthProgressPct}%</strong> ({totalCompletedChecks} of {totalPossibleChecks} total checks)
+        {/* ================= GORGEOUS PROGRESS SUMMARY AT BOTTOM ================= */}
+        <div className="mt-7 pt-5 border-t border-[#ede7d8] space-y-3">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+            <div className="space-y-0.5">
+              <div className="text-xs sm:text-sm font-extrabold text-[#2b2621]">
+                Overall Month Consistency: <span className="text-emerald-800 font-black">{monthProgressPct}%</span>
+              </div>
+              <div className="text-xs text-[#877868]">
+                {totalCompletedChecks} of {totalPossibleChecks} total checks completed this month
+              </div>
+            </div>
+
+            <div className="w-full sm:w-64 bg-[#f0ebd9] h-3 rounded-full overflow-hidden border border-[#ded5c0]">
+              <div
+                className="bg-gradient-to-r from-emerald-600 to-teal-600 h-full rounded-full transition-all duration-500"
+                style={{ width: `${Math.min(100, monthProgressPct)}%` }}
+              />
+            </div>
           </div>
         </div>
 
       </div>
 
-      {/* ================= ADD HABIT MODAL ================= */}
+      {/* ================= ADD HABIT MODAL (With Quick Islamic Suggestions) ================= */}
       {showAddModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4 animate-in fade-in">
-          <div className="bg-white rounded-2xl border-2 border-[#2b2621] p-5 max-w-sm w-full shadow-2xl space-y-4">
-            <div className="flex items-center justify-between border-b border-[#eee5d8] pb-2">
-              <h4 className="font-black text-sm text-[#2b2621] uppercase tracking-wider">
+          <div className="bg-white rounded-3xl border-2 border-[#2b2621] p-5 sm:p-6 max-w-md w-full shadow-2xl space-y-4">
+            <div className="flex items-center justify-between border-b border-[#eee5d8] pb-3">
+              <h4 className="font-black text-base text-[#2b2621] tracking-wide">
                 Add New Habit
               </h4>
               <button
                 type="button"
                 onClick={() => setShowAddModal(false)}
-                className="text-[#8e8070] hover:text-[#2b2621] font-bold text-base"
+                className="w-8 h-8 rounded-lg flex items-center justify-center text-[#8e8070] hover:text-[#2b2621] hover:bg-[#f5eee8] font-bold text-lg cursor-pointer"
               >
                 ✕
               </button>
             </div>
 
-            <form onSubmit={handleAddHabit} className="space-y-3">
+            <form onSubmit={(e) => handleAddHabit(e)} className="space-y-4">
               <div>
-                <label className="block text-xs font-bold text-[#5c5043] mb-1">
+                <label className="block text-xs font-bold text-[#5c5043] mb-1.5 uppercase tracking-wider">
                   Habit Name
                 </label>
                 <input
@@ -556,23 +599,42 @@ export default function HabitTracker() {
                   value={newHabitTitle}
                   onChange={(e) => setNewHabitTitle(e.target.value)}
                   placeholder="e.g. Read Surah Al-Mulk before bed"
-                  className="w-full px-3 py-2 rounded-xl border-2 border-[#2b2621] text-xs sm:text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-[#fadfd4]"
+                  className="w-full px-4 py-2.5 rounded-xl border-2 border-[#2b2621] text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-[#fadfd4]"
                   autoFocus
                 />
               </div>
 
-              <div className="flex justify-end gap-2 pt-2">
+              {/* Quick suggestions */}
+              <div>
+                <span className="block text-[11px] font-bold text-[#8e8070] uppercase tracking-wider mb-2">
+                  Quick Islamic Suggestions:
+                </span>
+                <div className="flex flex-wrap gap-1.5">
+                  {QUICK_HABIT_SUGGESTIONS.map((sug) => (
+                    <button
+                      key={sug}
+                      type="button"
+                      onClick={() => handleAddHabit(undefined, sug)}
+                      className="px-2.5 py-1 rounded-lg bg-[#faf6ee] hover:bg-[#f3ead6] border border-[#ded5c0] text-xs font-bold text-[#143323] transition-all cursor-pointer active:scale-95 text-left"
+                    >
+                      + {sug}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-2 pt-2 border-t border-[#ede7d8]">
                 <button
                   type="button"
                   onClick={() => setShowAddModal(false)}
-                  className="px-3.5 py-1.5 rounded-xl border border-[#d6cbaf] text-xs font-bold text-[#5c5043] hover:bg-[#faf6ee]"
+                  className="px-4 py-2 rounded-xl border border-[#d6cbaf] text-xs font-bold text-[#5c5043] hover:bg-[#faf6ee] cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={!newHabitTitle.trim()}
-                  className="px-4 py-1.5 rounded-xl bg-[#2b2621] hover:bg-[#3d362f] text-white text-xs font-bold disabled:opacity-50 transition-all cursor-pointer shadow-xs"
+                  className="px-5 py-2 rounded-xl bg-[#2b2621] hover:bg-[#3d362f] text-white text-xs font-bold disabled:opacity-50 transition-all cursor-pointer shadow-xs active:scale-95"
                 >
                   Save Habit
                 </button>
