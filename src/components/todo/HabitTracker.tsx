@@ -8,9 +8,12 @@ interface HabitItem {
   checks: Record<number, boolean>; // dayNum (1..31) -> boolean
 }
 
+interface HabitTemplate {
+  id: string;
+  title: string;
+}
+
 interface MonthlyData {
-  goals: string[];
-  notes: string[];
   habits: HabitItem[];
 }
 
@@ -39,19 +42,7 @@ const QUICK_HABIT_SUGGESTIONS = [
   'Drink 8 glasses of water',
 ];
 
-const DEFAULT_GOALS: string[] = [
-  'Complete 1 full Quran recitation this month',
-  'Never miss Fajr in congregation / on time',
-  'Learn meaning of 5 new Quranic words daily',
-  'Build 21-day continuous habit streak'
-];
-
-const DEFAULT_NOTES: string[] = [
-  'Consistency is loved by Allah even if it is small.',
-  'Focus on progress, not perfection.',
-  'Remind self: Every letter of Quran brings 10 rewards.',
-  'Stay hydrated and start day with Bismillah.'
-];
+const MASTER_HABITS_KEY = 'tilawat_habit_tracker_master_list_v4';
 
 const INITIAL_DEFAULT_HABITS: HabitItem[] = DEFAULT_HABITS.map((title, i) => ({
   id: 'def_' + i,
@@ -59,13 +50,48 @@ const INITIAL_DEFAULT_HABITS: HabitItem[] = DEFAULT_HABITS.map((title, i) => ({
   checks: {},
 }));
 
+function getSavedMasterTemplates(): HabitTemplate[] | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const rawMaster = localStorage.getItem(MASTER_HABITS_KEY);
+    if (rawMaster) {
+      const parsed = JSON.parse(rawMaster);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        return parsed;
+      }
+    }
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && (key.startsWith('tilawat_habit_tracker_v4_') || key.startsWith('tilawat_habit_tracker_v3_'))) {
+        const rawMonth = localStorage.getItem(key);
+        if (rawMonth) {
+          const parsedMonth = JSON.parse(rawMonth);
+          if (parsedMonth && Array.isArray(parsedMonth.habits) && parsedMonth.habits.length > 0) {
+            return parsedMonth.habits.map((h: HabitItem) => ({ id: h.id, title: h.title }));
+          }
+        }
+      }
+    }
+  } catch {}
+  return null;
+}
+
+function saveMasterTemplates(habitsList: HabitItem[]) {
+  if (typeof window === 'undefined') return;
+  try {
+    const templates: HabitTemplate[] = habitsList.map((h) => ({
+      id: h.id,
+      title: h.title,
+    }));
+    localStorage.setItem(MASTER_HABITS_KEY, JSON.stringify(templates));
+  } catch {}
+}
+
 export default function HabitTracker() {
   const [mounted, setMounted] = useState(false);
-  const today = new Date();
-  const [selectedYear, setSelectedYear] = useState<number>(today.getFullYear());
-  const [selectedMonth, setSelectedMonth] = useState<number>(today.getMonth()); // 0-11
-  const [goals, setGoals] = useState<string[]>(DEFAULT_GOALS);
-  const [notes, setNotes] = useState<string[]>(DEFAULT_NOTES);
+  const [today, setToday] = useState(() => new Date());
+  const [selectedYear, setSelectedYear] = useState<number>(() => new Date().getFullYear());
+  const [selectedMonth, setSelectedMonth] = useState<number>(() => new Date().getMonth()); // 0-11
   const [habits, setHabits] = useState<HabitItem[]>(INITIAL_DEFAULT_HABITS);
   const [newHabitTitle, setNewHabitTitle] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
@@ -93,40 +119,78 @@ export default function HabitTracker() {
   }, [daysInMonth, selectedYear, selectedMonth]);
 
   const storageKey = `tilawat_habit_tracker_v4_${selectedYear}_${selectedMonth}`;
+  const legacyStorageKey = `tilawat_habit_tracker_v3_${selectedYear}_${selectedMonth}`;
 
-  // Load from localStorage on month/year change
+  // Load from localStorage on month/year change while preserving user's custom habits
   useEffect(() => {
     setMounted(true);
     try {
-      const saved = localStorage.getItem(storageKey);
+      const saved = localStorage.getItem(storageKey) || localStorage.getItem(legacyStorageKey);
+      const masterTemplates = getSavedMasterTemplates();
+
       if (saved) {
         const parsed: MonthlyData = JSON.parse(saved);
-        setGoals(parsed.goals && parsed.goals.length === 4 ? parsed.goals : DEFAULT_GOALS);
-        setNotes(parsed.notes && parsed.notes.length === 4 ? parsed.notes : DEFAULT_NOTES);
-        setHabits(
-          parsed.habits && parsed.habits.length > 0
-            ? parsed.habits
-            : INITIAL_DEFAULT_HABITS
-        );
+        if (parsed && Array.isArray(parsed.habits) && parsed.habits.length > 0) {
+          const loadedHabits = [...parsed.habits];
+          if (masterTemplates) {
+            const existingTitles = new Set(loadedHabits.map((h) => h.title.toLowerCase()));
+            for (const tpl of masterTemplates) {
+              if (!existingTitles.has(tpl.title.toLowerCase())) {
+                loadedHabits.push({ id: tpl.id, title: tpl.title, checks: {} });
+              }
+            }
+          }
+          setHabits(loadedHabits);
+          saveMasterTemplates(loadedHabits);
+          return;
+        }
+      }
+
+      if (masterTemplates && masterTemplates.length > 0) {
+        const carriedHabits: HabitItem[] = masterTemplates.map((tpl) => ({
+          id: tpl.id,
+          title: tpl.title,
+          checks: {},
+        }));
+        setHabits(carriedHabits);
+        localStorage.setItem(storageKey, JSON.stringify({ habits: carriedHabits }));
       } else {
-        setGoals(DEFAULT_GOALS);
-        setNotes(DEFAULT_NOTES);
         setHabits(INITIAL_DEFAULT_HABITS);
+        saveMasterTemplates(INITIAL_DEFAULT_HABITS);
       }
     } catch {
       setHabits(INITIAL_DEFAULT_HABITS);
     }
-  }, [storageKey]);
+  }, [storageKey, legacyStorageKey]);
 
-  // Save to localStorage helper
-  const saveData = (newHabits: HabitItem[], newGoals: string[], newNotes: string[]) => {
+  // Real-time 12:00 AM Midnight Timer: advances active day without ever deleting user's habits
+  useEffect(() => {
+    const now = new Date();
+    const nextMidnight = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate() + 1,
+      0, 0, 1
+    );
+    const msUntilMidnight = Math.max(1000, nextMidnight.getTime() - now.getTime());
+    const timerId = setTimeout(() => {
+      const freshNow = new Date();
+      setToday(freshNow);
+      setSelectedYear(freshNow.getFullYear());
+      setSelectedMonth(freshNow.getMonth());
+    }, msUntilMidnight);
+
+    return () => clearTimeout(timerId);
+  }, [today]);
+
+  // Save to localStorage helper (also updates master habit templates so added habits are never lost)
+  const saveData = (newHabits: HabitItem[]) => {
     try {
       const data: MonthlyData = {
-        goals: newGoals,
-        notes: newNotes,
-        habits: newHabits
+        habits: newHabits,
       };
       localStorage.setItem(storageKey, JSON.stringify(data));
+      saveMasterTemplates(newHabits);
     } catch (e) {
       console.error('Failed to save habit tracker data:', e);
     }
@@ -136,7 +200,7 @@ export default function HabitTracker() {
     setToastMessage(msg);
     setTimeout(() => {
       setToastMessage(null);
-    }, 2000);
+    }, 2200);
   };
 
   // Toggle check for a specific habit and day
@@ -148,41 +212,9 @@ export default function HabitTracker() {
         const newChecks = { ...h.checks, [day]: !currentVal };
         return { ...h, checks: newChecks };
       });
-      saveData(updated, goals, notes);
+      saveData(updated);
       return updated;
     });
-  };
-
-  // Update a single goal line
-  const handleGoalChange = (index: number, val: string) => {
-    const updated = [...goals];
-    updated[index] = val;
-    setGoals(updated);
-    saveData(habits, updated, notes);
-  };
-
-  // Delete all goals (Clear All)
-  const handleDeleteAllGoals = () => {
-    const emptyGoals = ['', '', '', ''];
-    setGoals(emptyGoals);
-    saveData(habits, emptyGoals, notes);
-    showToast('All goals cleared');
-  };
-
-  // Update a single note line
-  const handleNoteChange = (index: number, val: string) => {
-    const updated = [...notes];
-    updated[index] = val;
-    setNotes(updated);
-    saveData(habits, goals, updated);
-  };
-
-  // Delete all notes (Clear All)
-  const handleDeleteAllNotes = () => {
-    const emptyNotes = ['', '', '', ''];
-    setNotes(emptyNotes);
-    saveData(habits, goals, emptyNotes);
-    showToast('All notes cleared');
   };
 
   // Add new habit
@@ -190,25 +222,26 @@ export default function HabitTracker() {
     if (e) e.preventDefault();
     const titleToAdd = (customTitle || newHabitTitle).trim();
     if (!titleToAdd) return;
+
     const newHabit: HabitItem = {
-      id: 'h_' + Date.now() + Math.random().toString(36).substring(2, 5),
+      id: 'h_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6),
       title: titleToAdd,
-      checks: {}
+      checks: {},
     };
     const updated = [...habits, newHabit];
     setHabits(updated);
-    saveData(updated, goals, notes);
+    saveData(updated);
     setNewHabitTitle('');
     setShowAddModal(false);
-    showToast('Habit added');
+    showToast('Habit added & saved');
   };
 
-  // Delete habit immediately on click WITHOUT asking for permission
+  // Delete habit immediately on click
   const handleDeleteHabit = (habitId: string, e: React.MouseEvent) => {
     e.stopPropagation();
     const updated = habits.filter((h) => h.id !== habitId);
     setHabits(updated);
-    saveData(updated, goals, notes);
+    saveData(updated);
     showToast('Habit removed');
   };
 
@@ -219,7 +252,7 @@ export default function HabitTracker() {
     const scrollTarget = Math.max(0, (currentDayNum - 3) * dayWidth);
     gridContainerRef.current.scrollTo({
       left: scrollTarget,
-      behavior: 'smooth'
+      behavior: 'smooth',
     });
   };
 
@@ -242,6 +275,78 @@ export default function HabitTracker() {
     }
   };
 
+  // Helper to get habits for any (year, month) for Today & Last 7 Days stats
+  const getHabitsForMonth = (y: number, m: number): HabitItem[] => {
+    if (y === selectedYear && m === selectedMonth) {
+      return habits;
+    }
+    if (mounted && typeof window !== 'undefined') {
+      try {
+        const raw =
+          localStorage.getItem(`tilawat_habit_tracker_v4_${y}_${m}`) ||
+          localStorage.getItem(`tilawat_habit_tracker_v3_${y}_${m}`);
+        if (raw) {
+          const parsed: MonthlyData = JSON.parse(raw);
+          if (parsed.habits && parsed.habits.length > 0) {
+            return parsed.habits;
+          }
+        }
+      } catch {}
+    }
+    return habits;
+  };
+
+  // Calculate Today's Performance
+  const todayHabits = getHabitsForMonth(today.getFullYear(), today.getMonth());
+  const todayTotalCount = todayHabits.length;
+  const todayCompletedCount = todayHabits.filter((h) => Boolean(h.checks[currentDayNum])).length;
+  const todayPercentage =
+    todayTotalCount > 0 ? Math.round((todayCompletedCount / todayTotalCount) * 100) : 0;
+
+  // Calculate Last 7 Days (Weekly Performance Breakdown)
+  const last7Days = useMemo(() => {
+    const list: Array<{
+      date: string;
+      dayLabel: string;
+      dayNum: number;
+      percentage: number;
+      completed: number;
+      total: number;
+      isToday: boolean;
+      hasData: boolean;
+    }> = [];
+
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(today);
+      d.setDate(today.getDate() - i);
+      const y = d.getFullYear();
+      const m = d.getMonth();
+      const dayNum = d.getDate();
+      const iso = `${y}-${String(m + 1).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`;
+      const dayLabel = d.toLocaleDateString('en-US', { weekday: 'short' });
+      const isToday = i === 0;
+
+      const dayHabits =
+        y === selectedYear && m === selectedMonth ? habits : getHabitsForMonth(y, m);
+      const total = dayHabits.length;
+      const completed = dayHabits.filter((h) => Boolean(h.checks[dayNum])).length;
+      const pct = total > 0 ? Math.round((completed / total) * 100) : 0;
+
+      list.push({
+        date: iso,
+        dayLabel,
+        dayNum,
+        percentage: pct,
+        completed,
+        total,
+        isToday,
+        hasData: isToday ? total > 0 : completed > 0,
+      });
+    }
+
+    return list;
+  }, [habits, selectedYear, selectedMonth, today, mounted]);
+
   // Calculate monthly stats
   const totalPossibleChecks = habits.length * daysInMonth;
   const totalCompletedChecks = useMemo(() => {
@@ -260,157 +365,191 @@ export default function HabitTracker() {
       : 0;
 
   return (
-    <section className="w-full space-y-6 select-none font-sans text-[#221c17]">
+    <section className="w-full space-y-5 select-none font-sans text-[#112a1d]">
       {/* Toast notification */}
       {toastMessage && (
-        <div className="fixed bottom-6 right-6 z-50 bg-[#1e1914] text-amber-100 px-4 py-2.5 rounded-2xl shadow-2xl text-xs font-semibold animate-in fade-in slide-in-from-bottom-3 border border-amber-500/30">
+        <div className="fixed bottom-5 right-5 z-50 bg-[#143323] text-emerald-100 px-4 py-2.5 rounded-xl shadow-lg text-xs font-semibold animate-in fade-in slide-in-from-bottom-2 border border-emerald-500/40">
           {toastMessage}
         </div>
       )}
 
-      {/* Main Journal Card */}
-      <div className="bg-[#fffefe] rounded-3xl border-2 border-[#2b2621] shadow-[0_8px_30px_rgba(40,30,20,0.06)] overflow-hidden p-4 sm:p-8 transition-all">
-        
-        {/* ================= HEADER SECTION (Centered Luxury Style) ================= */}
-        <div className="flex flex-col items-center justify-center text-center pb-6 sm:pb-7 border-b-2 border-[#2b2621] space-y-4 sm:space-y-5">
-          {/* Main Title with Elegant Underline Motif */}
-          <div className="space-y-1">
-            <h2 className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tight text-[#2b2621] font-mono">
-              Habit Tracker
-            </h2>
-            <div className="w-16 h-1 bg-[#fadfd4] mx-auto rounded-full border border-[#2b2621]" />
+      {/* PERFORMANCE PERCENTAGE SECTION */}
+      <div className="bg-white border border-[#ded5c0] rounded-2xl sm:rounded-3xl p-3.5 sm:p-4 shadow-xs space-y-3">
+        {/* Header */}
+        <div className="flex items-center justify-between gap-2 border-b border-[#ede7d8] pb-2">
+          <h2 className="font-bold text-xs sm:text-sm text-[#112a1d] tracking-tight uppercase">
+            Performance
+          </h2>
+        </div>
+
+        {/* Today's Percentage Card */}
+        <div className="bg-[#faf8f3] border border-[#ded5c0] rounded-xl p-3 space-y-2 shadow-2xs">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-[#143323] uppercase tracking-wider">
+              Today&apos;s Performance
+            </span>
+            <span
+              className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                todayPercentage === 100
+                  ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                  : todayPercentage >= 50
+                  ? 'bg-amber-100 text-amber-800 border border-amber-300'
+                  : 'bg-[#ede7d8] text-[#527060]'
+              }`}
+            >
+              {todayPercentage === 100
+                ? '100%'
+                : todayPercentage > 0
+                ? 'In Progress'
+                : 'Not Started'}
+            </span>
           </div>
 
-          {/* Centered Month Selector Widget */}
-          <div className="w-full max-w-[280px] sm:max-w-xs border-2 border-[#2b2621] rounded-2xl overflow-hidden bg-white shadow-sm">
-            {/* Header: MONTH */}
-            <div className="bg-[#fadfd4] text-[#2b2621] border-b-2 border-[#2b2621] px-4 py-1.5 flex items-center justify-between text-xs font-black tracking-widest uppercase">
-              <span>MONTH:</span>
-              <span className="text-xs font-black text-[#85341a]">{selectedYear}</span>
+          <div className="flex items-baseline justify-between">
+            <span className="text-2xl sm:text-3xl font-extrabold text-[#112a1d] tracking-tight">
+              {todayPercentage}%
+            </span>
+            <span className="text-[11px] text-[#527060] font-medium">
+              {todayCompletedCount} of {todayTotalCount} completed
+            </span>
+          </div>
+
+          {/* Sleek Progress Bar */}
+          <div className="w-full bg-[#e8e0cc] h-1.5 rounded-full overflow-hidden">
+            <div
+              className="bg-emerald-600 h-full rounded-full transition-all duration-500"
+              style={{ width: `${Math.max(todayPercentage, 0)}%` }}
+            />
+          </div>
+        </div>
+
+        {/* 7-Day Day-by-Day Mini Performance Breakdown */}
+        <div className="pt-1">
+          <div className="flex items-center justify-between mb-1.5 px-0.5">
+            <span className="text-[11px] font-bold text-[#527060] uppercase tracking-wider">
+              Last 7 Days
+            </span>
+          </div>
+
+          <div className="grid grid-cols-7 gap-1 sm:gap-1.5 text-center">
+            {last7Days.map((d) => (
+              <div
+                key={d.date}
+                className={`py-1.5 px-0.5 rounded-xl border flex flex-col items-center justify-between transition-all ${
+                  d.isToday
+                    ? 'bg-emerald-50/90 border-emerald-400 ring-1 ring-emerald-300 shadow-2xs'
+                    : d.hasData
+                    ? 'bg-[#faf8f3] border-[#ded5c0]'
+                    : 'bg-[#fbf9f4] border-[#ede7d8]'
+                }`}
+              >
+                <span className="text-[11px] font-bold text-[#143323] leading-tight">
+                  {d.dayLabel}
+                </span>
+                <span className="text-[9px] text-[#8e8574] font-medium leading-none mt-0.5">
+                  {d.dayNum}
+                </span>
+
+                {/* Vertical mini capsule bar */}
+                <div className="w-2.5 sm:w-3 bg-[#ede5d1] h-7 rounded-full overflow-hidden flex flex-col justify-end p-0.5 my-1.5">
+                  <div
+                    className={`w-full rounded-full transition-all duration-500 ${
+                      d.isToday
+                        ? 'bg-emerald-600'
+                        : d.percentage >= 70
+                        ? 'bg-emerald-700'
+                        : d.percentage > 0
+                        ? 'bg-amber-600'
+                        : 'bg-transparent'
+                    }`}
+                    style={{ height: `${Math.max(d.percentage, 0)}%` }}
+                  />
+                </div>
+
+                <span
+                  className={`text-[10px] font-bold leading-none ${
+                    d.isToday
+                      ? 'text-emerald-900'
+                      : d.hasData
+                      ? 'text-[#112a1d]'
+                      : 'text-neutral-400'
+                  }`}
+                >
+                  {d.hasData ? `${d.percentage}%` : '–'}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* ================= MAIN HABIT TRACKER CARD ================= */}
+      <div className="bg-white border border-[#ded5c0] rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-sm space-y-5">
+        
+        {/* Header Bar: Title, Month Selector & Actions */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#ede7d8] pb-4">
+          <div>
+            <div className="flex items-center gap-2.5">
+              <h2 className="font-display text-xl sm:text-2xl font-bold text-[#112a1d] tracking-tight">
+                Habit Tracker
+              </h2>
+              <span className="text-xs font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full">
+                {habits.length} Habits
+              </span>
             </div>
-            {/* Month Switcher Controls */}
-            <div className="flex items-center justify-between px-3 py-2 bg-white">
+            <p className="text-xs text-[#527060] mt-0.5">
+              Track your daily consistency across all {daysInMonth} days of {MONTH_NAMES[selectedMonth]}.
+            </p>
+          </div>
+
+          {/* Month Switcher & Action Buttons */}
+          <div className="flex flex-wrap items-center gap-2">
+            {/* Month Navigator */}
+            <div className="inline-flex items-center bg-[#faf8f3] border border-[#ded5c0] rounded-xl p-1 shadow-2xs">
               <button
                 type="button"
                 onClick={handlePrevMonth}
                 aria-label="Previous Month"
-                className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-[#f7ece8] active:scale-90 transition-all font-bold text-sm text-[#2b2621] cursor-pointer"
+                className="w-8 h-8 flex items-center justify-center rounded-lg text-[#143323] hover:bg-[#efe9d8] active:scale-95 transition-all cursor-pointer font-bold"
               >
-                ◀
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+                </svg>
               </button>
-              <div className="text-center font-black text-base sm:text-lg text-[#2b2621] tracking-wide">
-                {MONTH_NAMES[selectedMonth]}
+
+              <div className="px-3 text-center" style={{ minWidth: '130px' }}>
+                <span className="text-xs sm:text-sm font-bold text-[#143323]">
+                  {MONTH_NAMES[selectedMonth]} {selectedYear}
+                </span>
               </div>
+
               <button
                 type="button"
                 onClick={handleNextMonth}
                 aria-label="Next Month"
-                className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-[#f7ece8] active:scale-90 transition-all font-bold text-sm text-[#2b2621] cursor-pointer"
+                className="w-8 h-8 flex items-center justify-center rounded-lg text-[#143323] hover:bg-[#efe9d8] active:scale-95 transition-all cursor-pointer font-bold"
               >
-                ▶
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                </svg>
               </button>
             </div>
-          </div>
-        </div>
 
-        {/* ================= GOALS & SELF-REMINDERS (2 Cards with Delete All) ================= */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 my-6">
-          
-          {/* Card 1: GOALS FOR THE MONTH */}
-          <div className="border-2 border-[#2b2621] rounded-2xl overflow-hidden bg-white shadow-2xs">
-            <div className="bg-[#fadfd4] text-[#2b2621] border-b-2 border-[#2b2621] px-4 py-2.5 flex items-center justify-between">
-              <span className="text-xs sm:text-sm font-black tracking-wider uppercase">GOALS FOR THE MONTH:</span>
-              <button
-                type="button"
-                onClick={handleDeleteAllGoals}
-                className="text-xs font-extrabold text-[#872d12] hover:text-red-700 hover:underline cursor-pointer transition-all active:scale-95"
-                title="Clear all goals"
-              >
-                Delete All
-              </button>
-            </div>
-            <div className="divide-y-2 divide-[#2b2621] bg-white">
-              {goals.map((goal, idx) => (
-                <div key={idx} className="flex items-center px-4 py-3 hover:bg-[#fdfaf7] transition-colors group">
-                  <span className="w-5 h-5 rounded-full bg-[#fcedea] border border-[#f0c2b2] text-[11px] font-black text-[#85341a] flex items-center justify-center mr-2.5 shrink-0">
-                    {idx + 1}
-                  </span>
-                  <input
-                    type="text"
-                    value={goal}
-                    onChange={(e) => handleGoalChange(idx, e.target.value)}
-                    placeholder={`Goal ${idx + 1}...`}
-                    className="w-full text-xs sm:text-sm text-[#2b2621] font-semibold bg-transparent focus:outline-none placeholder:text-[#ab9f90]"
-                  />
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Card 2: SELF-REMINDERS / NOTES */}
-          <div className="border-2 border-[#2b2621] rounded-2xl overflow-hidden bg-white shadow-2xs">
-            <div className="bg-[#fadfd4] text-[#2b2621] border-b-2 border-[#2b2621] px-4 py-2.5 flex items-center justify-between">
-              <span className="text-xs sm:text-sm font-black tracking-wider uppercase">SELF-REMINDERS / NOTES:</span>
-              <button
-                type="button"
-                onClick={handleDeleteAllNotes}
-                className="text-xs font-extrabold text-[#872d12] hover:text-red-700 hover:underline cursor-pointer transition-all active:scale-95"
-                title="Clear all notes"
-              >
-                Delete All
-              </button>
-            </div>
-            <div className="divide-y-2 divide-[#2b2621] bg-white">
-              {notes.map((note, idx) => (
-                <div key={idx} className="flex items-center px-4 py-3 hover:bg-[#fdfaf7] transition-colors group">
-                  <span className="w-5 h-5 rounded-full bg-[#fcedea] border border-[#f0c2b2] text-xs font-black text-[#85341a] flex items-center justify-center mr-2.5 shrink-0">
-                    •
-                  </span>
-                  <input
-                    type="text"
-                    value={note}
-                    onChange={(e) => handleNoteChange(idx, e.target.value)}
-                    placeholder={`Reminder / Note ${idx + 1}...`}
-                    className="w-full text-xs sm:text-sm text-[#2b2621] font-semibold bg-transparent focus:outline-none placeholder:text-[#ab9f90]"
-                  />
-                </div>
-              ))}
-            </div>
-          </div>
-
-        </div>
-
-        {/* ================= CONTROLS & ACTIONS BAR ================= */}
-        <div className="flex flex-wrap items-center justify-between gap-3 pb-4 mb-2 border-b border-[#e6ddd1]">
-          {/* Section Indicator */}
-          <div className="flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-emerald-700" />
-            <span className="text-xs sm:text-sm font-black text-[#2b2621] tracking-wider uppercase">
-              31-Day Habit Grid
-            </span>
-            <span className="text-xs text-[#8e8070] font-semibold hidden xs:inline">
-              ({habits.length} habits)
-            </span>
-          </div>
-
-          <div className="flex items-center gap-2">
-            {/* Quick jump to today */}
             {isCurrentMonth && (
               <button
                 type="button"
                 onClick={handleJumpToToday}
-                className="px-3.5 py-2 rounded-xl bg-[#fadfd4] hover:bg-[#f6cdbe] active:scale-95 text-[#74351a] border-2 border-[#2b2621] text-xs sm:text-sm font-extrabold transition-all cursor-pointer shadow-xs"
-                title="Scroll directly to today's date"
+                className="px-3.5 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 active:scale-95 text-emerald-900 border border-emerald-200 text-xs font-bold transition-all cursor-pointer"
+                title="Scroll directly to today's column"
               >
                 Today: Day {currentDayNum}
               </button>
             )}
 
-            {/* Add Habit button */}
             <button
               type="button"
               onClick={() => setShowAddModal(true)}
-              className="px-4 py-2 rounded-xl bg-[#2b2621] hover:bg-[#3d362f] active:scale-95 text-white text-xs sm:text-sm font-bold transition-all cursor-pointer shadow-xs flex items-center gap-1.5"
+              className="px-4 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 active:scale-95 text-white text-xs font-bold transition-all cursor-pointer shadow-xs flex items-center gap-1.5"
             >
               <span>+</span>
               <span>Add Habit</span>
@@ -418,64 +557,71 @@ export default function HabitTracker() {
           </div>
         </div>
 
-        {/* ================= 31-DAY MATRIX (Spacious, Clear Names, Weekday Headers) ================= */}
+        {/* ================= 31-DAY HABIT MATRIX ================= */}
         <div className="relative">
-          
           {/* Mobile scroll hint */}
-          <div className="flex sm:hidden items-center justify-between text-xs text-[#706456] font-medium mb-2 px-1">
-            <span>Swipe horizontally to view days 1-{daysInMonth}</span>
+          <div className="flex sm:hidden items-center justify-between text-xs text-[#527060] font-medium mb-2 px-1">
+            <span>Swipe horizontally to view days 1–{daysInMonth}</span>
             {isCurrentMonth && (
-              <span className="font-bold text-[#74351a]">Today: Day {currentDayNum}</span>
+              <span className="font-bold text-emerald-800">Today: Day {currentDayNum}</span>
             )}
           </div>
 
-          {/* Scrollable Container with Sticky Left Column */}
+          {/* Scrollable Table Container with Solid Sticky Habit Column */}
           <div
             ref={gridContainerRef}
-            className="w-full overflow-x-auto border-2 border-[#2b2621] rounded-2xl shadow-xs bg-white scroll-smooth relative"
+            className="w-full overflow-x-auto border border-[#ded5c0] rounded-2xl shadow-xs bg-white scroll-smooth relative"
             style={{ WebkitOverflowScrolling: 'touch' }}
           >
-            <table className="border-collapse table-fixed w-full min-w-max">
+            <table className="border-collapse w-full" style={{ minWidth: 'max-content' }}>
               <thead>
-                <tr className="bg-[#fadfd4] text-[#2b2621] border-b-2 border-[#2b2621]">
-                  {/* Sticky 'HABITS' Column (Wider so full title is readable) */}
-                  <th className="sticky left-0 z-30 bg-[#fadfd4] border-r-2 border-[#2b2621] px-4 py-3 text-left text-xs sm:text-sm font-black tracking-wider uppercase w-[220px] sm:w-[300px] shadow-[4px_0_10px_rgba(0,0,0,0.06)]">
-                    HABITS
+                <tr className="bg-[#faf8f3] text-[#143323] border-b border-[#ded5c0]">
+                  {/* Sticky 'HABITS' Column with explicit minWidth so it never collapses */}
+                  <th
+                    className="sticky left-0 z-30 bg-[#faf8f3] border-r border-[#ded5c0] px-4 py-3 text-left text-xs sm:text-sm font-bold tracking-wider uppercase text-[#143323] shadow-[4px_0_10px_rgba(0,0,0,0.04)]"
+                    style={{ minWidth: '210px', width: '230px' }}
+                  >
+                    Habits
                   </th>
-                  {/* Days 1 to daysInMonth with Day Number & Weekday */}
+
+                  {/* Days 1 to daysInMonth */}
                   {daysArray.map(({ day, weekday }) => {
                     const isTodayCell = isCurrentMonth && day === currentDayNum;
                     return (
                       <th
                         key={day}
-                        className={`border-r border-[#2b2621] last:border-r-0 text-center font-black text-xs sm:text-sm w-[42px] sm:w-[48px] py-2.5 ${
+                        style={{ minWidth: '44px', width: '44px' }}
+                        className={`border-r border-[#ede7d8] last:border-r-0 text-center py-2.5 ${
                           isTodayCell
-                            ? 'bg-[#fac4b0] text-[#74351a] ring-2 ring-inset ring-[#c75529]'
-                            : 'text-[#2b2621]'
+                            ? 'bg-emerald-700 text-white'
+                            : 'bg-[#faf8f3] text-[#143323]'
                         }`}
                       >
                         <div className="flex flex-col items-center justify-center leading-tight">
-                          <span className="text-[9px] sm:text-[10px] text-[#85341a] font-bold uppercase opacity-80">
+                          <span
+                            className={`text-[9px] font-bold uppercase ${
+                              isTodayCell ? 'text-emerald-100' : 'text-[#8e8574]'
+                            }`}
+                          >
                             {weekday}
                           </span>
-                          <span className="text-xs sm:text-sm font-black">{day}</span>
-                          {isTodayCell && (
-                            <span className="text-[7px] font-black uppercase text-[#c75529] tracking-tighter leading-none mt-0.5">
-                              TODAY
-                            </span>
-                          )}
+                          <span className="text-xs sm:text-sm font-extrabold mt-0.5">{day}</span>
                         </div>
                       </th>
                     );
                   })}
+
                   {/* Done Column */}
-                  <th className="border-l-2 border-[#2b2621] bg-[#fadfd4] text-center font-black text-xs sm:text-sm uppercase tracking-wider w-[66px] sm:w-[78px] px-2 py-2.5">
+                  <th
+                    style={{ minWidth: '68px', width: '68px' }}
+                    className="border-l border-[#ded5c0] bg-[#faf8f3] text-center font-bold text-xs uppercase tracking-wider text-[#143323] px-2 py-2.5"
+                  >
                     Done
                   </th>
                 </tr>
               </thead>
 
-              <tbody className="divide-y-2 border-[#2b2621] divide-[#2b2621]">
+              <tbody className="divide-y divide-[#ede7d8]">
                 {habits.map((habit) => {
                   const doneDaysCount = daysArray.filter(({ day }) => habit.checks[day]).length;
                   const habitPct = Math.round((doneDaysCount / daysInMonth) * 100);
@@ -483,28 +629,35 @@ export default function HabitTracker() {
                   return (
                     <tr
                       key={habit.id}
-                      className="hover:bg-[#fcfaf7] transition-colors group"
+                      className="bg-white hover:bg-[#fcfaf5] transition-colors group"
                     >
-                      {/* Sticky Habit Name Column with immediate one-click delete */}
-                      <td className="sticky left-0 z-20 bg-white group-hover:bg-[#fcfaf7] border-r-2 border-[#2b2621] px-4 py-3 text-xs sm:text-sm font-bold text-[#2b2621] shadow-[4px_0_10px_rgba(0,0,0,0.06)]">
-                        <div className="flex items-center justify-between gap-2.5">
-                          <span className="truncate max-w-[180px] sm:max-w-[250px] leading-snug" title={habit.title}>
+                      {/* Sticky Habit Name Column */}
+                      <td
+                        style={{ minWidth: '210px', width: '230px' }}
+                        className="sticky left-0 z-20 bg-white group-hover:bg-[#fcfaf5] border-r border-[#ded5c0] px-4 py-3 text-xs sm:text-sm font-semibold text-[#112a1d] shadow-[4px_0_10px_rgba(0,0,0,0.04)]"
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <span
+                            className="truncate leading-snug text-[#112a1d]"
+                            style={{ maxWidth: '165px' }}
+                            title={habit.title}
+                          >
                             {habit.title}
                           </span>
                           <button
                             type="button"
                             onClick={(e) => handleDeleteHabit(habit.id, e)}
-                            className="w-6 h-6 rounded-md flex items-center justify-center text-[#ab9f90] hover:text-red-700 hover:bg-red-50 transition-colors shrink-0 cursor-pointer"
-                            title="Delete habit immediately"
+                            className="w-6 h-6 rounded-md flex items-center justify-center text-[#8e8574] hover:text-rose-600 hover:bg-rose-50 transition-colors shrink-0 cursor-pointer"
+                            title="Delete habit"
                           >
-                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                             </svg>
                           </button>
                         </div>
                       </td>
 
-                      {/* 1..31 Checkable Cells (Large & Satisfying) */}
+                      {/* 1..31 Checkable Cells */}
                       {daysArray.map(({ day }) => {
                         const isChecked = Boolean(habit.checks[day]);
                         const isTodayCell = isCurrentMonth && day === currentDayNum;
@@ -513,19 +666,22 @@ export default function HabitTracker() {
                           <td
                             key={day}
                             onClick={() => handleToggleCell(habit.id, day)}
-                            className={`border-r border-[#2b2621] last:border-r-0 text-center cursor-pointer select-none transition-all p-0 h-[48px] sm:h-[54px] ${
-                              isTodayCell ? 'bg-amber-50/70' : ''
-                            } hover:bg-[#fadfd4]/60`}
+                            style={{ minWidth: '44px', width: '44px', height: '50px' }}
+                            className={`border-r border-[#ede7d8] last:border-r-0 text-center cursor-pointer select-none transition-colors p-0 ${
+                              isTodayCell ? 'bg-emerald-50/60' : ''
+                            } hover:bg-emerald-50`}
                           >
                             <div className="w-full h-full flex items-center justify-center">
                               {isChecked ? (
-                                <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-gradient-to-br from-emerald-600 to-teal-700 text-white flex items-center justify-center font-black text-sm sm:text-base shadow-xs transition-transform active:scale-90 animate-in zoom-in-75">
+                                <div className="w-7 h-7 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-bold text-sm shadow-xs transition-transform active:scale-90">
                                   ✓
                                 </div>
                               ) : (
                                 <div
-                                  className={`w-6 h-6 sm:w-7 sm:h-7 rounded-xl border-2 border-[#c7b8a7] hover:border-[#74351a] hover:bg-white transition-all ${
-                                    isTodayCell ? 'border-amber-500 ring-2 ring-amber-400 bg-amber-100/40' : 'bg-transparent'
+                                  className={`w-6 h-6 rounded-xl border-2 transition-all ${
+                                    isTodayCell
+                                      ? 'border-emerald-500 bg-white ring-2 ring-emerald-200'
+                                      : 'border-[#d6cbaf] bg-white hover:border-emerald-600'
                                   }`}
                                 />
                               )}
@@ -534,11 +690,18 @@ export default function HabitTracker() {
                         );
                       })}
 
-                      {/* Total Count Column with Progress Pill */}
-                      <td className="border-l-2 border-[#2b2621] text-center font-black text-xs sm:text-sm text-[#2b2621] bg-white group-hover:bg-[#fcfaf7]">
-                        <div className="flex flex-col items-center justify-center py-1">
-                          <span className="leading-tight text-xs sm:text-sm font-black text-[#143323]">{doneDaysCount}</span>
-                          <span className="text-[10px] text-[#8e8070] leading-none font-bold mt-0.5">{habitPct}%</span>
+                      {/* Done Summary Column */}
+                      <td
+                        style={{ minWidth: '68px', width: '68px' }}
+                        className="border-l border-[#ded5c0] text-center bg-[#faf8f3] px-2 py-2"
+                      >
+                        <div className="flex flex-col items-center justify-center">
+                          <span className="leading-tight text-xs sm:text-sm font-bold text-[#143323]">
+                            {doneDaysCount}
+                          </span>
+                          <span className="text-[10px] text-[#527060] leading-none font-semibold mt-0.5">
+                            {habitPct}%
+                          </span>
                         </div>
                       </td>
                     </tr>
@@ -549,41 +712,40 @@ export default function HabitTracker() {
           </div>
         </div>
 
-        {/* ================= GORGEOUS PROGRESS SUMMARY AT BOTTOM ================= */}
-        <div className="mt-7 pt-5 border-t border-[#ede7d8] space-y-3">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+        {/* ================= BOTTOM MONTHLY CONSISTENCY BAR ================= */}
+        <div className="pt-4 border-t border-[#ede7d8]">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <div className="space-y-0.5">
-              <div className="text-xs sm:text-sm font-extrabold text-[#2b2621]">
-                Overall Month Consistency: <span className="text-emerald-800 font-black">{monthProgressPct}%</span>
+              <div className="text-xs sm:text-sm font-bold text-[#112a1d]">
+                Overall Month Consistency: <span className="text-emerald-700 font-extrabold">{monthProgressPct}%</span>
               </div>
-              <div className="text-xs text-[#877868]">
+              <div className="text-xs text-[#527060]">
                 {totalCompletedChecks} of {totalPossibleChecks} total checks completed this month
               </div>
             </div>
 
-            <div className="w-full sm:w-64 bg-[#f0ebd9] h-3 rounded-full overflow-hidden border border-[#ded5c0]">
+            <div className="w-full sm:w-64 bg-[#e8e0cc] h-2.5 rounded-full overflow-hidden">
               <div
-                className="bg-gradient-to-r from-emerald-600 to-teal-600 h-full rounded-full transition-all duration-500"
+                className="bg-emerald-600 h-full rounded-full transition-all duration-500"
                 style={{ width: `${Math.min(100, monthProgressPct)}%` }}
               />
             </div>
           </div>
         </div>
-
       </div>
 
-      {/* ================= ADD HABIT MODAL (With Quick Islamic Suggestions) ================= */}
+      {/* ================= ADD HABIT MODAL ================= */}
       {showAddModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4 animate-in fade-in">
-          <div className="bg-white rounded-3xl border-2 border-[#2b2621] p-5 sm:p-6 max-w-md w-full shadow-2xl space-y-4">
-            <div className="flex items-center justify-between border-b border-[#eee5d8] pb-3">
-              <h4 className="font-black text-base text-[#2b2621] tracking-wide">
+          <div className="bg-white rounded-3xl border border-[#ded5c0] p-5 sm:p-6 max-w-md w-full shadow-2xl space-y-4">
+            <div className="flex items-center justify-between border-b border-[#ede7d8] pb-3">
+              <h4 className="font-bold text-base text-[#112a1d] tracking-wide">
                 Add New Habit
               </h4>
               <button
                 type="button"
                 onClick={() => setShowAddModal(false)}
-                className="w-8 h-8 rounded-lg flex items-center justify-center text-[#8e8070] hover:text-[#2b2621] hover:bg-[#f5eee8] font-bold text-lg cursor-pointer"
+                className="w-8 h-8 rounded-lg flex items-center justify-center text-[#8e8574] hover:text-[#112a1d] hover:bg-[#faf8f3] font-bold text-lg cursor-pointer"
               >
                 ✕
               </button>
@@ -591,7 +753,7 @@ export default function HabitTracker() {
 
             <form onSubmit={(e) => handleAddHabit(e)} className="space-y-4">
               <div>
-                <label className="block text-xs font-bold text-[#5c5043] mb-1.5 uppercase tracking-wider">
+                <label className="block text-xs font-bold text-[#527060] mb-1.5 uppercase tracking-wider">
                   Habit Name
                 </label>
                 <input
@@ -599,14 +761,13 @@ export default function HabitTracker() {
                   value={newHabitTitle}
                   onChange={(e) => setNewHabitTitle(e.target.value)}
                   placeholder="e.g. Read Surah Al-Mulk before bed"
-                  className="w-full px-4 py-2.5 rounded-xl border-2 border-[#2b2621] text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-[#fadfd4]"
+                  className="w-full px-4 py-2.5 rounded-xl border border-[#ded5c0] bg-[#faf8f3] focus:bg-white text-sm font-semibold text-[#112a1d] focus:outline-none focus:border-emerald-600"
                   autoFocus
                 />
               </div>
 
-              {/* Quick suggestions */}
               <div>
-                <span className="block text-[11px] font-bold text-[#8e8070] uppercase tracking-wider mb-2">
+                <span className="block text-[11px] font-bold text-[#527060] uppercase tracking-wider mb-2">
                   Quick Islamic Suggestions:
                 </span>
                 <div className="flex flex-wrap gap-1.5">
@@ -615,7 +776,7 @@ export default function HabitTracker() {
                       key={sug}
                       type="button"
                       onClick={() => handleAddHabit(undefined, sug)}
-                      className="px-2.5 py-1 rounded-lg bg-[#faf6ee] hover:bg-[#f3ead6] border border-[#ded5c0] text-xs font-bold text-[#143323] transition-all cursor-pointer active:scale-95 text-left"
+                      className="px-2.5 py-1 rounded-lg bg-[#faf8f3] hover:bg-emerald-50 border border-[#ded5c0] text-xs font-semibold text-[#143323] transition-all cursor-pointer active:scale-95 text-left"
                     >
                       + {sug}
                     </button>
@@ -627,14 +788,14 @@ export default function HabitTracker() {
                 <button
                   type="button"
                   onClick={() => setShowAddModal(false)}
-                  className="px-4 py-2 rounded-xl border border-[#d6cbaf] text-xs font-bold text-[#5c5043] hover:bg-[#faf6ee] cursor-pointer"
+                  className="px-4 py-2 rounded-xl border border-[#d6cbaf] text-xs font-bold text-[#527060] hover:bg-[#faf8f3] cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={!newHabitTitle.trim()}
-                  className="px-5 py-2 rounded-xl bg-[#2b2621] hover:bg-[#3d362f] text-white text-xs font-bold disabled:opacity-50 transition-all cursor-pointer shadow-xs active:scale-95"
+                  className="px-5 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold disabled:opacity-50 transition-all cursor-pointer shadow-xs active:scale-95"
                 >
                   Save Habit
                 </button>
@@ -643,7 +804,6 @@ export default function HabitTracker() {
           </div>
         </div>
       )}
-
     </section>
   );
 }

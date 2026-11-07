@@ -385,158 +385,144 @@ export function StreakClient() {
         </div>
       </div>
 
-      {/* Day-by-Day Detailed Recitation Cards */}
-      <div className="space-y-2.5">
-        <div className="flex items-center justify-between px-1">
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-lg bg-emerald-100/90 border border-emerald-300 text-emerald-800 flex items-center justify-center text-xs shadow-2xs">
-              <svg className="w-3.5 h-3.5 text-emerald-800" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+      {/* Day-by-Day Detailed Recitation Card */}
+      <div className="bg-white border border-[#ded5c0] rounded-2xl sm:rounded-3xl p-4 sm:p-5 shadow-sm space-y-3.5">
+        {/* Card Header */}
+        <div className="flex items-center justify-between border-b border-[#ede7d8] pb-3">
+          <div className="flex items-center gap-2.5">
+            <div className="w-7 h-7 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 flex items-center justify-center shadow-2xs">
+              <svg className="w-4 h-4 text-emerald-800" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
               </svg>
             </div>
-            <h2 className="text-sm sm:text-base font-bold text-[#112a1d] tracking-tight">
-              Daily Breakdown
-            </h2>
+            <div>
+              <h2 className="text-sm sm:text-base font-bold text-[#112a1d] tracking-tight leading-tight">
+                Daily Breakdown
+              </h2>
+              <p className="text-[11px] text-[#527060]">
+                Day-by-day recitation time &amp; words
+              </p>
+            </div>
           </div>
-          <span className="text-[11px] text-[#527060] font-medium bg-[#f0ebd9] px-2 py-0.5 rounded-full border border-[#ded5c0]">
+          <span className="text-[11px] text-emerald-800 font-semibold bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200">
             7-Day Activity
           </span>
         </div>
 
+        {/* 7 Day Rows */}
         <div className="space-y-2">
           {weekDays.map((d) => {
+            const [, mStr, dayStr] = d.date.split("-");
+            const monthShort = new Date(2026, Number(mStr) - 1, 1).toLocaleDateString("en-US", {
+              month: "short",
+            });
+
             return (
               <div
                 key={d.date}
-                className={`rounded-2xl p-3 sm:p-3.5 border transition-all duration-200 ${
+                className={`rounded-2xl p-3 sm:px-4 sm:py-3 border transition-all duration-200 ${
                   d.isToday
-                    ? "bg-gradient-to-r from-[#fffef7] via-[#fffcf2] to-white border-[#f59e0b] shadow-[0_4px_16px_rgba(245,158,11,0.12)] ring-1 ring-[#f59e0b]/40"
+                    ? "bg-emerald-50/50 border-emerald-400 ring-1 ring-emerald-300/60 shadow-xs"
                     : d.hasRecited
-                    ? "bg-white border-[#c9decb] hover:border-emerald-400 shadow-sm"
+                    ? "bg-[#fbfcfa] border-emerald-200 hover:border-emerald-400 shadow-2xs"
                     : d.isPast
-                    ? "bg-[#faf7ee]/80 border-[#ded5c0] hover:bg-[#faf7ee]"
-                    : "bg-white/60 border border-dashed border-[#ded5c0]"
+                    ? "bg-[#faf8f3] border-[#e5ded0] hover:border-[#d6cbaf]"
+                    : "bg-[#fcfbf8] border border-dashed border-[#ded5c0] opacity-75"
                 }`}
               >
-                <div className="flex items-center justify-between gap-2.5">
-                  {/* Left: Day Icon + Day Name & Date */}
+                <div className="flex items-center justify-between gap-3">
+                  {/* Left: Calendar Date Tile + Day Name & Subtitle */}
                   <div className="flex items-center gap-3 min-w-0">
                     <div
-                      className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center shrink-0 transition-transform ${
+                      className={`w-11 h-11 rounded-xl flex flex-col items-center justify-center shrink-0 border transition-all ${
                         d.hasRecited
-                          ? "bg-gradient-to-br from-emerald-600 to-teal-700 text-white shadow-sm"
+                          ? "bg-emerald-700 border-emerald-700 text-white shadow-xs"
                           : d.isToday
-                          ? "bg-gradient-to-br from-amber-400 to-amber-500 text-white shadow-sm ring-2 ring-amber-300"
-                          : d.isPast
-                          ? "bg-[#ede7d8] border border-[#ded5c0] text-[#8e8574]"
-                          : "bg-transparent border border-dashed border-[#ded5c0] text-[#a89f8f]"
+                          ? "bg-[#143323] border-[#143323] text-white shadow-xs"
+                          : "bg-white border-[#ded5c0] text-[#143323]"
                       }`}
                     >
-                      {d.hasRecited ? (
-                        <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                        </svg>
-                      ) : d.isToday ? (
-                        <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                      ) : d.isPast ? (
-                        <svg className="w-4 h-4 text-[#8e8574]" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 12h-15" />
-                        </svg>
-                      ) : (
-                        <span className="w-2 h-2 rounded-full bg-[#ded5c0]" />
-                      )}
+                      <span
+                        className={`text-[9px] font-bold uppercase tracking-wider leading-none ${
+                          d.hasRecited || d.isToday ? "text-emerald-200" : "text-[#8e8574]"
+                        }`}
+                      >
+                        {monthShort}
+                      </span>
+                      <span className="text-sm sm:text-base font-extrabold leading-tight mt-0.5">
+                        {Number(dayStr)}
+                      </span>
                     </div>
 
                     <div className="min-w-0">
-                      <div className="flex items-center gap-1.5 flex-wrap">
-                        <span className={`text-sm sm:text-base font-bold tracking-tight ${d.isToday ? "text-[#112a1d]" : "text-[#112a1d]"}`}>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-sm sm:text-base font-bold text-[#112a1d] tracking-tight">
                           {d.fullDayName}
                         </span>
                         {d.isToday && (
-                          <span className="bg-gradient-to-r from-amber-500 to-amber-600 text-white text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider shadow-2xs">
+                          <span className="bg-emerald-700 text-white text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">
                             Today
                           </span>
                         )}
                       </div>
-                      <span className="text-xs text-[#527060] font-medium block">
-                        {formatReadableDate(d.date)}
-                      </span>
+
+                      <div className="flex items-center gap-2 mt-0.5 text-xs">
+                        {d.hasRecited ? (
+                          <span className="text-emerald-800 font-semibold">
+                            {formatTimeSpent(d.timeSpentSeconds)} • {d.wordsRevealed} words
+                          </span>
+                        ) : (
+                          <span className="text-[#8e8574] font-medium">
+                            0m • 0 words
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
 
-                  {/* Right: Metrics + Status Action */}
-                  <div className="flex items-center gap-2.5 sm:gap-3 shrink-0">
-                    {/* Metrics */}
-                    <div className="text-right">
-                      {d.hasRecited ? (
-                        <>
-                          <div className="font-bold text-emerald-950 text-xs sm:text-sm">
-                            {formatTimeSpent(d.timeSpentSeconds)}
-                          </div>
-                          <div className="text-[11px] text-[#527060] font-medium">
-                            {d.wordsRevealed} words
-                          </div>
-                        </>
-                      ) : (
-                        <>
-                          <div className="text-xs text-[#8e8574] font-medium">
-                            0m
-                          </div>
-                          <div className="text-[11px] text-[#a89f8f]">
-                            0 words
-                          </div>
-                        </>
-                      )}
-                    </div>
-
-                    {/* Status Pill or Recite Action */}
-                    <div className="min-w-[80px] sm:min-w-[90px] text-right">
-                      {d.hasRecited ? (
-                        <span className="inline-flex items-center gap-1 bg-emerald-50 border border-emerald-300 text-emerald-800 text-[11px] font-bold px-2.5 py-1 rounded-full shadow-2xs">
-                          <svg className="w-3 h-3 text-emerald-700" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                          </svg>
-                          <span>Done</span>
-                        </span>
-                      ) : d.isToday ? (
-                        <Link
-                          href="/surahs"
-                          className="inline-flex items-center gap-1.5 bg-gradient-to-r from-emerald-700 via-emerald-800 to-teal-800 hover:from-emerald-800 hover:to-teal-900 text-white text-xs font-bold px-3.5 py-1.5 rounded-xl active:scale-95 transition-all shadow-md hover:shadow-lg cursor-pointer"
-                        >
-                          <svg className="w-3 h-3 text-emerald-200" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 100-6 3 3 0 000 6z" />
-                          </svg>
-                          <span>Recite</span>
-                        </Link>
-                      ) : d.isPast ? (
-                        <span className="inline-block text-[11px] font-semibold text-[#8e8574] bg-[#f0ebd9]/80 border border-[#ded5c0] px-2.5 py-1 rounded-lg">
-                          Missed
-                        </span>
-                      ) : (
-                        <span className="inline-block text-[11px] font-medium text-[#a89f8f] bg-[#faf7ee] border border-dashed border-[#ded5c0] px-2 py-0.5 rounded-md">
-                          Upcoming
-                        </span>
-                      )}
-                    </div>
+                  {/* Right: Status Badge or Recite Action */}
+                  <div className="shrink-0">
+                    {d.hasRecited ? (
+                      <span className="inline-flex items-center gap-1 bg-emerald-100 border border-emerald-300 text-emerald-800 text-xs font-bold px-3 py-1.5 rounded-xl">
+                        <svg className="w-3.5 h-3.5 text-emerald-700" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                        </svg>
+                        <span>Done</span>
+                      </span>
+                    ) : d.isToday ? (
+                      <Link
+                        href="/surahs"
+                        className="inline-flex items-center gap-1.5 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold px-3.5 py-2 rounded-xl active:scale-95 transition-all shadow-xs cursor-pointer"
+                      >
+                        <span>Recite</span>
+                        <span className="text-emerald-200">→</span>
+                      </Link>
+                    ) : d.isPast ? (
+                      <span className="inline-flex items-center text-[11px] font-semibold text-[#7a7060] bg-[#efeadd] border border-[#ded5c0] px-2.5 py-1 rounded-xl">
+                        Missed
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center text-[11px] font-medium text-[#9e9482] bg-white border border-dashed border-[#ded5c0] px-2.5 py-1 rounded-xl">
+                        Upcoming
+                      </span>
+                    )}
                   </div>
                 </div>
 
                 {/* Surahs Completed on that day */}
                 {d.hasRecited && d.surahs.length > 0 && (
-                  <div className="mt-2.5 pt-2 border-t border-[#edf4ee] flex flex-wrap items-center gap-1.5">
+                  <div className="mt-2.5 pt-2 border-t border-emerald-200/60 flex flex-wrap items-center gap-1.5">
                     <span className="text-[10px] uppercase font-bold tracking-wider text-emerald-800 mr-1 flex items-center gap-1">
                       <svg className="w-3 h-3 text-emerald-700" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                       </svg>
-                      Completed:
+                      Practiced:
                     </span>
                     {d.surahs.map((s) => (
                       <Link
                         key={s.number}
                         href={`/recite/${s.number}`}
-                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#f0f8f3] hover:bg-[#e1f3e7] border border-emerald-200 text-[#112a1d] text-xs font-semibold transition-all shadow-2xs hover:border-emerald-300"
+                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white hover:bg-emerald-50 border border-emerald-200 text-[#112a1d] text-xs font-semibold transition-all shadow-2xs"
                       >
                         <span className="text-emerald-800 font-bold">{s.number}.</span>
                         <span>{s.name}</span>

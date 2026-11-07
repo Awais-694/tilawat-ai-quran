@@ -74,6 +74,13 @@ const QUICK_SUGGESTIONS = [
   "Read Tarjama & Tafseer",
 ];
 
+const QUICK_PRIORITY_SUGGESTIONS = [
+  "Keep recitation streak alive today",
+  "Practice Tajweed with AI mic",
+  "Memorize 3 new Ayahs",
+  "Complete 1 Surah with translation",
+];
+
 export function TodoListClient() {
   const router = useRouter();
   const [data, setData] = useState<PlannerData>(() => DEFAULT_PLANNER);
@@ -152,7 +159,6 @@ export function TodoListClient() {
         setData(freshDayPlanner);
         localStorage.setItem(STORAGE_KEY, JSON.stringify(freshDayPlanner));
         localStorage.setItem(STORAGE_LAST_DATE_KEY, todayIso);
-        showToast("🌙 12:00 AM Midnight: New day started! Previous record saved and tasks reset.");
       } else {
         // Same day or first visit
         if (parsedData && typeof parsedData === "object") {
@@ -237,7 +243,6 @@ export function TodoListClient() {
             localStorage.setItem(STORAGE_LAST_DATE_KEY, newIso);
           } catch {}
 
-          showToast("🌙 12:00 AM Midnight: Daily performance saved and checklist reset for the new day.");
           return resetPlanner;
         });
       }, msUntilMidnight);
@@ -322,15 +327,18 @@ export function TodoListClient() {
   };
 
   // Add Priority
-  const handleAddPriority = (e?: React.FormEvent) => {
+  const handleAddPriority = (e?: React.FormEvent, customText?: string) => {
     e?.preventDefault();
-    const text = newPriorityInput.trim();
+    const text = (customText ?? newPriorityInput).trim();
     if (!text) return;
     setData((prev) => ({
       ...prev,
-      priorities: [...prev.priorities, { id: `p_${Date.now()}`, text, completed: false }],
+      priorities: [
+        ...prev.priorities,
+        { id: `p_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`, text, completed: false },
+      ],
     }));
-    setNewPriorityInput("");
+    if (!customText) setNewPriorityInput("");
   };
 
 
@@ -489,9 +497,6 @@ export function TodoListClient() {
           <h2 className="font-bold text-xs sm:text-sm text-[#112a1d] tracking-tight uppercase">
             Performance
           </h2>
-          <span className="text-[10px] font-semibold text-emerald-800 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
-            12:00 AM Reset
-          </span>
         </div>
 
         {/* Today's Percentage Card */}
@@ -616,37 +621,42 @@ export function TodoListClient() {
         {/* 2-Column Responsive Layout */}
         <div className="grid grid-cols-1 md:grid-cols-12 gap-5">
           
-          {/* LEFT COLUMN: TODAY'S CHECKLIST (ELEVATED, MODERN DESIGN) */}
-          <div className="md:col-span-7 flex flex-col space-y-3">
-            <div className="border border-[#ded5c0] rounded-2xl overflow-hidden bg-white shadow-xs flex flex-col justify-between">
-              <div>
-                {/* Header Banner */}
-                <div className="bg-gradient-to-r from-[#143323] via-[#1b4731] to-[#143323] text-white px-4 py-3 flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className="w-6 h-6 rounded-lg bg-emerald-500/20 border border-emerald-400/30 flex items-center justify-center">
-                      <svg className="w-3.5 h-3.5 text-emerald-300" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+          {/* LEFT COLUMN: TODAY'S CHECKLIST */}
+          <div className="md:col-span-7 flex flex-col">
+            <div className="border border-[#ded5c0] rounded-2xl bg-[#fcfbf8] p-3.5 sm:p-4 shadow-2xs flex flex-col justify-between h-full space-y-3.5">
+              <div className="space-y-3">
+                {/* Clean Modern Header */}
+                <div className="flex items-center justify-between gap-2 border-b border-[#ede7d8] pb-3">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 flex items-center justify-center shrink-0 shadow-2xs">
+                      <svg className="w-4 h-4 text-emerald-800" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
                       </svg>
                     </div>
-                    <span className="font-bold text-xs sm:text-sm uppercase tracking-wider">
-                      Today's Checklist
-                    </span>
+                    <div>
+                      <h3 className="font-bold text-sm sm:text-base text-[#112a1d] tracking-tight leading-tight">
+                        Today&apos;s Checklist
+                      </h3>
+                      <p className="text-[11px] text-[#527060]">
+                        Daily Quran &amp; Sunnah routine
+                      </p>
+                    </div>
                   </div>
 
-                  <span className="text-xs font-bold text-emerald-100 bg-white/10 border border-white/15 px-2.5 py-1 rounded-full shadow-2xs">
-                    {data.tasks.filter((t) => t.completed).length}/{data.tasks.length} Completed
+                  <span className="text-xs font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-full shrink-0">
+                    {data.tasks.filter((t) => t.completed).length} / {data.tasks.length} Done
                   </span>
                 </div>
 
-                {/* Filter Tabs: Modern Segmented Control Pills */}
-                <div className="flex items-center justify-between px-3.5 py-2.5 bg-[#faf8f3] border-b border-[#ede7d8] text-xs">
-                  <div className="flex items-center gap-1.5 bg-[#eae2ce]/50 p-1 rounded-xl border border-[#ded5c0]/70">
+                {/* Segmented Filter Pills */}
+                <div className="flex items-center justify-between gap-2">
+                  <div className="inline-flex items-center gap-1 bg-[#f0eadb] p-1 rounded-xl border border-[#ded5c0]">
                     <button
                       type="button"
                       onClick={() => setTaskFilter("all")}
                       className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
                         taskFilter === "all"
-                          ? "bg-white text-[#143323] shadow-xs font-bold"
+                          ? "bg-white text-[#143323] shadow-2xs font-bold"
                           : "text-[#527060] hover:text-[#143323]"
                       }`}
                     >
@@ -657,7 +667,7 @@ export function TodoListClient() {
                       onClick={() => setTaskFilter("done")}
                       className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
                         taskFilter === "done"
-                          ? "bg-emerald-700 text-white shadow-xs font-bold"
+                          ? "bg-emerald-700 text-white shadow-2xs font-bold"
                           : "text-[#527060] hover:text-[#143323]"
                       }`}
                     >
@@ -668,35 +678,45 @@ export function TodoListClient() {
                       onClick={() => setTaskFilter("not_done")}
                       className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
                         taskFilter === "not_done"
-                          ? "bg-amber-600 text-white shadow-xs font-bold"
+                          ? "bg-amber-600 text-white shadow-2xs font-bold"
                           : "text-[#527060] hover:text-[#143323]"
                       }`}
                     >
                       Pending ({data.tasks.filter((t) => !t.completed).length})
                     </button>
                   </div>
-
-                  <span className="text-[11px] text-[#8e8574] hidden sm:inline">
-                    Tap circle to check off
-                  </span>
                 </div>
 
-                {/* Tasks List with modern, refined cards */}
-                <div className="p-3 space-y-2 max-h-[320px] overflow-y-auto scrollbar-thin">
+                {/* Tasks List */}
+                <div className="space-y-2 max-h-[320px] overflow-y-auto pr-0.5">
                   {filteredTasks.length === 0 ? (
-                    <div className="py-10 text-center text-xs text-[#8e8574] space-y-2">
-                      <div className="w-10 h-10 mx-auto rounded-full bg-emerald-50 border border-emerald-200/80 flex items-center justify-center text-emerald-800 text-base">
-                        ✓
-                      </div>
-                      <p className="font-semibold text-sm text-[#143323]">
-                        {data.tasks.length === 0
-                          ? "No tasks yet for today."
-                          : `No ${taskFilter === "done" ? "completed" : "pending"} tasks.`}
-                      </p>
-                      {data.tasks.length === 0 && (
-                        <p className="text-[11px] text-[#8e8574]">
-                          Add tasks below or tap any quick suggestion to start fresh.
+                    <div className="bg-white border border-dashed border-[#ded5c0] rounded-xl p-4 text-center space-y-3">
+                      <div className="space-y-1">
+                        <p className="font-bold text-xs sm:text-sm text-[#143323]">
+                          {data.tasks.length === 0
+                            ? "Your checklist is empty for today"
+                            : `No ${taskFilter === "done" ? "completed" : "pending"} tasks`}
                         </p>
+                        <p className="text-[11px] text-[#527060]">
+                          {data.tasks.length === 0
+                            ? "Tap any quick suggestion below or type your own task:"
+                            : "Switch filter tabs above to view other tasks."}
+                        </p>
+                      </div>
+
+                      {data.tasks.length === 0 && (
+                        <div className="flex flex-wrap justify-center gap-1.5 pt-1">
+                          {QUICK_SUGGESTIONS.map((sug) => (
+                            <button
+                              key={sug}
+                              type="button"
+                              onClick={() => handleAddTask(undefined, sug)}
+                              className="px-2.5 py-1.5 rounded-lg border border-[#ded5c0] bg-[#faf8f3] hover:bg-emerald-50 hover:border-emerald-300 text-[11px] font-semibold text-[#143323] transition-all cursor-pointer active:scale-95"
+                            >
+                              + {sug}
+                            </button>
+                          ))}
+                        </div>
                       )}
                     </div>
                   ) : (
@@ -705,20 +725,18 @@ export function TodoListClient() {
                         key={task.id}
                         className={`group flex items-center justify-between p-2.5 sm:p-3 rounded-xl border transition-all ${
                           task.completed
-                            ? "bg-[#f4f8f5]/90 border-emerald-200/80 text-[#527060]"
-                            : "bg-white hover:bg-[#fcfaf5] border-[#ded5c0] hover:border-emerald-300 shadow-2xs"
+                            ? "bg-emerald-50/50 border-emerald-200 text-[#527060]"
+                            : "bg-white hover:bg-[#faf8f3] border-[#ded5c0] hover:border-emerald-300 shadow-2xs"
                         }`}
                       >
-                        {/* Task text & Circular Custom Checkbox */}
                         <div
                           onClick={() => toggleItem("tasks", task.id)}
                           className="flex items-center gap-3 min-w-0 pr-2 cursor-pointer flex-1 select-none"
                         >
-                          {/* Circular Smooth Checkbox */}
                           <div
                             className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-all duration-200 ${
                               task.completed
-                                ? "bg-emerald-600 border-emerald-600 text-white shadow-2xs scale-105"
+                                ? "bg-emerald-600 border-emerald-600 text-white shadow-2xs"
                                 : "border-[#c4ba9f] bg-white group-hover:border-emerald-600"
                             }`}
                           >
@@ -729,11 +747,10 @@ export function TodoListClient() {
                             )}
                           </div>
 
-                          {/* Task Text */}
                           <span
                             className={`text-xs sm:text-sm font-medium transition-all break-words ${
                               task.completed
-                                ? "line-through text-neutral-400 font-normal"
+                                ? "line-through text-[#8e8574] font-normal"
                                 : "text-[#112a1d]"
                             }`}
                           >
@@ -741,31 +758,27 @@ export function TodoListClient() {
                           </span>
                         </div>
 
-                        {/* Status Action & Delete Icon */}
                         <div className="flex items-center gap-1.5 shrink-0 ml-2">
-                          {/* Status Pill Toggle */}
                           <button
                             type="button"
                             onClick={() => toggleItem("tasks", task.id)}
                             className={`px-2.5 py-1 text-[11px] font-bold rounded-lg transition-all cursor-pointer ${
                               task.completed
-                                ? "bg-emerald-100 text-emerald-800 hover:bg-emerald-200 border border-emerald-300"
+                                ? "bg-emerald-100 text-emerald-800 border border-emerald-300"
                                 : "bg-[#faf8f3] text-[#527060] hover:bg-emerald-50 hover:text-emerald-800 border border-[#ded5c0]"
                             }`}
-                            title="Toggle status"
                           >
-                            {task.completed ? "✓ Done" : "Mark Done"}
+                            {task.completed ? "✓ Done" : "Done"}
                           </button>
 
-                          {/* Delete button on hover */}
                           <button
                             type="button"
                             onClick={() => deleteItem("tasks", task.id)}
-                            className="opacity-40 group-hover:opacity-100 text-[#8e8574] hover:text-rose-600 p-1.5 text-xs transition-opacity rounded-lg hover:bg-rose-50 cursor-pointer"
+                            className="text-[#8e8574] hover:text-rose-600 p-1.5 text-xs transition-colors rounded-lg hover:bg-rose-50 cursor-pointer"
                             title="Delete task"
                           >
                             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                             </svg>
                           </button>
                         </div>
@@ -773,142 +786,182 @@ export function TodoListClient() {
                     ))
                   )}
                 </div>
-
-                {/* Quick Add Suggestions Chips */}
-                {data.tasks.length === 0 && (
-                  <div className="px-3.5 py-2.5 bg-[#faf8f3] border-t border-[#ede7d8] space-y-1.5">
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-[#527060] block">
-                      Quick Suggestions:
-                    </span>
-                    <div className="flex flex-wrap gap-1.5">
-                      {QUICK_SUGGESTIONS.map((sug) => (
-                        <button
-                          key={sug}
-                          type="button"
-                          onClick={() => handleAddTask(undefined, sug)}
-                          className="px-2.5 py-1 rounded-lg border border-[#ded5c0] bg-white hover:bg-emerald-50 hover:border-emerald-300 text-[11px] font-semibold text-[#143323] transition-all cursor-pointer active:scale-95 shadow-2xs"
-                        >
-                          + {sug}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
               </div>
 
-              {/* Add Task Input Form: Modern & Polished */}
-              <form onSubmit={(e) => handleAddTask(e)} className="p-3 border-t border-[#ede7d8] bg-[#faf8f3]">
+              {/* Add Task Input Form */}
+              <form onSubmit={(e) => handleAddTask(e)} className="pt-2 border-t border-[#ede7d8]">
                 <div className="flex items-center gap-2">
-                  <div className="relative flex-1">
-                    <input
-                      type="text"
-                      placeholder="Add a new daily goal or task..."
-                      value={newTaskInput}
-                      onChange={(e) => setNewTaskInput(e.target.value)}
-                      className="w-full bg-white border border-[#ded5c0] rounded-xl px-3.5 py-2 text-xs sm:text-sm text-[#112a1d] focus:outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 placeholder:text-[#8e8574] shadow-2xs transition-all"
-                    />
-                  </div>
+                  <input
+                    type="text"
+                    placeholder="Add a new daily task..."
+                    value={newTaskInput}
+                    onChange={(e) => setNewTaskInput(e.target.value)}
+                    className="w-full bg-white border border-[#ded5c0] rounded-xl px-3.5 py-2 text-xs sm:text-sm text-[#112a1d] focus:outline-none focus:border-emerald-600 placeholder:text-[#8e8574]"
+                  />
                   <button
                     type="submit"
-                    className="px-4 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 active:scale-95 text-white text-xs sm:text-sm font-bold transition-all shrink-0 cursor-pointer shadow-xs flex items-center gap-1"
+                    className="px-4 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 active:scale-95 text-white text-xs sm:text-sm font-bold transition-all shrink-0 cursor-pointer shadow-2xs"
                   >
-                    <span>+</span>
-                    <span>Add</span>
+                    + Add
                   </button>
                 </div>
               </form>
             </div>
           </div>
 
-          {/* RIGHT COLUMN: TOP PRIORITIES (Span 5 on desktop) */}
-          <div className="md:col-span-5 flex flex-col space-y-4">
-            
-            {/* 1. TOP PRIORITIES */}
-            <div className="border border-[#ded5c0] rounded-2xl overflow-hidden bg-white shadow-xs">
-              <div className="bg-gradient-to-r from-[#143323] to-[#1c4731] text-white px-3.5 py-2.5 flex items-center justify-between">
-                <span className="font-bold text-xs uppercase tracking-wider">
-                  Top Priorities
-                </span>
-                <span className="text-[10px] font-bold text-amber-300 bg-amber-400/20 border border-amber-300/30 px-2 py-0.5 rounded-full">
-                  High Focus
-                </span>
-              </div>
-              <div className="p-2.5 sm:p-3 divide-y divide-[#f0ede6]">
-                {data.priorities.length === 0 ? (
-                  <div className="py-4 text-center text-xs text-[#8e8574] italic">
-                    No priorities set. Add high-focus goals below.
+          {/* RIGHT COLUMN: TOP PRIORITIES */}
+          <div className="md:col-span-5 flex flex-col">
+            <div className="border border-[#ded5c0] rounded-2xl bg-[#fcfbf8] p-3.5 sm:p-4 shadow-2xs flex flex-col justify-between h-full space-y-3.5">
+              <div className="space-y-3">
+                {/* Clean Modern Header */}
+                <div className="flex items-center justify-between gap-2 border-b border-[#ede7d8] pb-3">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 flex items-center justify-center shrink-0 shadow-2xs">
+                      <svg className="w-4 h-4 text-emerald-800" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-sm sm:text-base text-[#112a1d] tracking-tight leading-tight">
+                        Top Priorities
+                      </h3>
+                      <p className="text-[11px] text-[#527060]">
+                        High-focus daily targets
+                      </p>
+                    </div>
                   </div>
-                ) : (
-                  data.priorities.map((item) => (
-                    <div
-                      key={item.id}
-                      className="group flex items-center justify-between py-2 first:pt-0 last:pb-0"
-                    >
+
+                  <span className="text-xs font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-full shrink-0">
+                    {data.priorities.filter((p) => p.completed).length} / {data.priorities.length} Focus
+                  </span>
+                </div>
+
+                {/* Priorities List */}
+                <div className="space-y-2 max-h-[320px] overflow-y-auto pr-0.5">
+                  {data.priorities.length === 0 ? (
+                    <div className="bg-white border border-dashed border-[#ded5c0] rounded-xl p-4 text-center space-y-3">
+                      <div className="space-y-1">
+                        <p className="font-bold text-xs sm:text-sm text-[#143323]">
+                          No priority goals set yet
+                        </p>
+                        <p className="text-[11px] text-[#527060]">
+                          Pick a suggested focus goal or add your own below:
+                        </p>
+                      </div>
+
+                      <div className="flex flex-wrap justify-center gap-1.5 pt-1">
+                        {QUICK_PRIORITY_SUGGESTIONS.map((sug) => (
+                          <button
+                            key={sug}
+                            type="button"
+                            onClick={() => handleAddPriority(undefined, sug)}
+                            className="px-2.5 py-1.5 rounded-lg border border-[#ded5c0] bg-[#faf8f3] hover:bg-emerald-50 hover:border-emerald-300 text-[11px] font-semibold text-[#143323] transition-all cursor-pointer active:scale-95"
+                          >
+                            + {sug}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  ) : (
+                    data.priorities.map((item) => (
                       <div
-                        onClick={() => toggleItem("priorities", item.id)}
-                        className="flex items-center gap-2.5 cursor-pointer flex-1 min-w-0 pr-2"
+                        key={item.id}
+                        className={`group flex items-center justify-between p-2.5 sm:p-3 rounded-xl border transition-all ${
+                          item.completed
+                            ? "bg-emerald-50/50 border-emerald-200 text-[#527060]"
+                            : "bg-white hover:bg-[#faf8f3] border-[#ded5c0] hover:border-emerald-300 shadow-2xs"
+                        }`}
                       >
                         <div
-                          className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 transition-all ${
-                            item.completed
-                              ? "bg-amber-600 border-amber-600 text-white"
-                              : "border-[#ded5c0] bg-white group-hover:border-amber-600"
-                          }`}
+                          onClick={() => toggleItem("priorities", item.id)}
+                          className="flex items-center gap-3 min-w-0 pr-2 cursor-pointer flex-1 select-none"
                         >
-                          {item.completed && (
-                            <svg className="w-2.5 h-2.5 text-white stroke-current" fill="none" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
-                            </svg>
-                          )}
-                        </div>
-                        <span
-                          className={`text-xs transition-all ${
-                            item.completed
-                              ? "line-through text-neutral-400"
-                              : "text-[#112a1d] font-medium"
-                          }`}
-                        >
-                          {item.text}
-                        </span>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => deleteItem("priorities", item.id)}
-                        className="opacity-0 group-hover:opacity-100 text-[#8e8574] hover:text-rose-600 text-xs px-1 cursor-pointer"
-                      >
-                        ✕
-                      </button>
-                    </div>
-                  ))
-                )}
+                          <div
+                            className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-all duration-200 ${
+                              item.completed
+                                ? "bg-emerald-600 border-emerald-600 text-white shadow-2xs"
+                                : "border-[#c4ba9f] bg-white group-hover:border-emerald-600"
+                            }`}
+                          >
+                            {item.completed && (
+                              <svg className="w-3 h-3 text-white stroke-current" fill="none" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
+                              </svg>
+                            )}
+                          </div>
 
-                {/* Add priority input */}
-                <form onSubmit={handleAddPriority} className="pt-2.5 mt-2 border-t border-[#ede7d8]">
-                  <div className="flex items-center gap-1.5">
-                    <input
-                      type="text"
-                      placeholder="Add priority goal..."
-                      value={newPriorityInput}
-                      onChange={(e) => setNewPriorityInput(e.target.value)}
-                      className="w-full bg-[#faf8f3] border border-[#ded5c0] rounded-xl px-2.5 py-1.5 text-xs text-[#112a1d] focus:outline-none focus:border-amber-600 placeholder:text-[#8e8574]"
-                    />
-                    <button
-                      type="submit"
-                      className="px-3 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 active:scale-95 text-white text-xs font-bold transition-all shrink-0 cursor-pointer shadow-2xs"
-                    >
-                      Add
-                    </button>
-                  </div>
-                </form>
+                          <span
+                            className={`text-xs sm:text-sm font-medium transition-all break-words ${
+                              item.completed
+                                ? "line-through text-[#8e8574] font-normal"
+                                : "text-[#112a1d]"
+                            }`}
+                          >
+                            {item.text}
+                          </span>
+                        </div>
+
+                        <div className="flex items-center gap-1.5 shrink-0 ml-2">
+                          <button
+                            type="button"
+                            onClick={() => toggleItem("priorities", item.id)}
+                            className={`px-2.5 py-1 text-[11px] font-bold rounded-lg transition-all cursor-pointer ${
+                              item.completed
+                                ? "bg-emerald-100 text-emerald-800 border border-emerald-300"
+                                : "bg-[#faf8f3] text-[#527060] hover:bg-emerald-50 hover:text-emerald-800 border border-[#ded5c0]"
+                            }`}
+                          >
+                            {item.completed ? "✓ Done" : "Done"}
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => deleteItem("priorities", item.id)}
+                            className="text-[#8e8574] hover:text-rose-600 p-1.5 text-xs transition-colors rounded-lg hover:bg-rose-50 cursor-pointer"
+                            title="Delete priority"
+                          >
+                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                          </button>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
               </div>
+
+              {/* Add Priority Input Form */}
+              <form onSubmit={(e) => handleAddPriority(e)} className="pt-2 border-t border-[#ede7d8]">
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    placeholder="Add a priority goal..."
+                    value={newPriorityInput}
+                    onChange={(e) => setNewPriorityInput(e.target.value)}
+                    className="w-full bg-white border border-[#ded5c0] rounded-xl px-3.5 py-2 text-xs sm:text-sm text-[#112a1d] focus:outline-none focus:border-emerald-600 placeholder:text-[#8e8574]"
+                  />
+                  <button
+                    type="submit"
+                    className="px-4 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 active:scale-95 text-white text-xs sm:text-sm font-bold transition-all shrink-0 cursor-pointer shadow-2xs"
+                  >
+                    + Add
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
         </div>
 
-        {/* Footer Actions: Clear Completed & Reset New Day */}
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 border-t border-[#ede7d8]">
-          <div className="text-xs text-[#527060] font-medium">
-            <span>Tasks auto-clear daily at 12:00 AM.</span>
+        {/* Footer Actions: Progress Pill, Clear Completed & Start New Day */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-4 border-t border-[#ede7d8]">
+          <div className="flex items-center gap-2 text-xs font-semibold text-[#527060]">
+            <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-[11px] font-bold">
+              ✓
+            </span>
+            <span>
+              {completedCount} of {totalCount} total items completed today ({todayPercentage}%)
+            </span>
           </div>
 
           <div className="flex flex-wrap items-center justify-end gap-2">
@@ -916,18 +969,24 @@ export function TodoListClient() {
             <button
               onClick={handleClearCompleted}
               disabled={completedCount === 0}
-              className="px-3.5 py-1.5 rounded-xl border border-[#ded5c0] bg-white hover:bg-[#faf7ee] text-xs font-semibold text-[#527060] disabled:opacity-40 transition-all cursor-pointer shadow-2xs"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-[#ded5c0] bg-[#faf8f3] hover:bg-[#f0ead8] text-xs font-bold text-[#143323] disabled:opacity-40 transition-all cursor-pointer shadow-2xs"
             >
-              Clear Completed
+              <svg className="w-3.5 h-3.5 text-[#527060]" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
+              <span>Clear Completed</span>
             </button>
 
             {/* Start New Day */}
             <button
               onClick={handleResetNewDay}
-              className="px-4 py-1.5 rounded-xl bg-emerald-800 hover:bg-emerald-900 text-white text-xs font-bold shadow-xs active:scale-95 transition-all cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold shadow-xs active:scale-95 transition-all cursor-pointer"
               title="Reset tasks for a new day"
             >
-              Start New Day
+              <svg className="w-3.5 h-3.5 text-emerald-100" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+              <span>Start New Day</span>
             </button>
           </div>
         </div>
