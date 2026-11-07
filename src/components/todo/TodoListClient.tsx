@@ -618,338 +618,334 @@ export function TodoListClient() {
           </div>
         </div>
 
-        {/* 2-Column Responsive Layout */}
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-5">
+        {/* Vertical Stacked Layout: Top Priorities on Top, Today's Checklist Below */}
+        <div className="space-y-5">
           
-          {/* LEFT COLUMN: TODAY'S CHECKLIST */}
-          <div className="md:col-span-7 flex flex-col">
-            <div className="border border-[#ded5c0] rounded-2xl bg-[#fcfbf8] p-3.5 sm:p-4 shadow-2xs flex flex-col justify-between h-full space-y-3.5">
-              <div className="space-y-3">
-                {/* Clean Modern Header */}
-                <div className="flex items-center justify-between gap-2 border-b border-[#ede7d8] pb-3">
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 flex items-center justify-center shrink-0 shadow-2xs">
-                      <svg className="w-4 h-4 text-emerald-800" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
-                      </svg>
-                    </div>
-                    <div>
-                      <h3 className="font-bold text-sm sm:text-base text-[#112a1d] tracking-tight leading-tight">
-                        Today&apos;s Checklist
-                      </h3>
+          {/* 1. TOP PRIORITIES (UPER) */}
+          <div className="border border-[#ded5c0] rounded-2xl bg-[#fcfbf8] p-3.5 sm:p-4 shadow-2xs flex flex-col justify-between space-y-3.5">
+            <div className="space-y-3">
+              {/* Clean Modern Header */}
+              <div className="flex items-center justify-between gap-2 border-b border-[#ede7d8] pb-3">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 flex items-center justify-center shrink-0 shadow-2xs">
+                    <svg className="w-4 h-4 text-emerald-800" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-sm sm:text-base text-[#112a1d] tracking-tight leading-tight">
+                      Top Priorities
+                    </h3>
+                    <p className="text-[11px] text-[#527060]">
+                      High-focus daily targets
+                    </p>
+                  </div>
+                </div>
+
+                <span className="text-xs font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-full shrink-0">
+                  {data.priorities.filter((p) => p.completed).length} / {data.priorities.length} Focus
+                </span>
+              </div>
+
+              {/* Priorities List */}
+              <div className="space-y-2 max-h-[280px] overflow-y-auto pr-0.5">
+                {data.priorities.length === 0 ? (
+                  <div className="bg-white border border-dashed border-[#ded5c0] rounded-xl p-4 text-center space-y-3">
+                    <div className="space-y-1">
+                      <p className="font-bold text-xs sm:text-sm text-[#143323]">
+                        No priority goals set yet
+                      </p>
                       <p className="text-[11px] text-[#527060]">
-                        Daily Quran &amp; Sunnah routine
+                        Pick a suggested focus goal or add your own below:
                       </p>
                     </div>
-                  </div>
 
-                  <span className="text-xs font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-full shrink-0">
-                    {data.tasks.filter((t) => t.completed).length} / {data.tasks.length} Done
-                  </span>
-                </div>
-
-                {/* Segmented Filter Pills */}
-                <div className="flex items-center justify-between gap-2">
-                  <div className="inline-flex items-center gap-1 bg-[#f0eadb] p-1 rounded-xl border border-[#ded5c0]">
-                    <button
-                      type="button"
-                      onClick={() => setTaskFilter("all")}
-                      className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-                        taskFilter === "all"
-                          ? "bg-white text-[#143323] shadow-2xs font-bold"
-                          : "text-[#527060] hover:text-[#143323]"
-                      }`}
-                    >
-                      All ({data.tasks.length})
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setTaskFilter("done")}
-                      className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-                        taskFilter === "done"
-                          ? "bg-emerald-700 text-white shadow-2xs font-bold"
-                          : "text-[#527060] hover:text-[#143323]"
-                      }`}
-                    >
-                      Done ({data.tasks.filter((t) => t.completed).length})
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setTaskFilter("not_done")}
-                      className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-                        taskFilter === "not_done"
-                          ? "bg-amber-600 text-white shadow-2xs font-bold"
-                          : "text-[#527060] hover:text-[#143323]"
-                      }`}
-                    >
-                      Pending ({data.tasks.filter((t) => !t.completed).length})
-                    </button>
-                  </div>
-                </div>
-
-                {/* Tasks List */}
-                <div className="space-y-2 max-h-[320px] overflow-y-auto pr-0.5">
-                  {filteredTasks.length === 0 ? (
-                    <div className="bg-white border border-dashed border-[#ded5c0] rounded-xl p-4 text-center space-y-3">
-                      <div className="space-y-1">
-                        <p className="font-bold text-xs sm:text-sm text-[#143323]">
-                          {data.tasks.length === 0
-                            ? "Your checklist is empty for today"
-                            : `No ${taskFilter === "done" ? "completed" : "pending"} tasks`}
-                        </p>
-                        <p className="text-[11px] text-[#527060]">
-                          {data.tasks.length === 0
-                            ? "Tap any quick suggestion below or type your own task:"
-                            : "Switch filter tabs above to view other tasks."}
-                        </p>
-                      </div>
-
-                      {data.tasks.length === 0 && (
-                        <div className="flex flex-wrap justify-center gap-1.5 pt-1">
-                          {QUICK_SUGGESTIONS.map((sug) => (
-                            <button
-                              key={sug}
-                              type="button"
-                              onClick={() => handleAddTask(undefined, sug)}
-                              className="px-2.5 py-1.5 rounded-lg border border-[#ded5c0] bg-[#faf8f3] hover:bg-emerald-50 hover:border-emerald-300 text-[11px] font-semibold text-[#143323] transition-all cursor-pointer active:scale-95"
-                            >
-                              + {sug}
-                            </button>
-                          ))}
-                        </div>
-                      )}
+                    <div className="flex flex-wrap justify-center gap-1.5 pt-1">
+                      {QUICK_PRIORITY_SUGGESTIONS.map((sug) => (
+                        <button
+                          key={sug}
+                          type="button"
+                          onClick={() => handleAddPriority(undefined, sug)}
+                          className="px-2.5 py-1.5 rounded-lg border border-[#ded5c0] bg-[#faf8f3] hover:bg-emerald-50 hover:border-emerald-300 text-[11px] font-semibold text-[#143323] transition-all cursor-pointer active:scale-95"
+                        >
+                          + {sug}
+                        </button>
+                      ))}
                     </div>
-                  ) : (
-                    filteredTasks.map((task) => (
+                  </div>
+                ) : (
+                  data.priorities.map((item) => (
+                    <div
+                      key={item.id}
+                      className={`group flex items-center justify-between p-2.5 sm:p-3 rounded-xl border transition-all ${
+                        item.completed
+                          ? "bg-emerald-50/50 border-emerald-200 text-[#527060]"
+                          : "bg-white hover:bg-[#faf8f3] border-[#ded5c0] hover:border-emerald-300 shadow-2xs"
+                      }`}
+                    >
                       <div
-                        key={task.id}
-                        className={`group flex items-center justify-between p-2.5 sm:p-3 rounded-xl border transition-all ${
-                          task.completed
-                            ? "bg-emerald-50/50 border-emerald-200 text-[#527060]"
-                            : "bg-white hover:bg-[#faf8f3] border-[#ded5c0] hover:border-emerald-300 shadow-2xs"
-                        }`}
+                        onClick={() => toggleItem("priorities", item.id)}
+                        className="flex items-center gap-3 min-w-0 pr-2 cursor-pointer flex-1 select-none"
                       >
                         <div
-                          onClick={() => toggleItem("tasks", task.id)}
-                          className="flex items-center gap-3 min-w-0 pr-2 cursor-pointer flex-1 select-none"
+                          className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-all duration-200 ${
+                            item.completed
+                              ? "bg-emerald-600 border-emerald-600 text-white shadow-2xs"
+                              : "border-[#c4ba9f] bg-white group-hover:border-emerald-600"
+                          }`}
                         >
-                          <div
-                            className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-all duration-200 ${
-                              task.completed
-                                ? "bg-emerald-600 border-emerald-600 text-white shadow-2xs"
-                                : "border-[#c4ba9f] bg-white group-hover:border-emerald-600"
-                            }`}
-                          >
-                            {task.completed && (
-                              <svg className="w-3 h-3 text-white stroke-current" fill="none" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
-                              </svg>
-                            )}
-                          </div>
-
-                          <span
-                            className={`text-xs sm:text-sm font-medium transition-all break-words ${
-                              task.completed
-                                ? "line-through text-[#8e8574] font-normal"
-                                : "text-[#112a1d]"
-                            }`}
-                          >
-                            {task.text}
-                          </span>
-                        </div>
-
-                        <div className="flex items-center gap-1.5 shrink-0 ml-2">
-                          <button
-                            type="button"
-                            onClick={() => toggleItem("tasks", task.id)}
-                            className={`px-2.5 py-1 text-[11px] font-bold rounded-lg transition-all cursor-pointer ${
-                              task.completed
-                                ? "bg-emerald-100 text-emerald-800 border border-emerald-300"
-                                : "bg-[#faf8f3] text-[#527060] hover:bg-emerald-50 hover:text-emerald-800 border border-[#ded5c0]"
-                            }`}
-                          >
-                            {task.completed ? "✓ Done" : "Done"}
-                          </button>
-
-                          <button
-                            type="button"
-                            onClick={() => deleteItem("tasks", task.id)}
-                            className="text-[#8e8574] hover:text-rose-600 p-1.5 text-xs transition-colors rounded-lg hover:bg-rose-50 cursor-pointer"
-                            title="Delete task"
-                          >
-                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                          {item.completed && (
+                            <svg className="w-3 h-3 text-white stroke-current" fill="none" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
                             </svg>
-                          </button>
+                          )}
                         </div>
+
+                        <span
+                          className={`text-xs sm:text-sm font-medium transition-all break-words ${
+                            item.completed
+                              ? "line-through text-[#8e8574] font-normal"
+                              : "text-[#112a1d]"
+                          }`}
+                        >
+                          {item.text}
+                        </span>
                       </div>
-                    ))
-                  )}
+
+                      <div className="flex items-center gap-1.5 shrink-0 ml-2">
+                        <button
+                          type="button"
+                          onClick={() => toggleItem("priorities", item.id)}
+                          className={`px-2.5 py-1 text-[11px] font-bold rounded-lg transition-all cursor-pointer ${
+                            item.completed
+                              ? "bg-emerald-100 text-emerald-800 border border-emerald-300"
+                              : "bg-[#faf8f3] text-[#527060] hover:bg-emerald-50 hover:text-emerald-800 border border-[#ded5c0]"
+                          }`}
+                        >
+                          {item.completed ? "✓ Done" : "Done"}
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => deleteItem("priorities", item.id)}
+                          className="text-[#8e8574] hover:text-rose-600 p-1.5 text-xs transition-colors rounded-lg hover:bg-rose-50 cursor-pointer"
+                          title="Delete priority"
+                        >
+                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+
+            {/* Add Priority Input Form */}
+            <form onSubmit={(e) => handleAddPriority(e)} className="pt-2 border-t border-[#ede7d8]">
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  placeholder="Add a priority goal..."
+                  value={newPriorityInput}
+                  onChange={(e) => setNewPriorityInput(e.target.value)}
+                  className="w-full bg-white border border-[#ded5c0] rounded-xl px-3.5 py-2 text-xs sm:text-sm text-[#112a1d] focus:outline-none focus:border-emerald-600 placeholder:text-[#8e8574]"
+                />
+                <button
+                  type="submit"
+                  className="px-4 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 active:scale-95 text-white text-xs sm:text-sm font-bold transition-all shrink-0 cursor-pointer shadow-2xs"
+                >
+                  + Add
+                </button>
+              </div>
+            </form>
+          </div>
+
+          {/* 2. TODAY'S CHECKLIST / TO-DO LIST (NICHAY) */}
+          <div className="border border-[#ded5c0] rounded-2xl bg-[#fcfbf8] p-3.5 sm:p-4 shadow-2xs flex flex-col justify-between space-y-3.5">
+            <div className="space-y-3">
+              {/* Clean Modern Header */}
+              <div className="flex items-center justify-between gap-2 border-b border-[#ede7d8] pb-3">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 flex items-center justify-center shrink-0 shadow-2xs">
+                    <svg className="w-4 h-4 text-emerald-800" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-sm sm:text-base text-[#112a1d] tracking-tight leading-tight">
+                      Today&apos;s Checklist
+                    </h3>
+                    <p className="text-[11px] text-[#527060]">
+                      Daily Quran &amp; Sunnah routine
+                    </p>
+                  </div>
+                </div>
+
+                <span className="text-xs font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-full shrink-0">
+                  {data.tasks.filter((t) => t.completed).length} / {data.tasks.length} Done
+                </span>
+              </div>
+
+              {/* Segmented Filter Pills */}
+              <div className="flex items-center justify-between gap-2">
+                <div className="inline-flex items-center gap-1 bg-[#f0eadb] p-1 rounded-xl border border-[#ded5c0]">
+                  <button
+                    type="button"
+                    onClick={() => setTaskFilter("all")}
+                    className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                      taskFilter === "all"
+                        ? "bg-white text-[#143323] shadow-2xs font-bold"
+                        : "text-[#527060] hover:text-[#143323]"
+                    }`}
+                  >
+                    All ({data.tasks.length})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setTaskFilter("done")}
+                    className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                      taskFilter === "done"
+                        ? "bg-emerald-700 text-white shadow-2xs font-bold"
+                        : "text-[#527060] hover:text-[#143323]"
+                    }`}
+                  >
+                    Done ({data.tasks.filter((t) => t.completed).length})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setTaskFilter("not_done")}
+                    className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                      taskFilter === "not_done"
+                        ? "bg-amber-600 text-white shadow-2xs font-bold"
+                        : "text-[#527060] hover:text-[#143323]"
+                    }`}
+                  >
+                    Pending ({data.tasks.filter((t) => !t.completed).length})
+                  </button>
                 </div>
               </div>
 
-              {/* Add Task Input Form */}
-              <form onSubmit={(e) => handleAddTask(e)} className="pt-2 border-t border-[#ede7d8]">
-                <div className="flex items-center gap-2">
-                  <input
-                    type="text"
-                    placeholder="Add a new daily task..."
-                    value={newTaskInput}
-                    onChange={(e) => setNewTaskInput(e.target.value)}
-                    className="w-full bg-white border border-[#ded5c0] rounded-xl px-3.5 py-2 text-xs sm:text-sm text-[#112a1d] focus:outline-none focus:border-emerald-600 placeholder:text-[#8e8574]"
-                  />
-                  <button
-                    type="submit"
-                    className="px-4 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 active:scale-95 text-white text-xs sm:text-sm font-bold transition-all shrink-0 cursor-pointer shadow-2xs"
-                  >
-                    + Add
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-
-          {/* RIGHT COLUMN: TOP PRIORITIES */}
-          <div className="md:col-span-5 flex flex-col">
-            <div className="border border-[#ded5c0] rounded-2xl bg-[#fcfbf8] p-3.5 sm:p-4 shadow-2xs flex flex-col justify-between h-full space-y-3.5">
-              <div className="space-y-3">
-                {/* Clean Modern Header */}
-                <div className="flex items-center justify-between gap-2 border-b border-[#ede7d8] pb-3">
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 flex items-center justify-center shrink-0 shadow-2xs">
-                      <svg className="w-4 h-4 text-emerald-800" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z" />
-                      </svg>
-                    </div>
-                    <div>
-                      <h3 className="font-bold text-sm sm:text-base text-[#112a1d] tracking-tight leading-tight">
-                        Top Priorities
-                      </h3>
+              {/* Tasks List */}
+              <div className="space-y-2 max-h-[340px] overflow-y-auto pr-0.5">
+                {filteredTasks.length === 0 ? (
+                  <div className="bg-white border border-dashed border-[#ded5c0] rounded-xl p-4 text-center space-y-3">
+                    <div className="space-y-1">
+                      <p className="font-bold text-xs sm:text-sm text-[#143323]">
+                        {data.tasks.length === 0
+                          ? "Your checklist is empty for today"
+                          : `No ${taskFilter === "done" ? "completed" : "pending"} tasks`}
+                      </p>
                       <p className="text-[11px] text-[#527060]">
-                        High-focus daily targets
+                        {data.tasks.length === 0
+                          ? "Tap any quick suggestion below or type your own task:"
+                          : "Switch filter tabs above to view other tasks."}
                       </p>
                     </div>
-                  </div>
 
-                  <span className="text-xs font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-full shrink-0">
-                    {data.priorities.filter((p) => p.completed).length} / {data.priorities.length} Focus
-                  </span>
-                </div>
-
-                {/* Priorities List */}
-                <div className="space-y-2 max-h-[320px] overflow-y-auto pr-0.5">
-                  {data.priorities.length === 0 ? (
-                    <div className="bg-white border border-dashed border-[#ded5c0] rounded-xl p-4 text-center space-y-3">
-                      <div className="space-y-1">
-                        <p className="font-bold text-xs sm:text-sm text-[#143323]">
-                          No priority goals set yet
-                        </p>
-                        <p className="text-[11px] text-[#527060]">
-                          Pick a suggested focus goal or add your own below:
-                        </p>
-                      </div>
-
+                    {data.tasks.length === 0 && (
                       <div className="flex flex-wrap justify-center gap-1.5 pt-1">
-                        {QUICK_PRIORITY_SUGGESTIONS.map((sug) => (
+                        {QUICK_SUGGESTIONS.map((sug) => (
                           <button
                             key={sug}
                             type="button"
-                            onClick={() => handleAddPriority(undefined, sug)}
+                            onClick={() => handleAddTask(undefined, sug)}
                             className="px-2.5 py-1.5 rounded-lg border border-[#ded5c0] bg-[#faf8f3] hover:bg-emerald-50 hover:border-emerald-300 text-[11px] font-semibold text-[#143323] transition-all cursor-pointer active:scale-95"
                           >
                             + {sug}
                           </button>
                         ))}
                       </div>
-                    </div>
-                  ) : (
-                    data.priorities.map((item) => (
+                    )}
+                  </div>
+                ) : (
+                  filteredTasks.map((task) => (
+                    <div
+                      key={task.id}
+                      className={`group flex items-center justify-between p-2.5 sm:p-3 rounded-xl border transition-all ${
+                        task.completed
+                          ? "bg-emerald-50/50 border-emerald-200 text-[#527060]"
+                          : "bg-white hover:bg-[#faf8f3] border-[#ded5c0] hover:border-emerald-300 shadow-2xs"
+                      }`}
+                    >
                       <div
-                        key={item.id}
-                        className={`group flex items-center justify-between p-2.5 sm:p-3 rounded-xl border transition-all ${
-                          item.completed
-                            ? "bg-emerald-50/50 border-emerald-200 text-[#527060]"
-                            : "bg-white hover:bg-[#faf8f3] border-[#ded5c0] hover:border-emerald-300 shadow-2xs"
-                        }`}
+                        onClick={() => toggleItem("tasks", task.id)}
+                        className="flex items-center gap-3 min-w-0 pr-2 cursor-pointer flex-1 select-none"
                       >
                         <div
-                          onClick={() => toggleItem("priorities", item.id)}
-                          className="flex items-center gap-3 min-w-0 pr-2 cursor-pointer flex-1 select-none"
+                          className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-all duration-200 ${
+                            task.completed
+                              ? "bg-emerald-600 border-emerald-600 text-white shadow-2xs"
+                              : "border-[#c4ba9f] bg-white group-hover:border-emerald-600"
+                          }`}
                         >
-                          <div
-                            className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-all duration-200 ${
-                              item.completed
-                                ? "bg-emerald-600 border-emerald-600 text-white shadow-2xs"
-                                : "border-[#c4ba9f] bg-white group-hover:border-emerald-600"
-                            }`}
-                          >
-                            {item.completed && (
-                              <svg className="w-3 h-3 text-white stroke-current" fill="none" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
-                              </svg>
-                            )}
-                          </div>
-
-                          <span
-                            className={`text-xs sm:text-sm font-medium transition-all break-words ${
-                              item.completed
-                                ? "line-through text-[#8e8574] font-normal"
-                                : "text-[#112a1d]"
-                            }`}
-                          >
-                            {item.text}
-                          </span>
-                        </div>
-
-                        <div className="flex items-center gap-1.5 shrink-0 ml-2">
-                          <button
-                            type="button"
-                            onClick={() => toggleItem("priorities", item.id)}
-                            className={`px-2.5 py-1 text-[11px] font-bold rounded-lg transition-all cursor-pointer ${
-                              item.completed
-                                ? "bg-emerald-100 text-emerald-800 border border-emerald-300"
-                                : "bg-[#faf8f3] text-[#527060] hover:bg-emerald-50 hover:text-emerald-800 border border-[#ded5c0]"
-                            }`}
-                          >
-                            {item.completed ? "✓ Done" : "Done"}
-                          </button>
-
-                          <button
-                            type="button"
-                            onClick={() => deleteItem("priorities", item.id)}
-                            className="text-[#8e8574] hover:text-rose-600 p-1.5 text-xs transition-colors rounded-lg hover:bg-rose-50 cursor-pointer"
-                            title="Delete priority"
-                          >
-                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                          {task.completed && (
+                            <svg className="w-3 h-3 text-white stroke-current" fill="none" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
                             </svg>
-                          </button>
+                          )}
                         </div>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </div>
 
-              {/* Add Priority Input Form */}
-              <form onSubmit={(e) => handleAddPriority(e)} className="pt-2 border-t border-[#ede7d8]">
-                <div className="flex items-center gap-2">
-                  <input
-                    type="text"
-                    placeholder="Add a priority goal..."
-                    value={newPriorityInput}
-                    onChange={(e) => setNewPriorityInput(e.target.value)}
-                    className="w-full bg-white border border-[#ded5c0] rounded-xl px-3.5 py-2 text-xs sm:text-sm text-[#112a1d] focus:outline-none focus:border-emerald-600 placeholder:text-[#8e8574]"
-                  />
-                  <button
-                    type="submit"
-                    className="px-4 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 active:scale-95 text-white text-xs sm:text-sm font-bold transition-all shrink-0 cursor-pointer shadow-2xs"
-                  >
-                    + Add
-                  </button>
-                </div>
-              </form>
+                        <span
+                          className={`text-xs sm:text-sm font-medium transition-all break-words ${
+                            task.completed
+                              ? "line-through text-[#8e8574] font-normal"
+                              : "text-[#112a1d]"
+                          }`}
+                        >
+                          {task.text}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center gap-1.5 shrink-0 ml-2">
+                        <button
+                          type="button"
+                          onClick={() => toggleItem("tasks", task.id)}
+                          className={`px-2.5 py-1 text-[11px] font-bold rounded-lg transition-all cursor-pointer ${
+                            task.completed
+                              ? "bg-emerald-100 text-emerald-800 border border-emerald-300"
+                              : "bg-[#faf8f3] text-[#527060] hover:bg-emerald-50 hover:text-emerald-800 border border-[#ded5c0]"
+                          }`}
+                        >
+                          {task.completed ? "✓ Done" : "Done"}
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => deleteItem("tasks", task.id)}
+                          className="text-[#8e8574] hover:text-rose-600 p-1.5 text-xs transition-colors rounded-lg hover:bg-rose-50 cursor-pointer"
+                          title="Delete task"
+                        >
+                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
             </div>
+
+            {/* Add Task Input Form */}
+            <form onSubmit={(e) => handleAddTask(e)} className="pt-2 border-t border-[#ede7d8]">
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  placeholder="Add a new daily task..."
+                  value={newTaskInput}
+                  onChange={(e) => setNewTaskInput(e.target.value)}
+                  className="w-full bg-white border border-[#ded5c0] rounded-xl px-3.5 py-2 text-xs sm:text-sm text-[#112a1d] focus:outline-none focus:border-emerald-600 placeholder:text-[#8e8574]"
+                />
+                <button
+                  type="submit"
+                  className="px-4 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 active:scale-95 text-white text-xs sm:text-sm font-bold transition-all shrink-0 cursor-pointer shadow-2xs"
+                >
+                  + Add
+                </button>
+              </div>
+            </form>
           </div>
         </div>
 
