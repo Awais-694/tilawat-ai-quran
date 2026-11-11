@@ -30,9 +30,11 @@ import type { WordState, WordToken } from "@/types/quran";
 export function ReciteClient({
   surahNumber,
   initialSurah,
+  initialAyah,
 }: {
   surahNumber: number;
   initialSurah?: LoadedSurah | null;
+  initialAyah?: number;
 }) {
   const [loaded, setLoaded] = useState<LoadedSurah | null>(initialSurah ?? null);
   const [loadErr, setLoadErr] = useState(false);
@@ -201,10 +203,33 @@ export function ReciteClient({
   const sessionCounted = useRef(false);
   const initialLoadedRef = useRef(false);
   const lastSavedTime = useRef(Date.now());
-  // Restore progress on first load: Resume from exact Ayah where user left off!
+
+  // Restore progress on first load (or jump directly to requested Ayah if ?ayah=N is passed!)
   useEffect(() => {
     if (!loaded || initialLoadedRef.current || recTokens.length === 0) return;
     initialLoadedRef.current = true;
+
+    let requestedAyah = initialAyah;
+    if (!requestedAyah && typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const ayahParam = Number(params.get("ayah"));
+      if (!isNaN(ayahParam) && ayahParam > 0) {
+        requestedAyah = ayahParam;
+      }
+    }
+
+    if (requestedAyah && requestedAyah > 0) {
+      const targetIdx = loaded.tokens.findIndex((t) => t.ayahNumber === requestedAyah);
+      if (targetIdx >= 0) {
+        jumpToProgress(targetIdx);
+        savedRevealed.current = targetIdx;
+
+        const pg = loaded.tokens[targetIdx]?.page ?? loaded.pages[0];
+        const pi = loaded.pages.indexOf(pg);
+        if (pi >= 0) setPageIdx(pi);
+        return;
+      }
+    }
 
     db.progress.get(surahNumber).then((saved) => {
       let wordsToResume = saved?.revealedWords ?? 0;
@@ -233,7 +258,7 @@ export function ReciteClient({
         if (pi >= 0) setPageIdx(pi);
       }
     });
-  }, [loaded, surahNumber, recTokens.length, jumpToProgress]);
+  }, [loaded, surahNumber, recTokens.length, jumpToProgress, initialAyah]);
 
   const saveProgress = async () => {
     if (!loaded) return;
@@ -260,7 +285,6 @@ export function ReciteClient({
     });
     try {
       if (isDone) {
-        // If completed, remove from tilawat_last_recitation so Resume card never shows a completed surah
         const raw = localStorage.getItem("tilawat_last_recitation");
         if (raw) {
           const p = JSON.parse(raw);
@@ -300,14 +324,9 @@ export function ReciteClient({
         };
         const prevSurahs = current.surahsPracticed ?? [];
         const updatedSurahs = Array.from(new Set([...prevSurahs, surahNumber]));
-        const prevCompleted = current.surahsCompleted ?? [];
-        const updatedCompleted = isDone
-          ? Array.from(new Set([...prevCompleted, surahNumber]))
-          : prevCompleted;
         const totalWords = (current.wordsRevealed ?? 0) + rDelta;
         const totalMistakes = (current.mistakes ?? 0) + mDelta;
         const minEstimated = totalWords > 0 ? Math.round(totalWords * 1.3) : 0;
-        // Calculate realistic active time (at least 1.3s per revealed word)
         const timeCredit = Math.max(timeDeltaSec <= 600 ? timeDeltaSec : 0, Math.round(rDelta * 1.3));
         const newSec = Math.max((current.timeSpentSeconds ?? 0) + timeCredit, minEstimated);
         await db.activity.put({
@@ -638,8 +657,6 @@ export function ReciteClient({
         </div>
       </div>
 
-
-
       {/* Real Mushaf 16-Line Page Container */}
       <MushafPage
         surahName={loaded.meta.arabicName}
@@ -690,7 +707,6 @@ export function ReciteClient({
           }
           const wordCount = groups.length;
           const isShortLine = wordCount < 4;
-          // Authentic Mushaf typography: scale density so all words remain strictly on this line without breaking
           const lineScale =
             wordCount <= 5 ? 1 :
             wordCount <= 7 ? 0.96 :
@@ -742,7 +758,7 @@ export function ReciteClient({
         })}
       </MushafPage>
 
-      {/* Simple Centered Ma Sha Allah Popup (Pure Arabic Calligraphy with Close/Cross Button) */}
+      {/* Simple Centered Ma Sha Allah Popup */}
       {showToast && (
         <div
           className={`fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 px-8 sm:px-12 py-5 sm:py-6 rounded-2xl sm:rounded-3xl bg-white/95 border-2 border-[#c5a059] shadow-[0_20px_50px_rgba(20,50,30,0.25)] backdrop-blur-xl flex flex-col items-center justify-center text-center select-none transition-all duration-500 relative min-w-[200px] ${
@@ -753,7 +769,6 @@ export function ReciteClient({
           role="status"
           aria-live="polite"
         >
-          {/* Close Cross Button */}
           <button
             type="button"
             onClick={(e) => {
@@ -776,13 +791,11 @@ export function ReciteClient({
         </div>
       )}
 
-
-      {/* Sleek, Modern Floating Control Island (Neutral Obsidian Luxury) */}
+      {/* Sleek, Modern Floating Control Island */}
       <div className="sticky bottom-2 sm:bottom-3 z-30 flex flex-col items-center gap-1 px-2">
         <div className="flex items-center justify-center gap-2 sm:gap-3.5 px-3 sm:px-4 py-2 rounded-full bg-[#141a17] border border-white/20 shadow-[0_16px_50px_rgba(0,0,0,0.65),0_0_1px_rgba(255,255,255,0.3)]">
           {/* Left: Enhanced Page Navigator & Auto-Turn */}
           <div className="flex items-center gap-1 rounded-full bg-black/50 border border-white/10 px-1 py-1">
-            {/* Previous Page Arrow */}
             <button
               onClick={() => {
                 setAutoFollow(false);
@@ -797,7 +810,6 @@ export function ReciteClient({
               </svg>
             </button>
 
-            {/* Page Counter */}
             <div className="flex items-center px-2 select-none">
               <span className="text-xs sm:text-sm font-bold text-white font-mono tracking-tight">
                 {pageIdx + 1}
@@ -808,7 +820,6 @@ export function ReciteClient({
               </span>
             </div>
 
-            {/* Next Page Arrow */}
             <button
               onClick={() => {
                 setAutoFollow(false);
@@ -823,7 +834,6 @@ export function ReciteClient({
               </svg>
             </button>
 
-            {/* Auto-turn Pages Switch */}
             <button
               onClick={() => setAutoFollow((prev) => !prev)}
               title={autoFollow ? "Auto-turn pages enabled (tap to disable)" : "Auto-turn pages disabled (tap to enable)"}
@@ -847,7 +857,6 @@ export function ReciteClient({
 
           {/* Right: Audio Reference & Reset Actions */}
           <div className="flex items-center gap-1.5 sm:gap-2">
-            {/* Audio Reference Player */}
             <button
               onClick={playCurrentAyah}
               title="Listen to reference recitation"
@@ -858,7 +867,6 @@ export function ReciteClient({
               </svg>
             </button>
 
-            {/* Reset Progress Button */}
             <button
               onClick={handleReset}
               title="Reset recitation session"
